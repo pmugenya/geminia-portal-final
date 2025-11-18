@@ -1,0 +1,47 @@
+.mat-small {
+    .mat-mdc-form-field-infix {
+        min-height: 42px !important;
+        padding-top: 8px !important;
+        padding-bottom: 8px !important;
+    }
+
+    .mat-mdc-select {
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+    }
+}
+
+.mat-select-invalid {
+    .mat-mdc-select-trigger {
+        border-color: #ef4444 !important;
+    }
+}
+
+// Make all mat-selects the same height
+   ::ng-deep .mat-mdc-form-field {
+       &.mat-small, &.country-select, &.category-select, &.cargo-type-select {
+           .mat-mdc-text-field-wrapper {
+               padding-bottom: 0;
+           }
+
+           .mat-mdc-form-field-infix {
+               min-height: 42px !important;
+               padding: 10px 0 !important;
+           }
+
+           .mat-mdc-form-field-subscript-wrapper {
+               margin-top: 0 !important;
+               min-height: 0 !important;
+           }
+
+           .mat-mdc-select {
+               padding-top: 0 !important;
+               padding-bottom: 0 !important;
+           }
+       }
+   }
+
+.readonly-section {
+    pointer-events: none;
+    opacity: 0.6;
+}

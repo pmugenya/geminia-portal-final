@@ -1,0 +1,476 @@
+<div class="flex w-full flex-auto flex-col">
+    <fuse-alert
+        name="quoteDownloadError"
+        type="error"
+        [dismissible]="true"
+        [appearance]="'soft'">
+        Failed to download quote. Please try again later.
+    </fuse-alert>
+    <div class="mx-auto flex w-full max-w-screen-xl flex-wrap p-6 md:p-8">
+        <!-- Header Section -->
+        <div class="flex w-full items-center justify-between">
+            <div>
+                <h2 class="text-3xl font-semibold leading-8 tracking-tight">
+                    My Insurance Dashboard
+                </h2>
+                <div class="text-secondary font-medium tracking-tight">
+                    Manage your policies, claims, and payments in one place
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Stats Section -->
+        <div class="mt-8 grid w-full grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+            <!-- Total Coverage -->
+            <div class="bg-card rounded-xl p-6 shadow">
+                <div class="flex items-center">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
+                        <mat-icon [svgIcon]="'heroicons_outline:shield-check'"></mat-icon>
+                    </div>
+                    <div class="ml-4">
+                        <div class="text-secondary text-sm font-medium">Active Quotes</div>
+                        <div class="text-2xl font-bold">{{ totalRecords }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Policies -->
+            <div class="bg-card rounded-xl p-6 shadow">
+                <div class="flex items-center">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-green-100 text-green-600">
+                        <mat-icon [svgIcon]="'heroicons_outline:document-text'"></mat-icon>
+                    </div>
+                    <div class="ml-4">
+                        <div class="text-secondary text-sm font-medium">Active Policies</div>
+                        <div class="text-2xl font-bold">{{ policiesTotalRecords }}</div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Monthly Premium -->
+            <div class="bg-card rounded-xl p-6 shadow">
+                <div class="flex items-center">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-purple-100 text-purple-600">
+                        <mat-icon [svgIcon]="'heroicons_outline:banknotes'"></mat-icon>
+                    </div>
+                    <div class="ml-4">
+                        <div class="text-secondary text-sm font-medium">Premium</div>
+                        <div class="text-2xl font-bold">{{ getMonthlyPremium() | currency:'KES ' }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Next Payment -->
+            <div class="bg-card rounded-xl p-6 shadow">
+                <div class="flex items-center">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-orange-100 text-orange-600">
+                        <mat-icon [svgIcon]="'heroicons_outline:calendar'"></mat-icon>
+                    </div>
+                    <div class="ml-4">
+                        <div class="text-secondary text-sm font-medium">Next Payment</div>
+                        <div class="text-2xl font-bold">{{ data.upcomingPayments.nextPaymentAmount | currency:'KES ' }}</div>
+<!--                        <div class="text-xs text-secondary mt-1">Due {{ formatDate(data.upcomingPayments.nextPaymentDate) }}</div>-->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="mt-8 grid w-full grid-cols-1 gap-8 xl:grid-cols-3">
+            <!-- Left Column - Policies and Coverage -->
+            <div class="xl:col-span-2 space-y-8">
+                <!-- My Policies Table -->
+                <div class="bg-card rounded-xl shadow">
+                    <div class="flex items-center justify-between p-6 border-b">
+                        <div>
+                            <h3 class="text-lg font-semibold">My Quotes</h3>
+                        </div>
+                        <button mat-stroked-button (click)="openProductQuoteDialog()">
+                            <mat-icon class="icon-size-4" [svgIcon]="'heroicons_outline:plus'"></mat-icon>
+                            <span class="ml-2">New Quote</span>
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <div class="bg-card rounded-xl shadow">
+                            <div class="text-secondary text-sm" *ngIf="!isInitialLoad">
+                                Showing {{ myQuotesDataSource.data.length }} of {{ totalRecords }} Quotes
+                            </div>
+                            <!-- Loading State -->
+<!--                            <div *ngIf="isLoading" class="flex justify-center items-center p-8">-->
+<!--                                <mat-spinner diameter="40"></mat-spinner>-->
+<!--                            </div>-->
+
+                            <!-- Table -->
+                            <div class="overflow-x-auto" *ngIf="!isLoading">
+                                <table
+                                    class="w-full"
+                                    mat-table
+                                    matSort
+                                    [dataSource]="myQuotesDataSource"
+                                    [trackBy]="trackByFn"
+                                    #myQuotesTable>
+                                    <!-- Product Type -->
+                                    <ng-container matColumnDef="refno">
+                                        <th mat-header-cell *matHeaderCellDef mat-sort-header>Ref No</th>
+                                        <td mat-cell *matCellDef="let policy">
+                                            <div class="flex items-center">
+                                                {{ policy.refno }}
+                                            </div>
+                                        </td>
+                                    </ng-container>
+
+                                    <!-- Insured Item -->
+                                    <ng-container matColumnDef="prodName">
+                                        <th mat-header-cell *matHeaderCellDef mat-sort-header>Product</th>
+                                        <td mat-cell *matCellDef="let policy">{{ policy.prodName }}</td>
+                                    </ng-container>
+                                    <ng-container matColumnDef="status">
+                                    <th mat-header-cell *matHeaderCellDef>Status</th>
+                                    <td mat-cell *matCellDef="let policy">
+                                        <span
+                                            class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
+                                            [ngClass]="getPolicyStatusColor(policy.status)"
+                                        >
+                                            {{ policy.status }}
+                                        </span>
+                                    </td>
+                                    </ng-container>
+                                        <ng-container matColumnDef="netprem">
+                                            <th mat-header-cell *matHeaderCellDef>Premium</th>
+                                            <td mat-cell *matCellDef="let policy">
+                                                {{ policy.netprem | currency:'KES ' }}
+                                            </td>
+
+                                        </ng-container>
+                                    <ng-container matColumnDef="expiryDates">
+                                        <th mat-header-cell *matHeaderCellDef>Expiry Date</th>
+                                        <td mat-cell *matCellDef="let policy">
+                                            <div [class.text-red-600]="isExpiringSoon(policy.expiryDates)"
+                                                 [class.font-semibold]="isExpiringSoon(policy.expiryDates)">
+                                                {{ formatDate(policy.expiryDates) }}
+                                                <div class="text-xs text-secondary" *ngIf="isExpiringSoon(policy.expiryDates)">
+                                                    {{ getDaysUntilRenewal(policy.expiryDates) }} days left
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </ng-container>
+
+
+                                    <!-- Empty State -->
+                                    <ng-container *ngIf="myQuotesDataSource.data.length === 0 && !isInitialLoad">
+                                        <tr class="no-data-row">
+                                            <td colspan="7" class="text-center py-8 text-gray-500">
+                                                <mat-icon class="icon-size-12 mx-auto mb-2 text-gray-300" [svgIcon]="'heroicons_outline:document-magnifying-glass'"></mat-icon>
+                                                <div class="text-lg font-medium">No policies found</div>
+                                                <div class="text-sm">Try adjusting your search or filters</div>
+                                            </td>
+                                        </tr>
+                                    </ng-container>
+
+                                    <ng-container matColumnDef="actions">
+                                        <th mat-header-cell *matHeaderCellDef>Actions</th>
+                                        <td mat-cell *matCellDef="let policy">
+                                            <div class="flex space-x-2">
+                                                <button mat-icon-button (click)="viewQuote(policy)" title="View Quote">
+                                                    <mat-icon class="icon-size-4" [svgIcon]="'heroicons_outline:eye'"></mat-icon>
+                                                </button>
+                                                <button mat-icon-button (click)="downloadQuote(policy)" title="Download Quote">
+                                                    <mat-icon class="icon-size-4" [svgIcon]="'heroicons_outline:arrow-down-tray'"></mat-icon>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </ng-container>
+
+                                    <tr mat-header-row *matHeaderRowDef="myQuotesTableColumns"></tr>
+                                    <tr mat-row *matRowDef="let row; columns: myQuotesTableColumns;"></tr>
+                                </table>
+                            </div>
+
+                            <!-- Pagination -->
+                            <mat-paginator
+                                *ngIf="!isInitialLoad && totalRecords > 0"
+                                [length]="totalRecords"
+                                [pageSize]="quotesPageSize"
+                                [pageSizeOptions]="pageSizeOptions"
+                                [pageIndex]="currentPage"
+                                (page)="onPageChange($event)"
+                                showFirstLastButtons="true"
+                            >
+                            </mat-paginator>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-card rounded-xl shadow">
+                    <div class="flex items-center justify-between p-6 border-b">
+                        <div>
+                            <h3 class="text-lg font-semibold">My Policies</h3>
+                        </div>
+                    </div>
+                    <div class="text-secondary text-sm" *ngIf="!isInitialLoad">
+                        Showing {{ myPolicyDataSource.data.length }} of {{ policiesTotalRecords }} policies
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table
+                            class="w-full"
+                            mat-table
+                            matSort
+                            [dataSource]="myPolicyDataSource"
+                            [trackBy]="trackByFn"
+                            #myPoliciesTable
+                        >
+
+                            <ng-container matColumnDef="productName">
+                                <th mat-header-cell *matHeaderCellDef>Product</th>
+                                <td mat-cell *matCellDef="let policy">
+                                    <div class="flex items-center">
+                                        {{ policy.productName }}
+                                    </div>
+                                </td>
+                            </ng-container>
+
+                            <ng-container matColumnDef="erprefno">
+                                <th mat-header-cell *matHeaderCellDef>Policy No</th>
+                                <td mat-cell *matCellDef="let policy">{{ policy.erprefno }}</td>
+                            </ng-container>
+
+                            <!-- Coverage Amount -->
+                            <ng-container matColumnDef="netpremium">
+                                <th mat-header-cell *matHeaderCellDef>Premium</th>
+                                <td mat-cell *matCellDef="let policy">
+                                    <span class="font-medium">{{ policy.netpremium | currency:'KES ' }}</span>
+                                </td>
+                            </ng-container>
+
+                            <!-- Premium -->
+                            <ng-container matColumnDef="coverFrom">
+                                <th mat-header-cell *matHeaderCellDef>Cover From</th>
+                                <td mat-cell *matCellDef="let policy">
+                                    {{ policy.coverFrom | date }}
+                                </td>
+                            </ng-container>
+
+                            <!-- Renewal Date -->
+                            <ng-container matColumnDef="coverTo">
+                                <th mat-header-cell *matHeaderCellDef>Cover To</th>
+                                <td mat-cell *matCellDef="let policy">
+                                    <div [class.text-red-600]="isExpiringSoon(policy.coverTo)"
+                                         [class.font-semibold]="isExpiringSoon(policy.coverTo)">
+                                        {{ formatDate(policy.coverTo) }}
+                                        <div class="text-xs text-secondary" *ngIf="isExpiringSoon(policy.coverTo)">
+                                            {{ getDaysUntilRenewal(policy.coverTo) }} days left
+                                        </div>
+                                    </div>
+                                </td>
+                            </ng-container>
+
+                            <!-- Actions -->
+                            <ng-container matColumnDef="actions">
+                                <th mat-header-cell *matHeaderCellDef>Actions</th>
+                                <td mat-cell *matCellDef="let policy">
+                                    <div class="flex space-x-2">
+                                        <button mat-icon-button (click)="viewPolicy(policy)" title="View Policy">
+                                            <mat-icon class="icon-size-4" [svgIcon]="'heroicons_outline:eye'"></mat-icon>
+                                        </button>
+                                        <button mat-icon-button (click)="downloadPolicy(policy)" title="Download">
+                                            <mat-icon class="icon-size-4" [svgIcon]="'heroicons_outline:arrow-down-tray'"></mat-icon>
+                                        </button>
+                                        <button
+                                            *ngIf="policy.status === 'renewal'"
+                                            mat-icon-button
+                                            (click)="renewPolicy(policy)"
+                                            title="Renew Policy"
+                                        >
+                                            <mat-icon class="icon-size-4 text-green-600" [svgIcon]="'heroicons_outline:arrow-path'"></mat-icon>
+                                        </button>
+                                    </div>
+                                </td>
+                            </ng-container>
+
+                            <tr mat-header-row *matHeaderRowDef="myPolicyTableColumns"></tr>
+                            <tr mat-row *matRowDef="let row; columns: myPolicyTableColumns;"></tr>
+                        </table>
+                    </div>
+                    <mat-paginator
+                        *ngIf="!isInitialLoad && policiesTotalRecords > 0"
+                        [length]="policiesTotalRecords"
+                        [pageSize]="policiesPageSize"
+                        [pageSizeOptions]="pageSizeOptions"
+                        [pageIndex]="currentPage"
+                        (page)="onPoliciesPageChange($event)"
+                        showFirstLastButtons="true"
+                    >
+                    </mat-paginator>
+                </div>
+
+                <!-- Coverage and Premium Charts -->
+                <div class="grid grid-cols-1 gap-8 lg:grid-cols-2">
+                    <!-- Coverage Distribution -->
+                    <div class="bg-card rounded-xl p-6 shadow">
+                        <h3 class="text-lg font-semibold mb-4">Coverage Distribution</h3>
+                        <apx-chart
+                            class="w-full"
+                            [chart]="coverageDistributionOptions.chart"
+                            [series]="coverageDistributionOptions.series"
+                            [labels]="coverageDistributionOptions.labels"
+                            [colors]="coverageDistributionOptions.colors"
+                            [fill]="coverageDistributionOptions.fill"
+                            [stroke]="coverageDistributionOptions.stroke"
+                            [tooltip]="coverageDistributionOptions.tooltip"
+                        ></apx-chart>
+                    </div>
+
+                    <!-- Premium Breakdown -->
+                    <div class="bg-card rounded-xl p-6 shadow">
+                        <h3 class="text-lg font-semibold mb-4">Premium Breakdown</h3>
+                        <apx-chart
+                            class="w-full"
+                            [chart]="premiumBreakdownOptions.chart"
+                            [colors]="premiumBreakdownOptions.colors"
+                            [fill]="premiumBreakdownOptions.fill"
+                            [series]="premiumBreakdownOptions.series"
+                            [stroke]="premiumBreakdownOptions.stroke"
+                            [tooltip]="premiumBreakdownOptions.tooltip"
+                            [xaxis]="premiumBreakdownOptions.xaxis"
+                            [yaxis]="premiumBreakdownOptions.yaxis"
+                        ></apx-chart>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column - Claims, Activity, and Quick Actions -->
+            <div class="space-y-8">
+                <!-- My Claims -->
+                <div class="bg-card rounded-xl shadow">
+                    <div class="flex items-center justify-between p-6 border-b">
+                        <div>
+                            <h3 class="text-lg font-semibold">My Claims</h3>
+                            <div class="text-secondary text-sm">
+                                {{ data.myClaims.pending }} pending, {{ data.myClaims.approved }} approved
+                            </div>
+                        </div>
+                        <button mat-stroked-button (click)="fileNewClaim()">
+                            <mat-icon class="icon-size-4" [svgIcon]="'heroicons_outline:plus'"></mat-icon>
+                            <span class="ml-2">New Claim</span>
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+<!--                        <table-->
+<!--                            class="w-full"-->
+<!--                            mat-table-->
+<!--                            matSort-->
+<!--                            [dataSource]="myClaimsDataSource"-->
+<!--                            [trackBy]="trackByFn"-->
+<!--                            #myClaimsTable-->
+<!--                        >-->
+<!--                            &lt;!&ndash; Claim Number &ndash;&gt;-->
+<!--                            <ng-container matColumnDef="claimNumber">-->
+<!--                                <th mat-header-cell *matHeaderCellDef>Claim #</th>-->
+<!--                                <td mat-cell *matCellDef="let claim">{{ claim.claimNumber }}</td>-->
+<!--                            </ng-container>-->
+
+<!--                            &lt;!&ndash; Policy Number &ndash;&gt;-->
+<!--                            <ng-container matColumnDef="policyNumber">-->
+<!--                                <th mat-header-cell *matHeaderCellDef>Policy #</th>-->
+<!--                                <td mat-cell *matCellDef="let claim">{{ claim.policyNumber }}</td>-->
+<!--                            </ng-container>-->
+
+<!--                            &lt;!&ndash; Type &ndash;&gt;-->
+<!--                            <ng-container matColumnDef="type">-->
+<!--                                <th mat-header-cell *matHeaderCellDef>Type</th>-->
+<!--                                <td mat-cell *matCellDef="let claim">{{ claim.type }}</td>-->
+<!--                            </ng-container>-->
+
+<!--                            &lt;!&ndash; Date &ndash;&gt;-->
+<!--                            <ng-container matColumnDef="date">-->
+<!--                                <th mat-header-cell *matHeaderCellDef>Date</th>-->
+<!--                                <td mat-cell *matCellDef="let claim">{{ formatDate(claim.date) }}</td>-->
+<!--                            </ng-container>-->
+
+<!--                            &lt;!&ndash; Amount &ndash;&gt;-->
+<!--                            <ng-container matColumnDef="amount">-->
+<!--                                <th mat-header-cell *matHeaderCellDef>Amount</th>-->
+<!--                                <td mat-cell *matCellDef="let claim">-->
+<!--                                    <span class="font-medium">{{ claim.amount | currency:'USD' }}</span>-->
+<!--                                </td>-->
+<!--                            </ng-container>-->
+
+<!--                            &lt;!&ndash; Status &ndash;&gt;-->
+<!--                            <ng-container matColumnDef="status">-->
+<!--                                <th mat-header-cell *matHeaderCellDef>Status</th>-->
+<!--                                <td mat-cell *matCellDef="let claim">-->
+<!--                                    <span-->
+<!--                                        class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"-->
+<!--                                        [ngClass]="getClaimStatusColor(claim.status)"-->
+<!--                                    >-->
+<!--                                        {{ claim.status }}-->
+<!--                                    </span>-->
+<!--                                </td>-->
+<!--                            </ng-container>-->
+
+<!--                            <tr mat-header-row *matHeaderRowDef="myClaimsTableColumns"></tr>-->
+<!--                            <tr mat-row *matRowDef="let row; columns: myClaimsTableColumns;"></tr>-->
+<!--                        </table>-->
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="bg-card rounded-xl shadow">
+                    <div class="p-6 border-b">
+                        <h3 class="text-lg font-semibold">Recent Activity</h3>
+                    </div>
+                    <div class="p-4 space-y-4">
+                        <div *ngFor="let activity of recentActivities" class="flex items-start space-x-3">
+                            <div class="flex h-8 w-8 items-center justify-center rounded-full"
+                                 [ngClass]="getActivityColor(activity.type)">
+                                <mat-icon class="icon-size-4" [svgIcon]="getActivityIcon(activity.type)"></mat-icon>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="text-sm font-medium">{{ activity.description }}</div>
+                                <div class="text-secondary text-xs">{{ activity.dateCreated }}</div>
+                                <div *ngIf="activity.amount" class="text-sm font-medium text-green-600">
+                                    {{ activity.amount | currency:'KES ' }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="bg-card rounded-xl shadow">
+                    <div class="p-6 border-b">
+                        <h3 class="text-lg font-semibold">Quick Actions</h3>
+                    </div>
+                    <div class="p-4 space-y-3">
+                        <button class="w-full justify-start" mat-stroked-button (click)="openProductQuoteDialog()">
+                            <mat-icon class="icon-size-5 mr-3" [svgIcon]="'heroicons_outline:calculator'"></mat-icon>
+                           Quick Quote
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Coverage Summary -->
+                <div class="bg-card rounded-xl shadow">
+                    <div class="p-6 border-b">
+                        <h3 class="text-lg font-semibold">Coverage Summary</h3>
+                    </div>
+                    <div class="p-4 space-y-4">
+                        <div *ngFor="let coverage of clientCoverage" class="space-y-2">
+                            <div class="flex justify-between text-sm">
+                                <span class="font-medium">{{ coverage.type }}</span>
+                                <span>{{ coverage.amount | currency:'KES ' }}</span>
+                            </div>
+                            <mat-progress-bar
+                                [value]="coverage.percentage"
+                                [color]="getProgressColor(coverage.type)"
+                                mode="determinate"
+                            ></mat-progress-bar>
+                            <div class="text-xs text-secondary text-right">{{ coverage.percentage.toFixed(1) }}% of total</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,46 @@
+.download-btn {
+    background: linear-gradient(135deg, #1e40af, #3b82f6);
+    color: #fff;
+    font-weight: 500;
+    text-transform: none;
+    border-radius: 0.5rem;
+    padding: 0.45rem 1rem;   /* smaller height */
+    font-size: 0.9rem;
+    line-height: 1.2;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+    transition: all 0.2s ease-in-out;
+    display: flex;
+    align-items: center;
+
+    mat-icon {
+        font-size: 18px;
+    }
+
+    &:hover {
+        background: linear-gradient(135deg, #2563eb, #60a5fa);
+        box-shadow: 0 3px 10px rgba(59, 130, 246, 0.4);
+        transform: translateY(-1px);
+    }
+
+    &:active {
+        transform: translateY(0);
+        box-shadow: 0 1px 4px rgba(59, 130, 246, 0.25);
+    }
+}
+
+
+.buy-btn {
+    background: linear-gradient(135deg, #059669, #10b981);
+    color: #fff;
+    font-weight: 500;
+    border-radius: 0.5rem;
+    padding: 0.45rem 1rem;
+    font-size: 0.9rem;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+    transition: all 0.2s ease-in-out;
+
+    &:hover {
+        background: linear-gradient(135deg, #10b981, #34d399);
+        box-shadow: 0 3px 10px rgba(16, 185, 129, 0.4);
+    }
+}

@@ -1,0 +1,17 @@
+:host {
+    display: block;
+}
+
+fuse-card {
+    border-radius: 1rem;
+    background: var(--fuse-card-bg, #fff);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+    &:hover {
+        transform: translateY(-3px);
+    }
+
+    mat-icon {
+        font-size: 2rem;
+    }
+}

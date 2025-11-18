@@ -1,0 +1,40 @@
+<div class="flex items-center gap-2">
+    <!-- User Name -->
+    <span class="font-medium text-sm text-white">
+        {{ user.name }}
+    </span>
+
+    <!-- User Icon Button -->
+    <button mat-icon-button [matMenuTriggerFor]="userActions" class="p-1">
+        <mat-icon
+            [svgIcon]="'heroicons_outline:user-circle'"
+            class="text-white text-2xl"
+        ></mat-icon>
+    </button>
+</div>
+
+
+<mat-menu [xPosition]="'before'" #userActions="matMenu">
+    <button mat-menu-item>
+        <span class="flex flex-col leading-none">
+            <span>Signed in as</span>
+            <span class="mt-1.5 text-md font-medium">{{ user.email }}</span>
+        </span>
+    </button>
+    <mat-divider class="my-2"></mat-divider>
+    <button mat-menu-item>
+        <mat-icon [svgIcon]="'heroicons_outline:user-circle'"></mat-icon>
+        <span>Profile</span>
+    </button>
+    <button mat-menu-item>
+        <mat-icon [svgIcon]="'heroicons_outline:cog-8-tooth'"></mat-icon>
+        <span>Settings</span>
+    </button>
+    <mat-divider class="my-2"></mat-divider>
+    <button mat-menu-item (click)="signOut()">
+        <mat-icon
+            [svgIcon]="'heroicons_outline:arrow-right-on-rectangle'"
+        ></mat-icon>
+        <span>Sign out</span>
+    </button>
+</mat-menu>
