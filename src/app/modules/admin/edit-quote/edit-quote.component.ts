@@ -579,7 +579,7 @@ export class EditMarineQuoteComponent implements OnInit, OnDestroy
 
                 // Generate reference number for M-Pesa payment
                 const refNo = applicationResponse?.transactionId;
-                this.applicationId = applicationResponse?.entityId;
+                this.applicationId = applicationResponse?.commandId;
                 this.isMakePaymentNow = true;
                 this.paymentRefNo = refNo;
                 this.isSubmitting = false;
@@ -1176,6 +1176,7 @@ export class EditMarineQuoteComponent implements OnInit, OnDestroy
         this.userService.checkProspectDocument(prospectId).subscribe({
             next: (data) => {
                 console.log(data);
+                console.log('prospectId ',prospectId);
                 this.userDocs = data;
                 this.isLoadingMarineData = false;
                 this.shipmentForm.get('idNumber')?.setValue(data.idNo);

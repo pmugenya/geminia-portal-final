@@ -1791,7 +1791,7 @@ export class MarineQuoteComponent implements OnInit, OnDestroy
 
                 // Generate reference number for M-Pesa payment
                 const refNo = applicationResponse?.transactionId;
-                this.applicationId = applicationResponse?.entityId;
+                this.applicationId = applicationResponse?.commandId;
                 this.isMakePaymentNow = true;
                 this.paymentRefNo = refNo;
                 this.isSubmitting = false;

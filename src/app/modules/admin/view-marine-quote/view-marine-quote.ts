@@ -1,9 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIcon } from '@angular/material/icon';
-import { DatePipe, DecimalPipe, NgClass } from '@angular/common';
+import { DatePipe, DecimalPipe, NgClass, NgIf } from '@angular/common';
 import { QuoteService } from '../../../core/services/quote.service';
 import { MatProgressBar } from '@angular/material/progress-bar';
 import { HttpEventType } from '@angular/common/http';
@@ -106,6 +106,7 @@ interface ApplicationShippingData {
         DecimalPipe,
         MatProgressBar,
         MatProgressSpinner,
+        NgIf,
     ],
 })
 export class ViewMarineQuote implements OnInit {
@@ -190,12 +191,15 @@ export class ViewMarineQuote implements OnInit {
         private router: Router,
         private snackBar: MatSnackBar,
         private dialog: MatDialog,
-        private quoteService: QuoteService
+        private quoteService: QuoteService,
+        private cdr: ChangeDetectorRef
     ) {}
 
     ngOnInit(): void {
         // Get application ID from route params
         this.quoteId = this.route.snapshot.paramMap.get('quoteId')!;
+        this.isLoading = true;
+        this.cdr.detectChanges();
         this.quoteService.retrieveOneTransaction(Number(this.quoteId!)).subscribe({
             next: (data) => {
                 this.refno = data.refno;
@@ -227,9 +231,13 @@ export class ViewMarineQuote implements OnInit {
                 this.netpremium = data.netpremium;
                 this.agencyName = data.agencyName;
                 this.approvedStatus = data.approvedStatus;
+                this.isLoading = false;
+                this.cdr.detectChanges();
                 console.log(data);
             },
             error: (err) => {
+                this.isLoading = false;
+                this.cdr.detectChanges();
                 console.error('Error fetching transaction:', err);
             }
         });
