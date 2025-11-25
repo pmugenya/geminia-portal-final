@@ -12,7 +12,7 @@ const generatePalette = require(
  * Tailwind-like color palettes automatically
  */
 const customPalettes = {
-    brand: generatePalette('#2196F3'),
+    brand: generatePalette('#04b2e1'),
 };
 
 /**
@@ -20,23 +20,20 @@ const customPalettes = {
  */
 const themes = {
     // Default theme is required for theming system to work correctly!
-    default: {
-        primary: {
-            ...colors.indigo,
-            DEFAULT: colors.indigo[600],
-        },
-        accent: {
-            ...colors.slate,
-            DEFAULT: colors.slate[800],
-        },
-        warn: {
-            ...colors.red,
-            DEFAULT: colors.red[600],
-        },
-        'on-warn': {
-            500: colors.red['50'],
-        },
+   default: {
+    primary: customPalettes.brand,
+    accent: {
+        ...colors.slate,
+        DEFAULT: colors.slate[800],
     },
+    warn: {
+        ...colors.red,
+        DEFAULT: colors.red[600],
+    },
+    'on-warn': {
+        500: colors.red['50'],
+    },
+},
     // Rest of the themes will use the 'default' as the base
     // theme and will extend it with their given configuration.
     brand: {

@@ -157,13 +157,25 @@ export class ClientInsuranceDashboardComponent implements OnInit,AfterViewInit {
             toolbar: { show: false },
             fontFamily: 'inherit'
         },
-        colors: ['#3B82F6'],
+        // Use #21275c for bars and key lines to match dashboard colour
+        colors: ['#21275c'],
         fill: { opacity: 0.8 },
         series: [{ name: 'Annual Premium', data: [] }],
         stroke: { width: 0 },
         tooltip: { theme: 'dark' },
-        xaxis: { categories: [], labels: { style: { colors: '#6B7280' } } },
-        yaxis: { labels: { formatter: (val) => this.formatCurrency(val) } }
+        xaxis: {
+            categories: [],
+            labels: { style: { colors: '#21275c' } }
+        },
+        yaxis: {
+            labels: {
+                formatter: (val) => this.formatCurrency(val),
+                style: { colors: '#21275c' }
+            }
+        },
+        grid: {
+            borderColor: '#21275c'
+        }
     };
     pendingQuotes: PendingQuote[] = [];
     recentActivities: RecentActivity[] = [];

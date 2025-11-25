@@ -5,7 +5,7 @@ import {
     Category,
     Country,
     MarineProduct,
-    PackagingType, Port,
+    PackagingType, Port, PostalCode,
     QuoteResult, QuotesData, StoredUser,
     User, UserDocumentData,
 } from '../../../core/user/user.types';
@@ -117,6 +117,7 @@ export class MarineQuoteComponent implements OnInit, OnDestroy
     coverageFormGroup!: FormGroup;
     shipmentForm!: FormGroup;
     quote?: QuotesData;
+    postalCodes: PostalCode[] = [];
     isLoading = true;
     isLoadingMarineData: boolean = true;
     isLoadingCargoTypes: boolean = true;
@@ -196,6 +197,8 @@ export class MarineQuoteComponent implements OnInit, OnDestroy
     private paymentPollingSub?: Subscription;
     private _unsubscribeAll: Subject<any> = new Subject<any>();
 
+    showShareModal = false;
+
 
     constructor(private fb: FormBuilder,
                 private userService: UserService,
@@ -230,11 +233,13 @@ export class MarineQuoteComponent implements OnInit, OnDestroy
             products: this.userService.getMarineProducts(),
             packagingTypes: this.userService.getMarinePackagingTypes(),
             categories: this.userService.getMarineCategories(),
+            postalcodes: this.quotationService.getPostalCodes()
         }).subscribe({
             next: (data) => {
                 this.marineProducts = data.products || [];
                 this.marinePackagingTypes = data.packagingTypes || [];
                 this.marineCategories = data.categories || [];
+                this.postalCodes = data.postalcodes;
 
                 // Initialize filtered arrays
                 this.filteredMarineCategories = this.marineCategories.slice();
@@ -249,18 +254,77 @@ export class MarineQuoteComponent implements OnInit, OnDestroy
 
         this.setupDateValidation();
 
-      const authUser =  this.userService.getCurrentUser();
-      if(authUser){
-          const userType = authUser.userType;
-          if (userType === 'A') {
-              this.toggleRequiredFields(true);
-          } else {
-              this.toggleRequiredFields(false);
-          }
-      }
+        const authUser = this.userService.getCurrentUser();
+        if (authUser) {
+            const userType = authUser.userType;
+            if (userType === 'A') {
+                this.toggleRequiredFields(true);
+            } else {
+                this.toggleRequiredFields(false);
+            }
+        }
 
         this.setupSearchableDropdowns();
 
+    }
+
+    openShareModal(): void {
+        this.showShareModal = true;
+    }
+
+    closeShareModal(): void {
+        this.showShareModal = false;
+    }
+
+    shareViaGmail(): void {
+        const subject = encodeURIComponent('Marine Quote Details');
+        const lines: string[] = [];
+
+        if (this.quoteResult) {
+            lines.push('Please find below the marine quote details.');
+            lines.push('');
+            lines.push(`Net Premium: KES ${this.quoteResult.netprem}`);
+            lines.push(`Premium: KES ${this.quoteResult.premium}`);
+            lines.push(`PHCF: KES ${this.quoteResult.phcf}`);
+            lines.push(`Training Levy: KES ${this.quoteResult.tl}`);
+            lines.push(`Stamp Duty: KES ${this.quoteResult.sd}`);
+            lines.push('');
+        }
+
+        lines.push('You can also attach a screenshot or PDF of the quote details to this email before sending.');
+
+        const body = encodeURIComponent(lines.join('\n'));
+        const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&su=${subject}&body=${body}`;
+        window.open(gmailUrl, '_blank');
+    }
+
+    private buildShareLinesFromResult(): string[] {
+        const lines: string[] = [];
+        if (this.quoteResult) {
+            lines.push('Please find below the marine quote details.');
+            lines.push('');
+            lines.push(`Net Premium: KES ${this.quoteResult.netprem}`);
+            lines.push(`Premium: KES ${this.quoteResult.premium}`);
+            lines.push(`PHCF: KES ${this.quoteResult.phcf}`);
+            lines.push(`Training Levy: KES ${this.quoteResult.tl}`);
+            lines.push(`Stamp Duty: KES ${this.quoteResult.sd}`);
+            lines.push('');
+        }
+        lines.push('You can also attach a screenshot or PDF of the quote details before sending.');
+        return lines;
+    }
+
+    shareViaWhatsApp(): void {
+        const text = encodeURIComponent(this.buildShareLinesFromResult().join('\n'));
+        const url = `https://wa.me/?text=${text}`;
+        window.open(url, '_blank');
+    }
+
+    shareViaOutlook(): void {
+        const subject = encodeURIComponent('Marine Quote Details');
+        const body = encodeURIComponent(this.buildShareLinesFromResult().join('\n'));
+        const mailtoUrl = `mailto:?subject=${subject}&body=${body}`;
+        window.location.href = mailtoUrl;
     }
 
     fetchUserDocuments(): void {
@@ -301,11 +365,30 @@ export class MarineQuoteComponent implements OnInit, OnDestroy
 
     private extractPhoneNumber(input: string): string {
         if (!input) return '';
-        const digitsOnly = input.replace(/\D/g, '');
-        const lastTenDigits = digitsOnly.slice(-10);
-        return lastTenDigits.startsWith('0')
-            ? lastTenDigits
-            : '0' + lastTenDigits;
+
+        let sanitized = input.trim().replace(/[^\d+]/g, '');
+
+        if (sanitized.startsWith('+254')) {
+            let local = sanitized.slice(4); // remove "+254"
+            if (local.length === 9 && local.startsWith('7')) {
+                return '0' + local;
+            }
+            return '0' + local.slice(-9);
+        } else if (sanitized.startsWith('254')) {
+            // without + sign
+            let local = sanitized.slice(3);
+            return '0' + local.slice(-9);
+        } else if (sanitized.length === 9 && sanitized.startsWith('7')) {
+            return '0' + sanitized;
+        } else if (sanitized.length === 10 && sanitized.startsWith('0')) {
+            return sanitized;
+        }
+
+        if (sanitized.startsWith('+1') || sanitized.startsWith('+2')) {
+            return sanitized;
+        }
+
+        return sanitized;
     }
 
     onScrollPorts(event: Event) {
@@ -566,7 +649,7 @@ export class MarineQuoteComponent implements OnInit, OnDestroy
         this.countySearchCtrl.valueChanges
             .pipe(takeUntil(this.destroy$), debounceTime(300))
             .subscribe(() => {
-                this.fetchCounties();
+                this.filterCounties();
             });
 
         this.cargoTypeSearchCtrl.valueChanges
@@ -609,7 +692,7 @@ export class MarineQuoteComponent implements OnInit, OnDestroy
     }
 
     private fetchCounties(): void {
-        // Get the mode of shipment: 'Sea' = 1, 'Air' = 2
+        // Load all counties from the API once, then apply client-side filtering
 
         this.isLoadingCounties = true;
         this.userService.getCounties(this.countyPage, this.pageSize).subscribe({
@@ -623,7 +706,7 @@ export class MarineQuoteComponent implements OnInit, OnDestroy
                     this.counties = [...this.counties, ...newCounties];
                 }
 
-                this.filteredCounties.next(this.counties.slice());
+                this.filterCounties();
                 this.isLoadingCounties = false;
             },
             error: (err) => {
@@ -633,6 +716,28 @@ export class MarineQuoteComponent implements OnInit, OnDestroy
                 this.isLoadingCounties = false;
             }
         });
+    }
+
+    private filterCounties(): void {
+        if (!this.counties) {
+            this.filteredCounties.next([]);
+            return;
+        }
+
+        let search = this.countySearchCtrl.value;
+        if (!search) {
+            this.filteredCounties.next(this.counties.slice());
+            return;
+        }
+
+        search = String(search).toLowerCase();
+
+        const filtered = this.counties.filter((county: any) => {
+            const name = (county.portName || county.portname || county.name || '').toLowerCase();
+            return name.includes(search);
+        });
+
+        this.filteredCounties.next(filtered);
     }
 
     private setupDateValidation(): void {
@@ -901,6 +1006,14 @@ export class MarineQuoteComponent implements OnInit, OnDestroy
     }
 
     listenForSumInsuredChanges(): void {
+        this.shipmentForm.get('dateOfDispatch')?.valueChanges.subscribe((dispatchDate: Date) => {
+            if (dispatchDate) {
+                const arrivalDate = new Date(dispatchDate);
+                arrivalDate.setMonth(arrivalDate.getMonth() + 3);
+
+                this.shipmentForm.get('estimatedArrival')?.setValue(arrivalDate);
+            }
+        });
         this.shipmentForm.get('sumInsured')?.valueChanges.pipe(
             debounceTime(300),
             distinctUntilChanged(),
@@ -1071,42 +1184,40 @@ export class MarineQuoteComponent implements OnInit, OnDestroy
             // Check if this file is already uploaded in another field
             const documentFields = ['idfDocument', 'invoice', 'kraPinCertificate', 'nationalId'];
             const fieldNames: { [key: string]: string } = {
-                'idfDocument': 'IDF Document',
-                'invoice': 'Invoice',
-                'kraPinCertificate': 'KRA PIN Certificate',
-                'nationalId': 'National ID'
+                idfDocument: 'IDF Document',
+                invoice: 'Invoice',
+                kraPinCertificate: 'KRA PIN Certificate',
+                nationalId: 'National ID'
             };
 
-            let duplicateFieldName = '';
+            let duplicateFieldName: string | null = null;
             const isDuplicate = documentFields.some((fieldName: string) => {
                 if (fieldName === controlName) return false; // Skip current field
                 const existingFile = this.shipmentForm.get(fieldName)?.value;
                 if (!existingFile) return false;
 
                 // Compare file name, size, and last modified date
-                const isDupe = existingFile.name === file.name &&
+                const isSame = existingFile.name === file.name &&
                     existingFile.size === file.size &&
                     existingFile.lastModified === file.lastModified;
 
-                if (isDupe) {
-                    duplicateFieldName = fieldNames[fieldName];
+                if (isSame) {
+                    duplicateFieldName = fieldNames[fieldName] || fieldName;
                 }
-                return isDupe;
+
+                return isSame;
             });
 
             if (isDuplicate) {
-                // Set shorter, more specific error message
-                this.duplicateFileErrors[controlName] = `The file is already uploaded as "${duplicateFieldName}"`;
-
-                // Clear the input
+                // User message: same file reused across different document cards, show specific card name
+                const nameToShow = duplicateFieldName || 'this document type';
+                this.duplicateFileErrors[controlName] = `This file is already uploaded as ${nameToShow}.`;
                 input.value = '';
-
-                // Clear the form control value
                 this.shipmentForm.get(controlName)?.setValue(null);
                 return;
             }
 
-            // Set the file if no duplicate found
+            // Store the valid, non-duplicate file on the form control
             this.shipmentForm.get(controlName)?.setValue(file);
         }
     }
@@ -1651,13 +1762,28 @@ export class MarineQuoteComponent implements OnInit, OnDestroy
                 this.userDocs = data;
                 this.isLoadingMarineData = false;
                 this.shipmentForm.get('idNumber')?.setValue(data.idNo);
+                if (data.idNo) {
+                    this.shipmentForm.get('idNumber')?.disable();
+                } else {
+                    this.shipmentForm.get('idNumber')?.enable();
+                }
                 this.shipmentForm.get('streetAddress')?.setValue(data.postalAddress);
                 this.shipmentForm.get('postalCode')?.setValue(data.postalCode);
                 this.shipmentForm.get('firstName')?.setValue(data.firstName);
                 this.shipmentForm.get('lastName')?.setValue(data.lastName);
                 this.shipmentForm.get('emailAddress')?.setValue(data.emailAddress);
+                if (data.emailAddress) {
+                    this.shipmentForm.get('emailAddress')?.disable();
+                } else {
+                    this.shipmentForm.get('emailAddress')?.enable();
+                }
                 this.shipmentForm.get('phoneNumber')?.setValue(this.extractPhoneNumber(data.phoneNumber));
                 this.shipmentForm.get('kraPin')?.setValue(data.pinNo);
+                if (data.pinNo) {
+                    this.shipmentForm.get('kraPin')?.disable();
+                } else {
+                    this.shipmentForm.get('kraPin')?.enable();
+                }
                 if (data.idfDocumentExists) {
                     this.shipmentForm.get('nationalId')?.clearValidators();
                     this.shipmentForm.get('nationalId')?.updateValueAndValidity();
@@ -1688,7 +1814,7 @@ export class MarineQuoteComponent implements OnInit, OnDestroy
             case 'pending':
                 return 'bg-yellow-100 text-yellow-700';
             case 'draft':
-                return 'bg-gray-100 text-gray-700';
+                return 'status-draft-pill';
             default:
                 return 'bg-blue-100 text-blue-700';
         }
@@ -1718,6 +1844,16 @@ export class MarineQuoteComponent implements OnInit, OnDestroy
     }
 
     onSubmit(): void {
+        const termsControl = this.quotationForm.get('termsAndPolicyConsent');
+        if (termsControl && !termsControl.value) {
+            termsControl.markAsTouched();
+            this.stepper.selectedIndex = 0;
+            this._snackBar.open('Please agree to the Terms of Use and Privacy Policy before submitting your application', 'Close', {
+                duration: 5000,
+                panelClass: ['error-snackbar']
+            });
+            return;
+        }
         if (this.shipmentForm.invalid) {
             // Mark all fields as touched to show validation errors
             this.shipmentForm.markAllAsTouched();
@@ -1887,6 +2023,11 @@ export class MarineQuoteComponent implements OnInit, OnDestroy
                  this._snackBar.open('STK request failed. Please try again.', 'Close', { duration: 5000 });
              }
          });
+    }
+
+
+    goToDashboard(): void {
+        this.router.navigate(['/dashboard']);
     }
 
 

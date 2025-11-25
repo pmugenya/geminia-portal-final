@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
 import {
     FormsModule,
     NgForm,
@@ -36,7 +36,7 @@ import { CommonModule } from '@angular/common';
         CommonModule
     ],
 })
-export class AuthForgotPasswordComponent implements OnInit {
+export class AuthForgotPasswordComponent implements OnInit, OnDestroy {
     @ViewChild('forgotPasswordNgForm') forgotPasswordNgForm!: NgForm;
     @ViewChild('resetPasswordNgForm') resetPasswordNgForm!: NgForm;
     @ViewChild('tokenPasswordNgForm') tokenPasswordNgForm!: NgForm;
@@ -52,6 +52,9 @@ export class AuthForgotPasswordComponent implements OnInit {
     showResetForm: boolean = true;
     showOtp: boolean = false;
     showFinalReset: boolean = false;
+
+    otpCountdown: number = 0;
+    private otpCountdownInterval: any;
 
     /**
      * Constructor
@@ -94,6 +97,10 @@ export class AuthForgotPasswordComponent implements OnInit {
                 ),
             }
         );
+    }
+
+    ngOnDestroy(): void {
+        this.stopOtpCountdown();
     }
 
     // -----------------------------------------------------------------------------------------------------
@@ -187,6 +194,7 @@ export class AuthForgotPasswordComponent implements OnInit {
                     this.resetPasswordForm.get('userid')?.setValue(response.userId);
                     this.tokenPasswordForm.get('tempToken')?.setValue(response.tempToken);
                     this.resetPasswordForm.get('tempToken')?.setValue(response.tempToken);
+                    this.startOtpCountdown();
                     // Set the alert
                     this.alert = {
                         type: 'success',
@@ -203,6 +211,14 @@ export class AuthForgotPasswordComponent implements OnInit {
                     };
                 }
             );
+    }
+
+    backToEmail(): void {
+        this.showOtp = false;
+        this.showResetForm = true;
+        this.showFinalReset = false;
+        this.stopOtpCountdown();
+        this.tokenPasswordForm.get('otpCode')?.reset();
     }
 
     verifyUser(): void {
@@ -308,6 +324,96 @@ export class AuthForgotPasswordComponent implements OnInit {
                     };
                 }
             );
+    }
+
+    /**
+     * Resend OTP code for forgot password
+     */
+    resendOtp(): void {
+        if (this.otpCountdown > 0) {
+            return;
+        }
+
+        this.tokenPasswordForm.disable();
+        this.showAlert = false;
+
+        const tempToken = this.tokenPasswordForm.get('tempToken')?.value ?? '';
+
+        if (!tempToken) {
+            this.alert = {
+                type: 'error',
+                message: 'Session expired. Please restart the password reset process.',
+            };
+            this.showAlert = true;
+            this.backToEmail();
+            this.tokenPasswordForm.enable();
+            return;
+        }
+
+        this._authService.resendOtp({ tempToken }).subscribe({
+            next: (response) => {
+                if (response?.tempToken) {
+                    this.tokenPasswordForm.get('tempToken')?.setValue(response.tempToken);
+                    this.resetPasswordForm.get('tempToken')?.setValue(response.tempToken);
+                }
+
+                this.startOtpCountdown();
+                this.tokenPasswordForm.enable();
+                this.tokenPasswordForm.get('otpCode')?.setValue('');
+
+                this.alert = {
+                    type: 'success',
+                    message:
+                        response?.message ||
+                        'A new OTP has been sent to your registered contact.',
+                };
+                this.showAlert = true;
+            },
+            error: (error) => {
+                this.tokenPasswordForm.enable();
+                this.alert = {
+                    type: 'error',
+                    message:
+                        error?.error?.message ||
+                        'Failed to resend OTP. Please try again.',
+                };
+                this.showAlert = true;
+            },
+        });
+    }
+
+    /**
+     * Format the countdown timer for display
+     */
+    formatCountdown(seconds: number): string {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    }
+
+    /**
+     * Starts the OTP countdown timer (60 seconds)
+     */
+    startOtpCountdown(): void {
+        this.otpCountdown = 60;
+        this.stopOtpCountdown();
+
+        this.otpCountdownInterval = setInterval(() => {
+            this.otpCountdown--;
+            if (this.otpCountdown <= 0) {
+                this.stopOtpCountdown();
+            }
+        }, 1000);
+    }
+
+    /**
+     * Stops the OTP countdown timer
+     */
+    stopOtpCountdown(): void {
+        if (this.otpCountdownInterval) {
+            clearInterval(this.otpCountdownInterval);
+            this.otpCountdownInterval = null;
+        }
     }
 
 }

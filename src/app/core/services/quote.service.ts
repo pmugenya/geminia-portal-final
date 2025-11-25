@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpEvent, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { QuotesData, RecentActivity } from '../user/user.types';
+import { PostalCode, QuotesData, RecentActivity } from '../user/user.types';
 
 @Injectable({ providedIn: 'root' })
 export class QuoteService {
@@ -19,6 +19,10 @@ export class QuoteService {
 
     getRecentActivities(): Observable<RecentActivity[]> {
         return this.http.get<RecentActivity[]>(`${this.baseUrl}/recentactivity`);
+    }
+
+    getPostalCodes(): Observable<PostalCode[]> {
+        return this.http.get<PostalCode[]>(`${this.baseUrl}/self/countries/postalcodes`);
     }
 
     searchByPin(pin: string): Observable<any> {

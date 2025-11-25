@@ -1,8 +1,16 @@
-<div class="flex flex-col flex-auto w-full p-6 md:p-10">
+<div class="flex flex-col flex-auto w-full p-4 md:p-8">
     <div class="bg-card rounded-xl shadow w-full">
         <!-- Header -->
-        <div class="p-6 border-b">
+        <div class="p-6 border-b flex items-center justify-between">
             <h2 class="text-xl font-semibold">Quick Marine Quote Details</h2>
+
+            <button
+                type="button"
+                (click)="closeQuote.emit()"
+                class="inline-flex items-center gap-2 px-4 py-1 rounded-full border text-sm font-medium bg-white header-close-btn">
+                <span class="text-base font-normal" aria-hidden="true">&times;</span>
+                <span>Close</span>
+            </button>
         </div>
 
         <!-- Stepper -->
@@ -21,76 +29,71 @@
                             {{ submissionError }}
                         </fuse-alert>
 
-                        <h3 class="mb-3 sm:mb-4 text-lg sm:text-xl font-semibold text-gray-800">Importer Information</h3>
-                        <p class="mb-3 sm:mb-4 text-xs sm:text-sm text-gray-500">This is the person or entity purchasing the insurance policy.</p>
-                        <div class="mb-6 rounded-lg border border-gray-200 bg-white p-4">
+                        <h3 class="mb-3 sm:mb-4 text-lg sm:text-xl font-semibold text-gray-800">Shipment Details</h3>
+                        <p class="mb-3 sm:mb-4 text-xs sm:text-sm text-gray-500 font-medium" *ngIf="false">This is the person or entity purchasing the insurance policy.</p>
+                        <div class="mb-6 rounded-lg border border-gray-200 bg-white p-4" *ngIf="false">
                             <div class="grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2">
-                                <div><label class="mb-2 block text-base font-medium text-gray-700">First Name <span class="text-red-500">*</span></label><input type="text" formControlName="firstName" class="w-full rounded-md border bg-white px-3 py-2 text-base text-gray-900" (input)="onFirstNameInput($event)" [ngClass]="(quotationForm.get('firstName')?.invalid && quotationForm.get('firstName')?.touched) || !quotationForm.get('firstName')?.value ? 'border-red-500 focus:ring-2 focus:ring-red-500' : 'border-gray-300 focus:ring-2 focus:ring-blue-500'"/></div>
-                                <div><label class="mb-2 block text-base font-medium text-gray-700">Last Name <span class="text-red-500">*</span></label><input type="text" formControlName="lastName" class="w-full rounded-md border bg-white px-3 py-2 text-base text-gray-900" (input)="onLastNameInput($event)" [ngClass]="(quotationForm.get('lastName')?.invalid && quotationForm.get('lastName')?.touched) || !quotationForm.get('lastName')?.value ? 'border-red-500 focus:ring-2 focus:ring-red-500' : 'border-gray-300 focus:ring-2 focus:ring-blue-500'"/></div>
-                                <div><label class="mb-2 block text-base font-medium text-gray-700">Email Address <span class="text-red-500">*</span></label><input type="email" formControlName="email" class="w-full rounded-md border bg-white px-3 py-2 text-base text-gray-900" (keydown)="preventSpaceInEmail($event)" (input)="onEmailInput($event)" autocapitalize="off" autocomplete="email" autocorrect="off" spellcheck="false" inputmode="email" [ngClass]="(quotationForm.get('email')?.invalid && quotationForm.get('email')?.touched) || !quotationForm.get('email')?.value ? 'border-red-500 focus:ring-2 focus:ring-red-500' : 'border-gray-300 focus:ring-2 focus:ring-blue-500'"/></div>
-                                <div><label class="mb-2 block text-base font-medium text-gray-700">Phone Number <span class="text-red-500">*</span></label><input type="tel" formControlName="phoneNumber" class="w-full rounded-md border bg-white px-3 py-2 text-base text-gray-900" (input)="onPhoneNumberInput($event)" [ngClass]="(quotationForm.get('phoneNumber')?.invalid && quotationForm.get('phoneNumber')?.touched) || !quotationForm.get('phoneNumber')?.value ? 'border-red-500 focus:ring-2 focus:ring-red-500' : 'border-gray-300 focus:ring-2 focus:ring-blue-500'"/></div>
+                                <div *ngIf="false"><label class="mb-2 block text-base font-medium text-gray-700">First Name <span class="text-red-500">*</span></label><input type="text" formControlName="firstName" class="w-full rounded-md border bg-white px-3 py-2 text-base text-gray-900" (input)="onFirstNameInput($event)" [ngClass]="(quotationForm.get('firstName')?.invalid && quotationForm.get('firstName')?.touched) || !quotationForm.get('firstName')?.value ? 'border-red-500 focus:ring-2 focus:ring-red-500' : 'border-gray-300 focus:ring-2 focus:ring-blue-500'"/></div>
+                                <div *ngIf="false"><label class="mb-2 block text-base font-medium text-gray-700">Last Name <span class="text-red-500">*</span></label><input type="text" formControlName="lastName" class="w-full rounded-md border bg-white px-3 py-2 text-base text-gray-900" (input)="onLastNameInput($event)" [ngClass]="(quotationForm.get('lastName')?.invalid && quotationForm.get('lastName')?.touched) || !quotationForm.get('lastName')?.value ? 'border-red-500 focus:ring-2 focus:ring-red-500' : 'border-gray-300 focus:ring-2 focus:ring-blue-500'"/></div>
+                                <div *ngIf="false"><label class="mb-2 block text-base font-medium text-gray-700">Email Address <span class="text-red-500">*</span></label><input type="email" formControlName="email" class="w-full rounded-md border bg-white px-3 py-2 text-base text-gray-900" (keydown)="preventSpaceInEmail($event)" (input)="onEmailInput($event)" autocapitalize="off" autocomplete="email" autocorrect="off" spellcheck="false" inputmode="email" [ngClass]="(quotationForm.get('email')?.invalid && quotationForm.get('email')?.touched) || !quotationForm.get('email')?.value ? 'border-red-500 focus:ring-2 focus:ring-red-500' : 'border-gray-300 focus:ring-2 focus:ring-blue-500'"/></div>
+                                <div *ngIf="false"><label class="mb-2 block text-base font-medium text-gray-700">Phone Number <span class="text-red-500">*</span></label><input type="tel" formControlName="phoneNumber" class="w-full rounded-md border bg-white px-3 py-2 text-base text-gray-900" (input)="onPhoneNumberInput($event)" [ngClass]="(quotationForm.get('phoneNumber')?.invalid && quotationForm.get('phoneNumber')?.touched) || !quotationForm.get('phoneNumber')?.value ? 'border-red-500 focus:ring-2 focus:ring-red-500' : 'border-gray-300 focus:ring-2 focus:ring-blue-500'"/></div>
 
                             </div>
                         </div>
 
-                        <div class="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
-                            <!-- Mode of Shipment -->
-                            <div>
-                                <label class="block text-sm font-medium mb-2">
+                        <div class="mb-6 rounded-lg border border-gray-200 bg-white p-4">
+                            <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+                                <!-- Mode of Shipment -->
+                                <div>
+                                <label class="block text-base font-medium text-gray-700 mb-2">
                                     Mode of Shipment <span class="text-red-500">*</span>
                                 </label>
                                 <mat-form-field appearance="outline" class="w-full mat-small">
-                                    <mat-select formControlName="modeOfShipment">
-                                        <mat-option value="" disabled>Select mode</mat-option>
+                                    <mat-select formControlName="modeOfShipment" placeholder="Mode of Shipment *">
+                                        <mat-option value="" disabled>Mode of Shipment *</mat-option>
                                         <mat-option value="1">Sea</mat-option>
                                         <mat-option value="2">Air</mat-option>
                                     </mat-select>
-                                    <mat-error *ngIf="quotationForm.get('modeOfShipment')?.invalid && quotationForm.get('modeOfShipment')?.touched">
-                                        Please select a mode of shipment
-                                    </mat-error>
                                 </mat-form-field>
                             </div>
 
-                            <!-- Trade Type -->
-                            <div>
-                                <label class="block text-sm font-medium mb-2">
+                                <!-- Trade Type -->
+                                <div>
+                                <label class="block text-base font-medium text-gray-700 mb-2">
                                     Trade Type <span class="text-red-500">*</span>
                                 </label>
                                 <mat-form-field appearance="outline" class="w-full mat-small">
-                                    <mat-select formControlName="tradeType">
-                                        <mat-option value="" disabled>Select trade type</mat-option>
+                                    <mat-select formControlName="tradeType" placeholder="Trade Type *">
+                                        <mat-option value="" disabled>Trade Type *</mat-option>
                                         <mat-option value="1">Import</mat-option>
                                         <mat-option value="2">Export</mat-option>
                                     </mat-select>
-                                    <mat-error *ngIf="quotationForm.get('tradeType')?.invalid && quotationForm.get('tradeType')?.touched">
-                                        Please select a trade type
-                                    </mat-error>
                                 </mat-form-field>
+                                </div>
                             </div>
-                        </div>
 
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <!-- Cargo Protection -->
-                            <div>
-                                <label class="block text-sm font-medium mb-2">Cargo Protection</label>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                                <!-- Cargo Protection -->
+                                <div>
+                                <label class="block text-base font-medium text-gray-700 mb-2">Cargo Protection</label>
                                 <input
                                     type="text"
                                     formControlName="marineProduct"
-                                    class="w-full rounded-md border border-gray-300 bg-gray-100 px-3 py-2 font-bold text-gray-900"
+                                    class="w-full rounded-md border border-gray-300 bg-gray-100 px-3 py-2 text-gray-900 h-12"
                                     readonly
                                 />
                             </div>
 
-                            <!-- Marine Packaging Type -->
-                            <div>
-                                <label class="block text-sm font-medium mb-2">
+                                <!-- Marine Packaging Type -->
+                                <div>
+                                <label class="block text-base font-medium text-gray-700 mb-2">
                                     Marine Packaging Type <span class="text-red-500">*</span>
                                 </label>
 
                                 <mat-radio-group
                                     formControlName="marinePackagingType"
-                                    class="flex gap-4 items-center h-10 px-3 rounded-md border text-gray-700"
+                                    class="flex flex-col sm:flex-row gap-1 sm:gap-2 items-start sm:items-center px-3 py-0.5 rounded-md border text-gray-700"
                                     [ngClass]="quotationForm.get('marinePackagingType')?.invalid && quotationForm.get('marinePackagingType')?.touched
           ? 'border-red-500 bg-red-50'
           : 'border-gray-300 bg-white'
@@ -98,50 +101,38 @@
                                 >
                                     <mat-radio-button
                                         value="1"
-                                        class="m-0 h-full flex items-center text-sm"
-                                        style="padding: 0 0.5rem;"
+                                        class="m-0 flex items-center text-sm"
+                                        style="padding: 0 0.25rem;"
                                     >
                                         Containerized
                                     </mat-radio-button>
 
                                     <mat-radio-button
                                         value="2"
-                                        class="m-0 h-full flex items-center text-sm"
-                                        style="padding: 0 0.5rem;"
+                                        class="m-0 flex items-center text-sm"
+                                        style="padding: 0 0.25rem;"
                                     >
                                         Non-Containerized
                                     </mat-radio-button>
                                 </mat-radio-group>
 
-                                <p
-                                    *ngIf="quotationForm.get('marinePackagingType')?.invalid && quotationForm.get('marinePackagingType')?.touched"
-                                    class="mt-2 text-xs sm:text-sm text-red-600 flex items-center"
-                                >
-                                    <svg
-                                        class="w-4 h-4 mr-1 flex-shrink-0"
-                                        fill="currentColor"
-                                        viewBox="0 0 20 20"
-                                    >
-                                        <path
-                                            fill-rule="evenodd"
-                                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                                            clip-rule="evenodd"
-                                        />
-                                    </svg>
-                                    Please select a packaging type
-                                </p>
+                                
+                                </div>
                             </div>
-                        </div>
 
 
 
 
-                        <div class="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
-                            <!-- Select Category -->
-                            <div>
-                                <label class="block text-sm font-medium mb-2">Select Category <span class="text-red-500">*</span></label>
-                                <mat-form-field appearance="outline" class="w-full category-select mat-small">
-                                    <mat-select formControlName="marineCategory" (selectionChange)="onCategorySelected($event.value)" #categorySelect>
+                            <div class="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
+                                <!-- Select Category -->
+                                <div>
+                                <label class="block text-base font-medium text-gray-700 mb-2">Select Category <span class="text-red-500">*</span></label>
+                                <mat-form-field
+                                    appearance="outline"
+                                    class="w-full category-select mat-small"
+                                    [ngClass]="quotationForm.get('marineCategory')?.invalid && quotationForm.get('marineCategory')?.touched ? 'mat-select-invalid' : ''"
+                                >
+                                    <mat-select formControlName="marineCategory" placeholder="Select Category *" (selectionChange)="onCategorySelected($event.value)" #categorySelect>
                                         <mat-option>
                                             <ngx-mat-select-search [formControl]="categoryFilterCtrl" placeholderLabel="Search categories..."></ngx-mat-select-search>
                                         </mat-option>
@@ -152,11 +143,11 @@
                                 </mat-form-field>
                             </div>
 
-                            <!-- Marine Cargo Type -->
-                            <div>
-                                <label class="block text-sm font-medium mb-2">Marine Cargo Type <span class="text-red-500">*</span></label>
+                                <!-- Marine Cargo Type -->
+                                <div>
+                                <label class="block text-base font-medium text-gray-700 mb-2">Marine Cargo Type <span class="text-red-500">*</span></label>
                                 <mat-form-field appearance="outline" class="w-full cargo-type-select mat-small">
-                                    <mat-select formControlName="marineCargoType" (selectionChange)="onCategoryTypeSelected($event.value)"
+                                    <mat-select formControlName="marineCargoType" placeholder="Marine Cargo Type *" (selectionChange)="onCategoryTypeSelected($event.value)"
                                                 #cargoTypeSelect [disabled]="isLoadingCargoTypes">
                                         <mat-option>
                                             <ngx-mat-select-search [formControl]="cargoTypeFilterCtrl" placeholderLabel="Search cargo types..."></ngx-mat-select-search>
@@ -166,14 +157,14 @@
                                         </mat-option>
                                     </mat-select>
                                 </mat-form-field>
+                                </div>
                             </div>
-                        </div>
 
 
-                        <div class="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
-                            <!-- Updated Country of Origin with Searchable Dropdown -->
-                            <div>
-                                <label class="mb-2 block text-sm font-medium text-gray-700">Country of Origin <span class="text-red-500">*</span></label>
+                            <div class="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
+                                <!-- Updated Country of Origin with Searchable Dropdown -->
+                                <div>
+                                <label class="mb-2 block text-base font-medium text-gray-700">Country of Origin <span class="text-red-500">*</span></label>
                                 <mat-form-field appearance="outline" class="w-full country-select">
                                     <mat-select formControlName="origin" #countrySelect2
                                                 (openedChange)="onSelectOpen($event)"
@@ -205,23 +196,67 @@
                             </div>
 
                             <div>
-                                <label class="mb-2 block text-sm font-medium text-gray-700">Destination</label>
-                                <input type="text" formControlName="destination" class="w-full rounded-md border-gray-300 bg-gray-100 px-3 py-2 text-gray-900 h-12" readonly/>
+                                <label class="mb-2 block text-base font-medium text-gray-700">Destination</label>
+                                <input type="text" formControlName="destination" class="w-full rounded-md border-gray-300 bg-gray-100 px-3 py-2 text-gray-900 h-14" readonly/>
+                                </div>
+                            </div>
+
+                            <div class="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
+                                <div>
+                                    <label class="mb-2 block text-base font-medium text-gray-700">Email Address <span class="text-red-500">*</span></label>
+                                    <input
+                                        type="email"
+                                        formControlName="email"
+                                        class="w-full rounded-md border bg-white px-3 py-2 text-base text-gray-900 h-12 email-input"
+                                        (keydown)="preventSpaceInEmail($event)"
+                                        (input)="onEmailInput($event)"
+                                        autocapitalize="off"
+                                        autocomplete="email"
+                                        autocorrect="off"
+                                        spellcheck="false"
+                                        inputmode="email"
+                                        [ngClass]="(quotationForm.get('email')?.invalid && quotationForm.get('email')?.touched) || !quotationForm.get('email')?.value ? 'border-red-500' : 'border-gray-300'"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="mb-2 block text-base font-medium text-gray-700">Sum Insured (KES) <span class="text-red-500">*</span></label>
+    <!--                            <input type="text" formControlName="sumInsured" appThousands placeholder="2,500,000" inputmode="numeric" class="w-full rounded-md border bg-white px-3 py-2 text-base" [ngClass]="(quotationForm.get('sumInsured')?.invalid && quotationForm.get('sumInsured')?.touched) || !quotationForm.get('sumInsured')?.value ? 'border-red-500 focus:ring-2 focus:ring-red-500' : 'border-gray-300 focus:ring-2 focus:ring-blue-500'"/>-->
+                                    <input
+                                        type="text"
+                                        formControlName="sumInsured"
+                                        placeholder="00.00"
+                                        appThousands
+                                        class="w-full rounded-md border bg-white px-3 py-2 text-base text-gray-900 sum-insured-input h-12"
+                                        [ngClass]="(quotationForm.get('sumInsured')?.invalid && quotationForm.get('sumInsured')?.touched) || !quotationForm.get('sumInsured')?.value ? 'border-red-500' : 'border-gray-300'"
+                                    />
+                                </div>
                             </div>
                         </div>
 
-                        <div class="mb-6">
-                            <label class="mb-2 block text-sm font-medium text-gray-700">Sum Insured (KES) <span class="text-red-500">*</span></label>
-<!--                            <input type="text" formControlName="sumInsured" appThousands placeholder="2,500,000" inputmode="numeric" class="w-full rounded-md border bg-white px-3 py-2 text-base" [ngClass]="(quotationForm.get('sumInsured')?.invalid && quotationForm.get('sumInsured')?.touched) || !quotationForm.get('sumInsured')?.value ? 'border-red-500 focus:ring-2 focus:ring-red-500' : 'border-gray-300 focus:ring-2 focus:ring-blue-500'"/>-->
-                            <input type="text" formControlName="sumInsured" placeholder="2,500,000" appThousands class="w-full rounded-md border-gray-300 bg-gray-100 px-3 py-2 text-gray-900 h-12" [ngClass]="(quotationForm.get('sumInsured')?.invalid && quotationForm.get('sumInsured')?.touched) || !quotationForm.get('sumInsured')?.value ? 'border-red-500 focus:ring-2 focus:ring-red-500' : 'border-gray-300 focus:ring-2 focus:ring-blue-500'"/>
-                        </div>
-
                         <!-- Terms and Policy Consent -->
-                        <div class="mt-6 space-y-2">
-                            <label class="flex items-start"><input type="checkbox" formControlName="termsAndPolicyConsent" class="mt-1 h-4 w-4 rounded border-gray-300 text-primary focus-ring-primary"/><span class="ml-3 text-sm text-gray-700">I agree to the <a (click)="openTermsModal($event)" class="cursor-pointer font-medium text-primary hover:underline">Terms of Use</a> and to the <a (click)="openPrivacyModal($event)" class="cursor-pointer font-medium text-primary hover:underline">Data Privacy Policy</a>.*</span></label>
+                        <div class="mt-1 space-y-2"
+                             [ngClass]="quotationForm.get('termsAndPolicyConsent')?.invalid && quotationForm.get('termsAndPolicyConsent')?.touched ? 'border border-red-500 bg-red-50 rounded-md p-3' : ''">
+                            <label class="flex items-start">
+                                <input
+                                    type="checkbox"
+                                    formControlName="termsAndPolicyConsent"
+                                    class="mt-1 h-4 w-4 rounded border-gray-300 text-primary focus-ring-primary"/>
+                                <span class="ml-3 text-sm text-gray-700">
+                                    I agree to the
+                                    <a (click)="openTermsModal($event)" class="cursor-pointer font-medium text-primary hover:underline">Terms of Use</a>
+                                    and to the
+                                    <a (click)="openPrivacyModal($event)" class="cursor-pointer font-medium text-primary hover:underline">Data Privacy Policy</a>.*
+                                </span>
+                            </label>
+                            <p
+                                *ngIf="quotationForm.get('termsAndPolicyConsent')?.invalid && quotationForm.get('termsAndPolicyConsent')?.touched"
+                                class="text-xs text-red-600 mt-1">
+                                You must agree to the Terms of Use and Data Privacy Policy to continue.
+                            </p>
                         </div>
 
-                        <div class="flex justify-end mt-6">
+                        <div class="flex justify-end mt-1">
                             <button
                                 mat-flat-button
                                 color="primary"
@@ -262,7 +297,7 @@
 
                                 <div class="text-base font-semibold text-gray-700 tracking-tight">
                                     Reference:
-                                    <span class="font-bold text-gray-900">{{ quote?.refno }}</span>
+                                    <span class="reference-pill">{{ quote?.refno }}</span>
                                 </div>
                             </div>
 
@@ -274,6 +309,13 @@
                                     (click)="downloadQuote()">
                                     <mat-icon svgIcon="heroicons_outline:arrow-down-tray" class="mr-2"></mat-icon>
                                     Download Quote
+                                </button>
+                                <button
+                                    type="button"
+                                    (click)="closeQuote.emit()"
+                                    class="inline-flex items-center gap-2 px-4 py-1 rounded-full border text-sm font-medium bg-white header-close-btn">
+                                    <span class="text-base font-normal" aria-hidden="true">&times;</span>
+                                    <span>Close</span>
                                 </button>
                             </div>
                         </div>
@@ -400,9 +442,11 @@
                                 </div>
 
                                 <div>
-                                    <label class="text-sm font-semibold text-gray-700">Net Premium</label>
-                                    <div class="text-xl !font-extrabold text-green-700">
-                                        {{ quote?.netprem | currency:'KES ' }}
+                                    <div class="flex items-center text-sm font-semibold text-gray-700">
+                                        <span>Net Premium</span>
+                                        <span class="net-premium-amount">
+                                            {{ quote?.netprem | currency:'KES ' }}
+                                        </span>
                                     </div>
                                 </div>
 
@@ -410,7 +454,7 @@
                         </div>
 
                         <!-- Description -->
-                        <div class="bg-white rounded-xl shadow p-6 mt-8 border border-gray-200">
+                        <div class="bg-white rounded-xl shadow p-6 mt-8 border border-gray-200" *ngIf="false">
                             <h3 class="text-lg !font-bold text-gray-900 mb-3">Description</h3>
 
                             <p class="text-gray-700 text-base leading-relaxed font-medium">
@@ -432,7 +476,7 @@
                                 mat-flat-button
                                 color="primary"
                                 (click)="buyNow()"
-                                class="w-full sm:w-auto px-6 py-2 rounded-lg shadow-md text-white !font-bold bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-all">
+                                class="w-full sm:w-auto px-6 py-2 rounded-lg shadow-md text-white !font-bold buy-now-btn transition-all">
                                 Buy Now
                             </button>
 

@@ -1,11 +1,11 @@
 .download-btn {
-    background: linear-gradient(135deg, #1e40af, #3b82f6);
-    color: #fff;
+    background-color: #21275c;
+    color: #ffffff;
     font-weight: 500;
     text-transform: none;
-    border-radius: 0.5rem;
-    padding: 0.45rem 1rem;   /* smaller height */
-    font-size: 0.9rem;
+    border-radius: 9999px;
+    padding: 0.35rem 1.1rem;   /* smaller height */
+    font-size: 0.85rem;
     line-height: 1.2;
     box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
     transition: all 0.2s ease-in-out;
@@ -17,30 +17,196 @@
     }
 
     &:hover {
-        background: linear-gradient(135deg, #2563eb, #60a5fa);
-        box-shadow: 0 3px 10px rgba(59, 130, 246, 0.4);
+        background-color: #04b2e1;
+        box-shadow: 0 3px 10px rgba(4, 178, 225, 0.4);
         transform: translateY(-1px);
     }
 
     &:active {
         transform: translateY(0);
-        box-shadow: 0 1px 4px rgba(59, 130, 246, 0.25);
+        box-shadow: 0 1px 4px rgba(4, 178, 225, 0.25);
     }
+}
+
+/* Share Quote trigger button */
+.share-trigger-btn {
+    border-color: #e5e7eb;
+    color: #374151;
+}
+
+.share-trigger-btn:hover {
+    border-color: #d1d5db;
+}
+
+/* Share Payment Details modal */
+.share-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+}
+
+.share-modal {
+    background: #ffffff;
+    border-radius: 1rem;
+    padding: 1.5rem 1.75rem;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 20px 45px rgba(15, 23, 42, 0.25);
+}
+
+.share-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+}
+
+.share-modal-header h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0;
+}
+
+.share-modal-subtitle {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-bottom: 1rem;
+}
+
+.close-btn {
+    border: none;
+    background: transparent;
+    padding: 0.15rem;
+    border-radius: 9999px;
+    cursor: pointer;
+    color: #6b7280;
+}
+
+.close-btn:hover {
+    background-color: #f3f4f6;
+}
+
+.share-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.share-option {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 0.9rem;
+    border-radius: 0.75rem;
+    border: 1px solid #e5e7eb;
+    background-color: #ffffff;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #111827;
+}
+
+.share-option:hover {
+    background-color: #04b2e1;
+    border-color: #04b2e1;
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.icon-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #eef2ff;
+    border: none;
+    color: #111827;
+}
+
+.whatsapp-icon {
+    background-color: transparent;
+    border-radius: 9999px;
+    border: 1px solid #21275c;
+    color: #21275c;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.share-option:hover .whatsapp-icon {
+    border-color: #ffffff;
+    color: #ffffff;
+}
+
+.share-icon-img {
+    width: 18px;
+    height: 18px;
 }
 
 
 .buy-btn {
-    background: linear-gradient(135deg, #059669, #10b981);
-    color: #fff;
+    background-color: #04b2e1;
+    color: #ffffff;
     font-weight: 500;
     border-radius: 0.5rem;
-    padding: 0.45rem 1rem;
-    font-size: 0.9rem;
+    padding: 0.55rem 1.5rem;
+    font-size: 0.95rem;
     box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
     transition: all 0.2s ease-in-out;
 
     &:hover {
-        background: linear-gradient(135deg, #10b981, #34d399);
-        box-shadow: 0 3px 10px rgba(16, 185, 129, 0.4);
+        background-color: #21275c;
+        box-shadow: 0 3px 10px rgba(33, 39, 92, 0.4);
+    }
+}
+
+/* Net Premium pill styling */
+.net-premium-pill {
+    background-color: #21275c;
+    color: #ffffff;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    display: inline-block;
+    margin-left: 0.5rem;
+    font-weight: 600;
+}
+
+/* Reference pill styling */
+.reference-pill {
+    background-color: #21275c;
+    color: #ffffff;
+    padding: 0.15rem 0.75rem;
+    border-radius: 9999px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    margin-left: 0.25rem;
+}
+
+/* Draft status pill styling */
+.status-draft-pill {
+    background-color: #21275c;
+    color: #ffffff !important;
+    border-radius: 9999px;
+}
+
+/* Header close button styling */
+.header-close-btn {
+    border-color: #04b2e1;
+    color: #04b2e1;
+
+    &:hover,
+    &:focus,
+    &:focus-visible {
+        border-color: #21275c;
+        color: #21275c;
+        outline: none;
+        box-shadow: 0 0 0 1px rgba(33, 39, 92, 0.3);
     }
 }

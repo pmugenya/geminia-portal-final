@@ -92,11 +92,13 @@ export class AuthService {
             timestamp: new Date().toISOString()
         });
 
-        // Regular user authentication via API
-        console.log('📡 Calling API endpoint:', `${this.baseUrl}/login`);
         return this._httpClient.post(`${this.baseUrl}/login`, credentials).pipe(
-            tap(response => {
-
+            tap((response: any) => {
+                // Store the temp token if it exists in the response
+                if (response && response.tempToken) {
+                    this.tempToken = response.tempToken;
+                }
+                return response;
             }),
             catchError(error => {
                 return throwError(() => error);
@@ -112,6 +114,26 @@ export class AuthService {
             map((response) => {
                 this.createdUser.next(response);
                 return response;  // return so subscriber gets it
+            })
+        );
+    }
+
+    /**
+     * Resend OTP to the user
+     * @param payload Object containing tempToken
+     */
+    resendOtp(payload: { tempToken: string }): Observable<any> {
+        const resendOtpUrl = `${this.baseUrl}/login/resend-otp`;
+        
+        return this._httpClient.post(resendOtpUrl, payload).pipe(
+            tap((response: any) => {
+                // Update temp token if a new one is provided in the response
+                if (response.tempToken) {
+                    this.tempToken = response.tempToken;
+                }
+            }),
+            catchError((error) => {
+                return throwError(() => new Error(error?.error?.message || 'Failed to resend OTP. Please try again.'));
             })
         );
     }

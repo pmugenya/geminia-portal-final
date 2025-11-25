@@ -119,42 +119,35 @@ export class AuthSignInComponent implements OnInit,OnDestroy {
         this.showAlert = false;
 
         // Sign in
-        this._authService.signIn(this.signInForm.value).subscribe(
-            (res) => {
-                // Set the redirect url.
-                // The '/signed-in-redirect' is a dummy url to catch the request and redirect the user
-                // to the correct page after a successful sign in. This way, that url can be set via
-                // routing file and we don't have to touch here.
+        this._authService.signIn(this.signInForm.value).subscribe({
+            next: (res) => {
+                // If we get a temp token, switch to OTP verification
                 if (res.tempToken) {
-                    this._authService.tempToken = res.tempToken;
                     this.loginState = 'otp';
                     this.startOtpCountdown();
-
                 } else {
-                    this.alert = { type: 'error', message: 'Login failed: Invalid response.' };
+                    this.alert = { 
+                        type: 'error', 
+                        message: res.message || 'Login failed: Invalid response.' 
+                    };
                     this.showAlert = true;
                 }
                 this.signInForm.enable();
-                // Reset the form
-                this.signInNgForm.resetForm();
             },
-            (response) => {
+            error: (error) => {
                 // Re-enable the form
                 this.signInForm.enable();
-
-                // Reset the form
-                this.signInNgForm.resetForm();
 
                 // Set the alert
                 this.alert = {
                     type: 'error',
-                    message: 'Wrong email or password',
+                    message: error?.error?.message || 'Invalid username or password. Please try again.',
                 };
 
                 // Show the alert
                 this.showAlert = true;
             }
-        );
+        });
     }
 
     ngOnDestroy(): void {
@@ -169,11 +162,89 @@ export class AuthSignInComponent implements OnInit,OnDestroy {
     }
 
 
+    /**
+     * Resend OTP code
+     */
+    resendOtp(): void {
+        if (this.otpCountdown > 0) return;
+        
+        this.signInForm.disable();
+        this.showAlert = false;
+        
+        // Get the current temp token
+        const tempToken = this._authService.tempToken;
+        
+        if (!tempToken) {
+            this.alert = { 
+                type: 'error', 
+                message: 'Session expired. Please sign in again.' 
+            };
+            this.showAlert = true;
+            this.loginState = 'credentials';
+            this.signInForm.enable();
+            return;
+        }
+        
+        // Call the API to resend OTP
+        this._authService.resendOtp({ tempToken }).subscribe({
+            next: (response) => {
+                // Update temp token if a new one is provided
+                if (response?.tempToken) {
+                    this._authService.tempToken = response.tempToken;
+                }
+                
+                // Restart the countdown
+                this.startOtpCountdown();
+                this.signInForm.enable();
+                this.signInForm.get('otp')?.setValue('');
+                
+                // Show success message
+                this.alert = { 
+                    type: 'success', 
+                    message: response?.message || 'A new OTP has been sent to your registered contact.' 
+                };
+                this.showAlert = true;
+            },
+            error: (error) => {
+                this.signInForm.enable();
+                this.alert = { 
+                    type: 'error', 
+                    message: error?.error?.message || 'Failed to resend OTP. Please try again.' 
+                };
+                this.showAlert = true;
+                
+                // If the error is due to an invalid/expired token, go back to credentials
+                if (error?.status === 401 || error?.status === 403) {
+                    this.loginState = 'credentials';
+                    this._authService.clearTempToken();
+                }
+            }
+        });
+    }
+
+    /**
+     * Format the countdown timer for display
+     */
+    formatCountdown(seconds: number): string {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    }
+
     verifyOtp(): void {
         if (!this._authService.tempToken) { this.backToCredentials(); return; }
         this.signInForm.disable();
         this.showAlert = false;
         const { otp } = this.signInForm.value;
+        
+        // Validate OTP format (6-8 digits)
+        if (!/^\d{6,8}$/.test(otp)) {
+            this.alert = { type: 'error', message: 'Please enter a valid 6-8 digit OTP code.' };
+            this.showAlert = true;
+            this.signInForm.enable();
+            return;
+        }
+        
         this._authService.verifyOtp({ tempToken: this._authService.tempToken, otp }).pipe(
             finalize(() => this.signInForm.enable())
         ).subscribe({
@@ -208,13 +279,15 @@ export class AuthSignInComponent implements OnInit,OnDestroy {
      * Starts the OTP countdown timer (60 seconds)
      */
     startOtpCountdown(): void {
-        this.otpCountdown = 60; // Industry standard: 60 seconds
+        this.otpCountdown = 60; // 60 seconds countdown
         this.stopOtpCountdown(); // Clear any existing interval
 
         this.otpCountdownInterval = setInterval(() => {
             this.otpCountdown--;
             if (this.otpCountdown <= 0) {
                 this.stopOtpCountdown();
+                // When countdown ends, ensure the form is updated
+                this.signInForm.get('otp')?.enable();
             }
         }, 1000);
     }

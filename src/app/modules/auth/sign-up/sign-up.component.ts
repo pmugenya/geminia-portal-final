@@ -95,9 +95,9 @@ export class AuthSignUpComponent implements OnInit,AfterViewInit  {
         // Create the form
         this.registerForm = this.fb.group({
             accountType: ['', Validators.required],
-            fullName: ['', [Validators.required, this.fullNameValidator]],
+            fullName: ['', [this.fullNameValidator]],
             email: ['', [Validators.required, Validators.email]],
-            kraPin: ['', [Validators.required, this.kraPinValidator]],
+            kraPin: ['', [this.kraPinValidator]],
             phoneNumber: ['', [Validators.required, this.phoneNumberValidator]],
             iraNumber: [''],
             pinNumber: [''],
@@ -129,21 +129,20 @@ export class AuthSignUpComponent implements OnInit,AfterViewInit  {
         const pinNumber = this.registerForm.get('pinNumber')!;
 
         if (accountType === 'C') { // Individual
-            fullName.setValidators([Validators.required, this.fullNameValidator]);
+            // Only email and phone are required for Individual
+            fullName.clearValidators();
+            kraPin.clearValidators();
             email.setValidators([Validators.required, Validators.email]);
-            kraPin.setValidators([Validators.required, this.kraPinValidator]);
             phoneNumber.setValidators([Validators.required, this.phoneNumberValidator]);
 
             iraNumber.clearValidators();
             pinNumber.clearValidators();
         } else if (accountType === 'A') { // Intermediary
-            iraNumber.setValidators([Validators.required]);
-            kraPin.setValidators([Validators.required, this.kraPinValidator]);
-            // pinNumber.setValidators([Validators.required]);
-
+            // Only IRA number is required for Intermediary; email is optional and hidden in this section
             fullName.clearValidators();
-            email.clearValidators();
             kraPin.clearValidators();
+            email.clearValidators();
+            iraNumber.setValidators([Validators.required]);
             phoneNumber.clearValidators();
             pinNumber.clearValidators();
         }
@@ -165,7 +164,14 @@ export class AuthSignUpComponent implements OnInit,AfterViewInit  {
 
 
     register(): void {
-        if (this.registerForm.invalid || this.registerForm.disabled) return;
+        if (this.registerForm.disabled) {
+            return;
+        }
+
+        if (this.registerForm.invalid) {
+            this.registerForm.markAllAsTouched();
+            return;
+        }
         this.loading = true;
         this.registerForm.disable();
         const formValue = this.registerForm.getRawValue();

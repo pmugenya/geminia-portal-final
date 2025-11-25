@@ -11,15 +11,77 @@
     }
 }
 
+// Quote Details Buy Now button styling
+.buy-now-btn {
+    background-color: #04b2e1;
+    color: #ffffff;
+    padding: 0.55rem 1.5rem;
+    font-size: 0.95rem;
+    border-radius: 0.5rem;
+
+    &:hover {
+        background-color: #21275c;
+    }
+
+    &:focus,
+    &:focus-visible {
+        outline: none;
+        box-shadow: 0 0 0 2px #21275c;
+    }
+}
+
+// Unified focus color for standard inputs and native selects/textareas in this form
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="number"],
+input[type="password"],
+select,
+textarea {
+    &:focus {
+        outline: none;
+        border-color: #04b2e1;
+        box-shadow: none;
+    }
+}
+
+// Alternate focus colour for key personal/shipping fields
+.special-focus-field {
+    &:focus {
+        border-color: #04b2e1 !important;
+        box-shadow: 0 0 0 1px rgba(4, 178, 225, 0.45) !important;
+        outline: none;
+    }
+}
+
+// Description of Goods uses primary focus colour
+.goods-description-field {
+    &:focus {
+        border-color: #04b2e1 !important;
+        box-shadow: 0 0 0 1px rgba(4, 178, 225, 0.45) !important;
+        outline: none;
+    }
+}
+
+// Explicit focus colour for key inputs
+.email-input,
+.sum-insured-input,
+.mpesa-input {
+    &:focus {
+        border-color: #04b2e1 !important;
+        box-shadow: 0 0 0 1px rgba(4, 178, 225, 0.45) !important;
+    }
+}
+
 .mat-select-invalid {
     .mat-mdc-select-trigger {
         border-color: #ef4444 !important;
     }
 }
 
-// Make all mat-selects the same height
+// Make most mat-selects the same height and unify focus colour
 ::ng-deep .mat-mdc-form-field {
-    &.mat-small, &.country-select, &.category-select, &.cargo-type-select {
+    &.mat-small, &.category-select, &.cargo-type-select {
         .mat-mdc-text-field-wrapper {
             padding-bottom: 0;
         }
@@ -39,23 +101,122 @@
             padding-bottom: 0 !important;
         }
     }
+
+    // Unified focus colour for mat-form-field (inputs and mat-selects)
+    &.mat-focused {
+        .mat-mdc-text-field-wrapper {
+            border-color: #04b2e1 !important;
+            box-shadow: 0 0 0 2px rgba(4, 178, 225, 0.65);
+        }
+
+        .mdc-notched-outline__leading,
+        .mdc-notched-outline__notch,
+        .mdc-notched-outline__trailing {
+            border-color: #04b2e1 !important;
+        }
+    }
+
+    // Shipping dropdown hover styling (Country of Origin, Loading Port, Port of Discharge, Final Destination)
+    &.shipping-select {
+        .mat-mdc-text-field-wrapper:hover {
+            border-color: #04b2e1 !important;
+            background-color: rgba(4, 178, 225, 0.12);
+            box-shadow: 0 0 0 2px rgba(4, 178, 225, 0.45);
+        }
+    }
+
+    // Slightly reduce Country of Origin height to align with Destination input
+    &.country-select {
+        .mat-mdc-text-field-wrapper {
+            padding-bottom: 0;
+        }
+
+        .mat-mdc-form-field-infix {
+            min-height: 38px !important;
+            padding: 6px 0 !important;
+        }
+
+        .mat-mdc-form-field-subscript-wrapper {
+            margin-top: 0 !important;
+            min-height: 0 !important;
+        }
+
+        .mat-mdc-select {
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+        }
+    }
+}
+
+// Blue option highlight inside ALL mat-select panels (navigating with mouse/keyboard)
+// Target generic states (hover, active, aria-selected) so it works regardless of internal class names
+::ng-deep .cdk-overlay-container .mat-mdc-select-panel .mat-mdc-option,
+::ng-deep .cdk-overlay-container .mat-mdc-select-panel .mat-mdc-option[aria-selected='true'],
+::ng-deep .cdk-overlay-container .mat-mdc-select-panel .mat-mdc-option.mat-mdc-option-active {
+    &.mat-mdc-option-active,
+    &[aria-selected='true'],
+    &:hover {
+        background-color: #04b2e1 !important;
+        color: #ffffff !important;
+
+        .mdc-list-item__primary-text,
+        .mat-mdc-option-text,
+        span {
+            color: #ffffff !important;
+        }
+    }
 }
 
 .readonly-section {
     pointer-events: none;
     opacity: 0.6;
 }
+
+// Net Premium display colour
+.net-premium-amount {
+    background-color: #21275c;
+    color: #ffffff !important;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    display: inline-block;
+    margin-left: 0.5rem;
+}
+
+// Draft status pill styling
+.status-draft-pill {
+    background-color: #21275c;
+    color: #ffffff !important;
+    border-radius: 9999px;
+}
+
+// White spinner for Send Payment Prompt button
+.payment-spinner {
+    --mdc-circular-progress-active-indicator-color: #ffffff;
+}
+
+// Reference pill styling
+.reference-pill {
+    background-color: #21275c;
+    color: #ffffff;
+    padding: 0.15rem 0.75rem;
+    border-radius: 9999px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    margin-left: 0.5rem;
+}
+
+// Quote Details Download Quote button styling
 .download-btn {
-    background: linear-gradient(135deg, #1e40af, #3b82f6);
-    color: #fff;
+    background-color: #21275c;
+    color: #FFFFFF;
     font-weight: 500;
     text-transform: none;
-    border-radius: 0.5rem;
-    padding: 0.45rem 1rem;   /* smaller height */
-    font-size: 0.9rem;
+    border-radius: 9999px;
+    padding: 0.35rem 1.1rem;
+    font-size: 0.85rem;
     line-height: 1.2;
-    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
-    transition: all 0.2s ease-in-out;
+    box-shadow: none;
+    transition: background-color 0.2s ease-in-out;
     display: flex;
     align-items: center;
 
@@ -64,14 +225,184 @@
     }
 
     &:hover {
-        background: linear-gradient(135deg, #2563eb, #60a5fa);
-        box-shadow: 0 3px 10px rgba(59, 130, 246, 0.4);
-        transform: translateY(-1px);
+        background-color: #21275c;
     }
 
-    &:active {
-        transform: translateY(0);
-        box-shadow: 0 1px 4px rgba(59, 130, 246, 0.25);
+    &:focus,
+    &:focus-visible {
+        outline: none;
+        background-color: #21275c;
+        box-shadow: 0 0 0 2px #21275c;
+    }
+}
+
+.header-close-btn {
+    border-color: #04b2e1;
+    color: #04b2e1;
+
+    &:hover,
+    &:focus,
+    &:focus-visible {
+        border-color: #21275c;
+        color: #21275c;
+        outline: none;
+        box-shadow: 0 0 0 1px rgba(33, 39, 92, 0.3);
+    }
+}
+
+// Step 2 Back button styling
+.back-btn-step2 {
+    background-color: #21275c;
+    color: #ffffff;
+    border-color: #21275c;
+
+    &:hover {
+        background-color: #04b2e1;
+        border-color: #04b2e1;
+    }
+}
+
+// Share Quote trigger button
+.share-trigger-btn {
+    border-color: #e5e7eb;
+    color: #374151;
+}
+
+.share-trigger-btn:hover {
+    border-color: #d1d5db;
+}
+
+// Share Payment Details modal
+.share-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+}
+
+.share-modal {
+    background: #ffffff;
+    border-radius: 1rem;
+    padding: 1.5rem 1.75rem;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 20px 45px rgba(15, 23, 42, 0.25);
+}
+
+.share-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+}
+
+.share-modal-header h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0;
+}
+
+.share-modal-subtitle {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-bottom: 1rem;
+}
+
+.close-btn {
+    border: none;
+    background: transparent;
+    padding: 0.15rem;
+    border-radius: 9999px;
+    cursor: pointer;
+    color: #6b7280;
+}
+
+.close-btn:hover {
+    background-color: #f3f4f6;
+}
+
+.share-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.share-option {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 0.9rem;
+    border-radius: 0.75rem;
+    border: 1px solid #e5e7eb;
+    background-color: #ffffff;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #111827;
+}
+
+.share-option:hover {
+    background-color: #04b2e1;
+    border-color: #04b2e1;
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.icon-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #eef2ff;
+    border: none;
+    color: #111827;
+}
+
+.whatsapp-icon {
+    background-color: transparent;
+    border-radius: 9999px;
+    border: 1px solid #21275c;
+    color: #21275c;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.share-option:hover .whatsapp-icon {
+    border-color: #ffffff;
+    color: #ffffff;
+}
+
+.share-icon-img {
+    width: 18px;
+    height: 18px;
+}
+
+// Stepper color customization
+::ng-deep .mat-horizontal-stepper-header-container {
+    .mat-step-header {
+        &.mat-active .mat-step-icon,
+        &.mat-step-header-selected .mat-step-icon,
+        &.mat-completed .mat-step-icon {
+            background-color: #04b2e1 !important;
+            color: #ffffff !important;
+        }
+
+        &.mat-active .mat-step-label,
+        &.mat-step-header-selected .mat-step-label,
+        &.mat-completed .mat-step-label {
+            color: #04b2e1 !important;
+        }
+    }
+
+    .mat-stepper-horizontal-line {
+        border-top-color: #04b2e1 !important;
     }
 }
 

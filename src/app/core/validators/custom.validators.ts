@@ -45,10 +45,12 @@ export class CustomValidators {
 
     static idfNumber(control: AbstractControl): ValidationErrors | null {
         if (!control.value) return null;
-        const idfPattern = /^\d{2}NBOIM\d{9}$/;
+        // Format: 2 digits + 3-letter office code + 'IM' + 9 digits
+        // Examples: 24NBOIM000002014, 23MBAIM004595400, 25MBAIM004889919
+        const idfPattern = /^\d{2}[A-Z]{3}IM\d{9}$/;
         return idfPattern.test(control.value) ? null : {
             idfNumber: {
-                message: 'IDF Number must be 2 digits + NBOIM + 9 digits (e.g., 24NBOIM000002014)'
+                message: 'IDF Number must be 2 digits + 3-letter code + IM + 9 digits (e.g., 24NBOIM000002014, 23MBAIM004595400)'
             }
         };
     }

@@ -11,15 +11,121 @@
     }
 }
 
-.mat-select-invalid {
-    .mat-mdc-select-trigger {
-        border-color: #ef4444 !important;
+// Quote Details Buy Now button styling
+.buy-now-btn {
+    background-color: #04b2e1;
+    color: #ffffff;
+
+    &:hover {
+        background-color: #21275c;
+    }
+
+    &:focus,
+    &:focus-visible {
+        outline: none;
+        background-color: #21275c;
+        box-shadow: 0 0 0 2px #21275c;
     }
 }
 
-// Make all mat-selects the same height
+// Blue option highlight inside all mat-select dropdowns in this component
+::ng-deep .cdk-overlay-container .mat-mdc-select-panel .mat-mdc-option,
+::ng-deep .cdk-overlay-container .mat-mdc-select-panel .mat-mdc-option[aria-selected='true'],
+::ng-deep .cdk-overlay-container .mat-mdc-select-panel .mat-mdc-option.mat-mdc-option-active {
+    &.mat-mdc-option-active,
+    &[aria-selected='true'],
+    &:hover {
+        background-color: #04b2e1 !important;
+        color: #ffffff !important;
+
+        .mdc-list-item__primary-text {
+            color: #ffffff !important;
+        }
+    }
+}
+
+// Unified focus color for standard inputs and native selects/textareas in this form
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="number"],
+input[type="password"],
+select,
+textarea {
+    &:focus {
+        outline: none;
+        border-color: #04b2e1;
+        box-shadow: none;
+    }
+}
+
+// Explicit focus colour for key inputs
+.email-input,
+.sum-insured-input {
+    &:focus {
+        border-color: #04b2e1 !important;
+        box-shadow: 0 0 0 1px rgba(4, 178, 225, 0.45) !important;
+    }
+}
+
+// Sum Insured (KES) input: allow height to be controlled by utility classes (e.g. h-12)
+.sum-insured-input {
+    min-height: 0;
+    height: auto;
+}
+
+// Stepper color customization
+::ng-deep .mat-horizontal-stepper-header-container {
+    .mat-step-header {
+        &.mat-active .mat-step-icon,
+        &.mat-step-header-selected .mat-step-icon,
+        &.mat-completed .mat-step-icon {
+            background-color: #04b2e1 !important;
+            color: #ffffff !important;
+        }
+
+        &.mat-active .mat-step-label,
+        &.mat-step-header-selected .mat-step-label,
+        &.mat-completed .mat-step-label {
+            color: #04b2e1 !important;
+        }
+    }
+
+    .mat-stepper-horizontal-line {
+        border-top-color: #04b2e1 !important;
+    }
+}
+
+.header-close-btn {
+    border-color: #04b2e1;
+    color: #04b2e1;
+
+    &:hover,
+    &:focus,
+    &:focus-visible {
+        border-color: #21275c;
+        color: #21275c;
+        outline: none;
+        box-shadow: 0 0 0 1px rgba(33, 39, 92, 0.3);
+    }
+}
+
+.mat-select-invalid {
+    // Ensure the visible outline of invalid selects turns red (MDC notched outline)
+    .mat-mdc-text-field-wrapper {
+        border-color: #ef4444 !important;
+
+        .mdc-notched-outline__leading,
+        .mdc-notched-outline__notch,
+        .mdc-notched-outline__trailing {
+            border-color: #ef4444 !important;
+        }
+    }
+}
+
+// Make most mat-selects the same height and unify focus colour
 ::ng-deep .mat-mdc-form-field {
-    &.mat-small, &.country-select, &.category-select, &.cargo-type-select {
+    &.mat-small, &.category-select, &.cargo-type-select {
         .mat-mdc-text-field-wrapper {
             padding-bottom: 0;
         }
@@ -39,23 +145,86 @@
             padding-bottom: 0 !important;
         }
     }
+
+    // Unified focus colour for mat-form-field (inputs and mat-selects)
+    &.mat-focused {
+        .mat-mdc-text-field-wrapper {
+            border-color: #04b2e1 !important;
+            box-shadow: 0 0 0 2px rgba(4, 178, 225, 0.65);
+        }
+
+        .mdc-notched-outline__leading,
+        .mdc-notched-outline__notch,
+        .mdc-notched-outline__trailing {
+            border-color: #04b2e1 !important;
+        }
+    }
+
+    // Force Country of Origin height to match Destination (h-12 ~ 3rem)
+    &.country-select,
+    &.country-select.mat-mdc-form-field {
+        .mat-mdc-text-field-wrapper {
+            height: 2.6rem !important;  // reduced again so it cannot appear taller than Destination
+            padding: 0 16px !important;
+            display: flex;
+            align-items: center;
+        }
+
+        .mat-mdc-form-field-infix {
+            min-height: auto !important;
+            padding: 0 !important;
+        }
+
+        .mat-mdc-form-field-subscript-wrapper {
+            margin-top: 0 !important;
+            min-height: 0 !important;
+        }
+
+        .mat-mdc-select {
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+        }
+    }
 }
 
 .readonly-section {
     pointer-events: none;
     opacity: 0.6;
 }
+
+// Net Premium display colour
+.net-premium-amount {
+    background-color: #21275c;
+    color: #ffffff !important;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    display: inline-block;
+    margin-left: 0.5rem;
+}
+
+// Reference pill styling
+.reference-pill {
+    background-color: #21275c;
+    color: #ffffff;
+    padding: 0.15rem 0.75rem;
+    border-radius: 9999px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    margin-left: 0.5rem;
+}
+
+// Quote Details Download Quote button styling
 .download-btn {
-    background: linear-gradient(135deg, #1e40af, #3b82f6);
-    color: #fff;
+    background-color: #04b2e1;
+    color: #ffffff;
     font-weight: 500;
     text-transform: none;
     border-radius: 0.5rem;
     padding: 0.45rem 1rem;   /* smaller height */
     font-size: 0.9rem;
     line-height: 1.2;
-    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
-    transition: all 0.2s ease-in-out;
+    box-shadow: none;
+    transition: background-color 0.2s ease-in-out;
     display: flex;
     align-items: center;
 
@@ -64,16 +233,13 @@
     }
 
     &:hover {
-        background: linear-gradient(135deg, #2563eb, #60a5fa);
-        box-shadow: 0 3px 10px rgba(59, 130, 246, 0.4);
-        transform: translateY(-1px);
+        background-color: #21275c;
     }
 
-    &:active {
-        transform: translateY(0);
-        box-shadow: 0 1px 4px rgba(59, 130, 246, 0.25);
+    &:focus,
+    &:focus-visible {
+        outline: none;
+        background-color: #21275c;
+        box-shadow: 0 0 0 2px #21275c;
     }
 }
-
-
-

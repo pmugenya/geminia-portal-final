@@ -207,3 +207,9 @@ export interface CoverageData {
     amount: number;
     percentage: number;
 }
+
+export interface PostalCode {
+    id: number,
+    postalCode: string;
+    postalTown: string;
+}

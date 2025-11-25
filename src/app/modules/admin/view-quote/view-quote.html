@@ -21,10 +21,21 @@
                     <h2 class="text-2xl font-bold text-gray-900">Marine Quote Details - {{quote?.refno}}</h2>
                 </h2>
                 <div class="text-secondary text-sm font-medium tracking-tight">
-                    <p class="text-sm text-gray-600 mt-1">Reference: <span class="font-semibold text-blue-600">{{quote?.refno}}</span></p>
+                    <p class="text-sm text-gray-600 mt-1">
+                        Reference:
+                        <span class="reference-pill">{{quote?.refno}}</span>
+                    </p>
                 </div>
             </div>
             <div class="flex items-center space-x-3">
+                <button mat-flat-button color="primary" class="buy-btn" (click)="buyNow()" *ngIf="quote?.status==='DRAFT'">
+                    <mat-icon class="icon-size-4" [svgIcon]="'heroicons_outline:credit-card'"></mat-icon>
+                    Buy Now
+                </button>
+                <button mat-flat-button color="primary" class="buy-btn" (click)="payNow()" *ngIf="quote?.status==='PENDING'">
+                    <mat-icon class="icon-size-4" [svgIcon]="'heroicons_outline:credit-card'"></mat-icon>
+                    Pay Now
+                </button>
                 <button
                     mat-flat-button
                     color="primary"
@@ -33,13 +44,19 @@
                     <mat-icon svgIcon="heroicons_outline:arrow-down-tray" class="mr-2"></mat-icon>
                     Download Quote
                 </button>
-                <button mat-flat-button color="primary" class="buy-btn" (click)="buyNow()" *ngIf="quote?.status==='DRAFT'">
-                    <mat-icon class="icon-size-4" [svgIcon]="'heroicons_outline:credit-card'"></mat-icon>
-                   Buy Now
+                <button
+                    type="button"
+                    class="inline-flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-medium bg-white text-gray-700 hover:bg-gray-50 share-trigger-btn"
+                    (click)="openShareModal()">
+                    <mat-icon class="icon-size-4">share</mat-icon>
+                    <span>Share Quote</span>
                 </button>
-                <button mat-flat-button color="primary" class="buy-btn" (click)="payNow()" *ngIf="quote?.status==='PENDING'">
-                    <mat-icon class="icon-size-4" [svgIcon]="'heroicons_outline:credit-card'"></mat-icon>
-                    Pay Now
+                <button
+                    type="button"
+                    (click)="goToDashboard()"
+                    class="inline-flex items-center gap-2 px-4 py-1 rounded-full border text-sm font-medium bg-white header-close-btn">
+                    <span class="text-base font-normal" aria-hidden="true">&times;</span>
+                    <span>Close</span>
                 </button>
             </div>
         </div>
@@ -146,18 +163,6 @@
             <h3 class="text-lg font-semibold mb-4">Shipping & Cargo Details</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div>
-                    <label class="text-sm text-secondary">Origin Country</label>
-                    <div class="font-medium">{{ quote?.originId }}</div>
-                </div>
-                <div>
-                    <label class="text-sm text-secondary">Destination</label>
-                    <div class="font-medium">{{ quote?.destination }}</div>
-                </div>
-                <div>
-                    <label class="text-sm text-secondary">Vessel Name</label>
-                    <div class="font-medium">{{ quote?.vesselName }}</div>
-                </div>
-                <div>
                     <label class="text-sm text-secondary">Cargo Type</label>
                     <div class="font-medium">{{ quote?.cargotype }}</div>
                 </div>
@@ -168,6 +173,18 @@
                 <div>
                     <label class="text-sm text-secondary">Packaging Type</label>
                     <div class="font-medium">{{ quote?.packagingtype }}</div>
+                </div>
+                <div>
+                    <label class="text-sm text-secondary">Origin Country</label>
+                    <div class="font-medium">{{ quote?.originId }}</div>
+                </div>
+                <div>
+                    <label class="text-sm text-secondary">Destination</label>
+                    <div class="font-medium">{{ quote?.destination }}</div>
+                </div>
+                <div>
+                    <label class="text-sm text-secondary">Vessel Name</label>
+                    <div class="font-medium">{{ quote?.vesselName }}</div>
                 </div>
             </div>
         </div>
@@ -197,8 +214,10 @@
                     <div class="font-medium">{{ quote?.sd | currency:'KES ' }}</div>
                 </div>
                 <div>
-                    <label class="text-sm text-secondary">Net Premium</label>
-                    <div class="text-lg font-bold text-green-600">{{ quote?.netprem | currency:'KES ' }}</div>
+                    <div class="flex items-center text-sm text-secondary">
+                        <span>Net Premium</span>
+                        <span class="net-premium-pill">{{ quote?.netprem | currency:'KES ' }}</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -208,6 +227,44 @@
             <p class="text-secondary text-sm leading-relaxed">
                 {{ quote?.description || 'No description provided for this quote.' }}
             </p>
+        </div>
+
+        <!-- Share Payment Details Modal -->
+        <div *ngIf="showShareModal" class="share-modal-backdrop">
+            <div class="share-modal">
+                <div class="share-modal-header">
+                    <h3>Share Quote Details</h3>
+                    <button type="button" class="close-btn" (click)="closeShareModal()">
+                        <mat-icon>close</mat-icon>
+                    </button>
+                </div>
+                <p class="share-modal-subtitle">Choose how you'd like to share the Quote information</p>
+
+                <div class="share-options">
+                    <button type="button" class="share-option whatsapp" (click)="shareViaWhatsApp()">
+                        <span class="icon-circle whatsapp-icon">WA</span>
+                        <span>WhatsApp</span>
+                    </button>
+                    <button type="button" class="share-option" (click)="shareViaGmail()">
+                        <span class="icon-circle">
+                            <mat-icon>mail</mat-icon>
+                        </span>
+                        <span>Gmail</span>
+                    </button>
+                    <button type="button" class="share-option" (click)="shareViaOutlook()">
+                        <span class="icon-circle">
+                            <mat-icon>mail</mat-icon>
+                        </span>
+                        <span>Outlook</span>
+                    </button>
+                    <button type="button" class="share-option">
+                        <span class="icon-circle">
+                            <mat-icon>mail</mat-icon>
+                        </span>
+                        <span>Other Email</span>
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 </div>

@@ -2,3 +2,156 @@
 /*  @ Import/write your custom styles here.
 /*  @ Styles from this file will override 'vendors.scss' and Fuse's base styles.
 /* ----------------------------------------------------------------------------------------------------- */
+
+// Global blue highlight for all Angular Material mat-select options
+// Matches the Marine dropdown design (blue selected row with white text)
+::ng-deep .cdk-overlay-container .mat-mdc-select-panel .mat-mdc-option,
+::ng-deep .cdk-overlay-container .mat-mdc-select-panel .mat-mdc-option[aria-selected='true'],
+::ng-deep .cdk-overlay-container .mat-mdc-select-panel .mat-mdc-option.mat-mdc-option-active {
+    &.mat-mdc-option-active,
+    &[aria-selected='true'],
+    &:hover {
+        background-color: #04b2e1 !important;
+        color: #ffffff !important;
+
+        .mdc-list-item__primary-text,
+        .mat-mdc-option-text,
+        span {
+            color: #ffffff !important;
+        }
+    }
+}
+
+// Dashboard card and table styling for My Insurance Dashboard
+app-client-insurance-dashboard {
+    // Blue ring around selected cards
+    .dashboard-card {
+        border: 1px solid #04b2e1;
+        border-radius: 0.75rem; // match rounded-xl visually
+        overflow: hidden; // ensure inner content and borders follow rounded corners
+    }
+
+    // Card header divider line in key cards (My Quotes, My Policies, Quick Actions,
+    // Coverage Summary, Recent Activity, My Claims) - use blue instead of default gray
+    .dashboard-card > .border-b {
+        border-color: #04b2e1 !important;
+    }
+
+    // Soft rounded corners around tables inside cards (My Quotes, My Policies)
+    .dashboard-card table.mat-mdc-table {
+        border-radius: 0.75rem;
+        overflow: hidden;
+    }
+
+    // Ensure inner card wrappers around tables (e.g. My Quotes) also have soft corners
+    .dashboard-card .overflow-x-auto > .bg-card {
+        border-radius: 0.75rem;
+    }
+
+    // Inner divider lines default in dashboard tables (used by My Policies, etc.)
+    .dashboard-card table.mat-mdc-table .mat-mdc-header-row,
+    .dashboard-card table.mat-mdc-table .mat-mdc-row,
+    .dashboard-card table.mat-mdc-table .mat-mdc-footer-row {
+        border-bottom: 1px solid #21275c;
+    }
+
+    // My Quotes table uses blue inner row lines instead
+    .my-quotes-card table.mat-mdc-table .mat-mdc-header-row,
+    .my-quotes-card table.mat-mdc-table .mat-mdc-row,
+    .my-quotes-card table.mat-mdc-table .mat-mdc-footer-row {
+        border-bottom: 1px solid #04b2e1;
+    }
+
+    // Text colour inside Recent Activity and My Claims sections
+    .recent-activity-card .text-sm,
+    .recent-activity-card .text-xs,
+    .my-claims-card .text-sm,
+    .my-claims-card .text-xs {
+        color: #21275c;
+    }
+
+    // Stroked action buttons (New Quote, New Claim, Quick Quote)
+    .dashboard-card button[mat-stroked-button] {
+        color: #04b2e1;
+        border-color: #04b2e1;
+    }
+
+    .dashboard-card button[mat-stroked-button]:focus-visible {
+        outline: 2px solid #21275c;
+        outline-offset: 2px;
+    }
+
+    // Premium Breakdown card text colour (all text inside)
+    .premium-breakdown-card,
+    .premium-breakdown-card .text-lg,
+    .premium-breakdown-card .text-sm,
+    .premium-breakdown-card .text-xs {
+        color: #21275c;
+    }
+
+    // My Quotes / My Policies paginator footer line colour
+    .dashboard-card .mat-paginator {
+        border-top: 1px solid #04b2e1;
+    }
+
+    // Filled action buttons: New Quote and Quick Quote -> full #04b2e1 with #21275c focus
+    .quick-quote-button,
+    .new-quote-button {
+        background-color: #04b2e1 !important;
+        color: #ffffff !important;
+        border-color: #04b2e1 !important;
+    }
+
+    .quick-quote-button mat-icon,
+    .new-quote-button mat-icon {
+        color: #ffffff !important;
+    }
+
+    .quick-quote-button:focus-visible,
+    .new-quote-button:focus-visible,
+    .new-claim-button:focus-visible {
+        outline: 2px solid #21275c;
+        outline-offset: 2px;
+        background-color: #21275c !important;
+        border-color: #21275c !important;
+    }
+
+    // My Claims: use a lighter header divider so blue border doesn't appear too bold
+    .my-claims-card > .border-b {
+        border-color: #e5e7eb !important;
+    }
+
+    // My Quotes data text colours (Ref No, Product, Premium columns)
+    .my-quotes-card .mat-mdc-cell.mat-column-refno,
+    .my-quotes-card .mat-mdc-cell.mat-column-prodName,
+    .my-quotes-card .mat-mdc-cell.mat-column-netprem {
+        color: #21275c;
+    }
+
+    // My Policies data text colours (PolicyNo, Product, Premium, Cover From, Cover To, Actions)
+    .my-policies-card .mat-mdc-cell.mat-column-erprefno,
+    .my-policies-card .mat-mdc-cell.mat-column-productName,
+    .my-policies-card .mat-mdc-cell.mat-column-netpremium,
+    .my-policies-card .mat-mdc-cell.mat-column-coverFrom,
+    .my-policies-card .mat-mdc-cell.mat-column-coverTo,
+    .my-policies-card .mat-mdc-cell.mat-column-actions {
+        color: #21275c;
+    }
+
+    // Summary text "Showing X of Y" in My Quotes and My Policies
+    .my-quotes-card .text-secondary.text-sm,
+    .my-policies-card .text-secondary.text-sm {
+        color: #21275c;
+    }
+
+    // "days left" helper text under dates in My Quotes and My Policies
+    .my-quotes-card .text-secondary.text-xs,
+    .my-policies-card .text-secondary.text-xs {
+        color: #21275c;
+    }
+
+    // Quick stats numbers (Active Quotes, Active Policies, Premium, Next Payment)
+    .dashboard-card .text-2xl.font-bold {
+        color: #21275c;
+    }
+}

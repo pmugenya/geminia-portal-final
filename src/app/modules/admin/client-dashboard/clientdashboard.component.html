@@ -22,7 +22,7 @@
         <!-- Quick Stats Section -->
         <div class="mt-8 grid w-full grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
             <!-- Total Coverage -->
-            <div class="bg-card rounded-xl p-6 shadow">
+            <div class="bg-card rounded-xl p-6 shadow dashboard-card">
                 <div class="flex items-center">
                     <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
                         <mat-icon [svgIcon]="'heroicons_outline:shield-check'"></mat-icon>
@@ -35,7 +35,7 @@
             </div>
 
             <!-- Active Policies -->
-            <div class="bg-card rounded-xl p-6 shadow">
+            <div class="bg-card rounded-xl p-6 shadow dashboard-card">
                 <div class="flex items-center">
                     <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-green-100 text-green-600">
                         <mat-icon [svgIcon]="'heroicons_outline:document-text'"></mat-icon>
@@ -49,7 +49,7 @@
             </div>
 
             <!-- Monthly Premium -->
-            <div class="bg-card rounded-xl p-6 shadow">
+            <div class="bg-card rounded-xl p-6 shadow dashboard-card">
                 <div class="flex items-center">
                     <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-purple-100 text-purple-600">
                         <mat-icon [svgIcon]="'heroicons_outline:banknotes'"></mat-icon>
@@ -62,7 +62,7 @@
             </div>
 
             <!-- Next Payment -->
-            <div class="bg-card rounded-xl p-6 shadow">
+            <div class="bg-card rounded-xl p-6 shadow dashboard-card">
                 <div class="flex items-center">
                     <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-orange-100 text-orange-600">
                         <mat-icon [svgIcon]="'heroicons_outline:calendar'"></mat-icon>
@@ -80,20 +80,20 @@
         <div class="mt-8 grid w-full grid-cols-1 gap-8 xl:grid-cols-3">
             <!-- Left Column - Policies and Coverage -->
             <div class="xl:col-span-2 space-y-8">
-                <!-- My Policies Table -->
-                <div class="bg-card rounded-xl shadow">
+                <!-- My Policies Table (My Quotes) -->
+                <div class="bg-card rounded-xl shadow dashboard-card my-quotes-card">
                     <div class="flex items-center justify-between p-6 border-b">
                         <div>
                             <h3 class="text-lg font-semibold">My Quotes</h3>
                         </div>
-                        <button mat-stroked-button (click)="openProductQuoteDialog()">
+                        <button mat-stroked-button class="new-quote-button" (click)="openProductQuoteDialog()">
                             <mat-icon class="icon-size-4" [svgIcon]="'heroicons_outline:plus'"></mat-icon>
                             <span class="ml-2">New Quote</span>
                         </button>
                     </div>
                     <div class="overflow-x-auto">
                         <div class="bg-card rounded-xl shadow">
-                            <div class="text-secondary text-sm" *ngIf="!isInitialLoad">
+                            <div class="px-6 pt-3 pb-2 text-secondary text-sm font-semibold" *ngIf="!isInitialLoad">
                                 Showing {{ myQuotesDataSource.data.length }} of {{ totalRecords }} Quotes
                             </div>
                             <!-- Loading State -->
@@ -172,11 +172,21 @@
                                         <th mat-header-cell *matHeaderCellDef>Actions</th>
                                         <td mat-cell *matCellDef="let policy">
                                             <div class="flex space-x-2">
-                                                <button mat-icon-button (click)="viewQuote(policy)" title="View Quote">
+                                                <button
+                                                    mat-stroked-button
+                                                    color="primary"
+                                                    class="px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1"
+                                                    (click)="viewQuote(policy)">
                                                     <mat-icon class="icon-size-4" [svgIcon]="'heroicons_outline:eye'"></mat-icon>
+                                                    <span>View Quote</span>
                                                 </button>
-                                                <button mat-icon-button (click)="downloadQuote(policy)" title="Download Quote">
+                                                <button
+                                                    mat-stroked-button
+                                                    color="primary"
+                                                    class="px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1"
+                                                    (click)="downloadQuote(policy)">
                                                     <mat-icon class="icon-size-4" [svgIcon]="'heroicons_outline:arrow-down-tray'"></mat-icon>
+                                                    <span>Download Quote</span>
                                                 </button>
                                             </div>
                                         </td>
@@ -202,13 +212,13 @@
                     </div>
                 </div>
 
-                <div class="bg-card rounded-xl shadow">
+                <div class="bg-card rounded-xl shadow dashboard-card my-policies-card">
                     <div class="flex items-center justify-between p-6 border-b">
                         <div>
                             <h3 class="text-lg font-semibold">My Policies</h3>
                         </div>
                     </div>
-                    <div class="text-secondary text-sm" *ngIf="!isInitialLoad">
+                    <div class="px-6 pt-3 pb-2 text-secondary text-sm font-semibold" *ngIf="!isInitialLoad">
                         Showing {{ myPolicyDataSource.data.length }} of {{ policiesTotalRecords }} policies
                     </div>
                     <div class="overflow-x-auto">
@@ -307,7 +317,7 @@
                 <!-- Coverage and Premium Charts -->
                 <div class="grid grid-cols-1 gap-8 lg:grid-cols-2">
                     <!-- Coverage Distribution -->
-                    <div class="bg-card rounded-xl p-6 shadow">
+                    <div class="bg-card rounded-xl p-6 shadow dashboard-card">
                         <h3 class="text-lg font-semibold mb-4">Coverage Distribution</h3>
                         <apx-chart
                             class="w-full"
@@ -322,7 +332,7 @@
                     </div>
 
                     <!-- Premium Breakdown -->
-                    <div class="bg-card rounded-xl p-6 shadow">
+                    <div class="bg-card rounded-xl p-6 shadow dashboard-card premium-breakdown-card">
                         <h3 class="text-lg font-semibold mb-4">Premium Breakdown</h3>
                         <apx-chart
                             class="w-full"
@@ -342,7 +352,7 @@
             <!-- Right Column - Claims, Activity, and Quick Actions -->
             <div class="space-y-8">
                 <!-- My Claims -->
-                <div class="bg-card rounded-xl shadow">
+                <div class="bg-card rounded-xl shadow dashboard-card my-claims-card">
                     <div class="flex items-center justify-between p-6 border-b">
                         <div>
                             <h3 class="text-lg font-semibold">My Claims</h3>
@@ -350,7 +360,7 @@
                                 {{ data.myClaims.pending }} pending, {{ data.myClaims.approved }} approved
                             </div>
                         </div>
-                        <button mat-stroked-button (click)="fileNewClaim()">
+                        <button mat-stroked-button class="new-claim-button" (click)="fileNewClaim()">
                             <mat-icon class="icon-size-4" [svgIcon]="'heroicons_outline:plus'"></mat-icon>
                             <span class="ml-2">New Claim</span>
                         </button>
@@ -416,7 +426,7 @@
                 </div>
 
                 <!-- Recent Activity -->
-                <div class="bg-card rounded-xl shadow">
+                <div class="bg-card rounded-xl shadow dashboard-card recent-activity-card">
                     <div class="p-6 border-b">
                         <h3 class="text-lg font-semibold">Recent Activity</h3>
                     </div>
@@ -438,12 +448,12 @@
                 </div>
 
                 <!-- Quick Actions -->
-                <div class="bg-card rounded-xl shadow">
+                <div class="bg-card rounded-xl shadow dashboard-card quick-actions-card">
                     <div class="p-6 border-b">
                         <h3 class="text-lg font-semibold">Quick Actions</h3>
                     </div>
                     <div class="p-4 space-y-3">
-                        <button class="w-full justify-start" mat-stroked-button (click)="openProductQuoteDialog()">
+                        <button class="w-full justify-start quick-quote-button" mat-stroked-button (click)="openProductQuoteDialog()">
                             <mat-icon class="icon-size-5 mr-3" [svgIcon]="'heroicons_outline:calculator'"></mat-icon>
                            Quick Quote
                         </button>
@@ -451,7 +461,7 @@
                 </div>
 
                 <!-- Coverage Summary -->
-                <div class="bg-card rounded-xl shadow">
+                <div class="bg-card rounded-xl shadow dashboard-card">
                     <div class="p-6 border-b">
                         <h3 class="text-lg font-semibold">Coverage Summary</h3>
                     </div>

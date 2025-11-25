@@ -49,6 +49,7 @@ export class ViewQuote implements OnInit,OnDestroy {
     private paymentPollingSub?: Subscription;
     isProcessingStk = false;
     paymentSuccess?: boolean;
+    showShareModal = false;
 
     constructor(private datePipe: DatePipe,
                 private quoteService: QuoteService,
@@ -196,18 +197,87 @@ export class ViewQuote implements OnInit,OnDestroy {
 
     /** Helper to style status badge */
     getStatusColor(status: string): string {
-        switch (status?.toLowerCase()) {
+        switch (status?.toUpperCase()) {
             case 'PAID':
                 return 'bg-green-100 text-green-700';
-            case 'status':
+            case 'STATUS':
                 return 'bg-red-100 text-red-700';
             case 'PENDING':
                 return 'bg-yellow-100 text-yellow-700';
             case 'DRAFT':
-                return 'bg-gray-100 text-gray-700';
+                return 'status-draft-pill';
             default:
                 return 'bg-blue-100 text-blue-700';
         }
+    }
+
+    goToDashboard(): void {
+        this.router.navigate(['/dashboard']);
+    }
+
+    openShareModal(): void {
+        this.showShareModal = true;
+    }
+
+    closeShareModal(): void {
+        this.showShareModal = false;
+    }
+
+    shareViaGmail(): void {
+        const ref = this.quote?.refno || this.quoteId || '';
+        const subject = encodeURIComponent(`Marine Quote Details - ${ref}`);
+
+        const lines: string[] = [];
+        if (this.quote) {
+            lines.push('Please find below the marine quote details.');
+            lines.push('');
+            lines.push(`Reference: ${this.quote.refno}`);
+            lines.push(`Customer: ${this.quote.firstName || ''} ${this.quote.lastName || ''}`.trim());
+            lines.push(`Email: ${this.quote.email || ''}`);
+            lines.push(`Phone: ${this.quote.phoneNo || ''}`);
+            lines.push('');
+            lines.push(`Sum Assured: KES ${this.quote.sumassured}`);
+            lines.push(`Net Premium: KES ${this.quote.netprem}`);
+            lines.push('');
+            lines.push('You can also attach a screenshot or PDF of the quote details to this email before sending.');
+        }
+
+        const body = encodeURIComponent(lines.join('\n'));
+        const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&su=${subject}&body=${body}`;
+        window.open(gmailUrl, '_blank');
+    }
+
+    private buildShareLines(): string[] {
+        const lines: string[] = [];
+        if (this.quote) {
+            lines.push('Please find below the marine quote details.');
+            lines.push('');
+            lines.push(`Reference: ${this.quote.refno}`);
+            lines.push(`Customer: ${this.quote.firstName || ''} ${this.quote.lastName || ''}`.trim());
+            lines.push(`Email: ${this.quote.email || ''}`);
+            lines.push(`Phone: ${this.quote.phoneNo || ''}`);
+            lines.push('');
+            lines.push(`Sum Assured: KES ${this.quote.sumassured}`);
+            lines.push(`Net Premium: KES ${this.quote.netprem}`);
+            lines.push('');
+        }
+        lines.push('You can also attach a screenshot or PDF of the quote details before sending.');
+        return lines;
+    }
+
+    shareViaWhatsApp(): void {
+        const lines = this.buildShareLines();
+        const text = encodeURIComponent(lines.join('\n'));
+        const url = `https://wa.me/?text=${text}`;
+        window.open(url, '_blank');
+    }
+
+    shareViaOutlook(): void {
+        const ref = this.quote?.refno || this.quoteId || '';
+        const subject = encodeURIComponent(`Marine Quote Details - ${ref}`);
+        const body = encodeURIComponent(this.buildShareLines().join('\n'));
+        const mailtoUrl = `mailto:?subject=${subject}&body=${body}`;
+        window.location.href = mailtoUrl;
     }
 
     payNow(): void {

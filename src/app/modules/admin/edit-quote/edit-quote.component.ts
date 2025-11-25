@@ -26,12 +26,12 @@ import { MatCheckbox } from '@angular/material/checkbox';
 import { MomentDateAdapter } from '@angular/material-moment-adapter';
 import { MY_DATE_FORMATS } from '../../../core/directives/date-formats';
 import {
-    catchError, debounceTime, distinctUntilChanged,
+    catchError, debounceTime, distinctUntilChanged, filter,
     finalize, forkJoin, fromEvent,
-    interval,
+    interval, map,
     of, ReplaySubject,
     Subject, Subscription,
-    switchMap,
+    switchMap, take,
     takeUntil,
     takeWhile, tap, throttleTime,
     throwError,
@@ -47,7 +47,7 @@ import {
     Country,
     MarineProduct,
     PackagingType,
-    Port, QuoteResult,
+    Port, PostalCode, QuoteResult,
     QuotesData, UserDocumentData,
 } from '../../../core/user/user.types';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -141,6 +141,7 @@ export class EditMarineQuoteComponent implements OnInit, OnDestroy
     dischargePorts: any[] = [];
     categories: any[] = [];
     counties: any[] = [];
+    postalCodes: PostalCode[] = [];
     origincountries: Country[] = [];
     filteredMarineCategories: Category[] = [];
     filteredMarineCargoTypes: CargoTypeData[] = [];
@@ -190,19 +191,31 @@ export class EditMarineQuoteComponent implements OnInit, OnDestroy
             products: this.userService.getMarineProducts(),
             packagingTypes: this.userService.getMarinePackagingTypes(),
             categories: this.userService.getMarineCategories(),
+            postalcodes: this.quotationService.getPostalCodes()
         }).subscribe({
             next: (data) => {
                 this.marineProducts = data.products || [];
                 this.marinePackagingTypes = data.packagingTypes || [];
-                this.marineCategories = data.categories || [];
+                this.marineCategories = data.categories ?? [];
                 // Initialize filtered arrays
-                this.filteredMarineCategories = this.marineCategories.slice();
+                this.filteredMarineCategories = [...this.marineCategories];
+                this.postalCodes = data.postalcodes;
+
+                if (this.marineCategories.length === 0) {
+                    console.warn("⚠ Marine categories returned empty list from API.");
+                }
+
+                if(this.quoteId){
+                    this.loadQuotDetails();
+                }
 
                 this.isLoadingMarineData = false;
             },
             error: (err) => {
                 console.error('Error loading marine data:', err);
                 this.isLoadingMarineData = false;
+                this.marineCategories = [];
+                this.filteredMarineCategories = [];
             },
         });
         this.setupSearchFilters();
@@ -211,9 +224,7 @@ export class EditMarineQuoteComponent implements OnInit, OnDestroy
         this.quoteId = this.route.snapshot.paramMap.get('quoteId')!;
         this.isLoadingMarineData = true;
 
-        if(this.quoteId){
-            this.loadQuotDetails();
-        }
+
     }
 
     private initializeAllData(): void {
@@ -277,7 +288,7 @@ export class EditMarineQuoteComponent implements OnInit, OnDestroy
         this.countySearchCtrl.valueChanges
             .pipe(takeUntil(this.destroy$), debounceTime(300))
             .subscribe(() => {
-                this.fetchCounties();
+                this.filterCounties();
             });
 
         this.cargoTypeSearchCtrl.valueChanges
@@ -307,7 +318,7 @@ export class EditMarineQuoteComponent implements OnInit, OnDestroy
     }
 
     private fetchCounties(): void {
-        // Get the mode of shipment: 'Sea' = 1, 'Air' = 2
+        // Load all counties from the API once, then apply client-side filtering
 
         this.isLoadingCounties = true;
         this.userService.getCounties(this.countyPage, this.pageSize).subscribe({
@@ -321,7 +332,7 @@ export class EditMarineQuoteComponent implements OnInit, OnDestroy
                     this.counties = [...this.counties, ...newCounties];
                 }
 
-                this.filteredCounties.next(this.counties.slice());
+                this.filterCounties();
                 this.isLoadingCounties = false;
             },
             error: (err) => {
@@ -331,6 +342,28 @@ export class EditMarineQuoteComponent implements OnInit, OnDestroy
                 this.isLoadingCounties = false;
             }
         });
+    }
+
+    private filterCounties(): void {
+        if (!this.counties) {
+            this.filteredCounties.next([]);
+            return;
+        }
+
+        let search = this.countySearchCtrl.value;
+        if (!search) {
+            this.filteredCounties.next(this.counties.slice());
+            return;
+        }
+
+        search = String(search).toLowerCase();
+
+        const filtered = this.counties.filter((county: any) => {
+            const name = (county.portName || county.portname || county.name || '').toLowerCase();
+            return name.includes(search);
+        });
+
+        this.filteredCounties.next(filtered);
     }
 
     private filterCargoTypes(): void {
@@ -402,18 +435,28 @@ export class EditMarineQuoteComponent implements OnInit, OnDestroy
                         this.fetchProspectDocuments(res.prospectId);
                     }
                 }
+                this.shipmentForm.get('modeOfShipment')?.setValue(''+res.shippingmodeId);
                 const selectedCategory = this.marineCategories.find(c => c.id === res.catId);
                 this.shipmentForm.get('selectCategory')?.setValue(selectedCategory.catname);
-                this.onCategorySelected2(selectedCategory.catname);
-                this.onCategorySelectedVal(selectedCategory.catname).subscribe(() => {
-                    const selectedCategory = this.filteredMarineCargoTypess.find(c => c.id === res.cargotypeId);
-                    this.shipmentForm.get('salesCategory')?.setValue(selectedCategory.ctname);
-                });
-                this.shipmentForm.get('agreeToTerms')?.setValue(true, { emitEvent: false });
-                this.onDropdownOpen('categories');
 
-                this.shipmentForm.get('modeOfShipment')?.setValue(''+res.shippingmodeId);
-                this.shipmentForm.get('sumInsured')?.setValue(res.sumassured);
+                this.onCategorySelectedVal(selectedCategory.catname)
+                    .pipe(
+                        filter(() => this.filteredMarineCargoTypess?.length > 0),
+                        take(1) // only once
+                    )
+                    .subscribe(() => {
+                        const selectedCargo = this.filteredMarineCargoTypess
+                            .find(c => c.id === res.cargotypeId);
+                        console.log('selectedCargo ',selectedCargo);
+
+                        if (selectedCargo) {
+                            this.shipmentForm.get('salesCategory')?.setValue(selectedCargo.ctname);
+                        }
+                        this.shipmentForm.get('sumInsured')?.setValue(res.sumassured);
+                    });
+                this.shipmentForm.get('agreeToTerms')?.setValue(true, { emitEvent: false });
+                // this.onDropdownOpen('categories');
+
 
                 let selectedCountry = this.origincountries.find(c => c.id === Number(res.originCountry));
                 const setCountryAndProceed = (country: Country) => {
@@ -949,6 +992,14 @@ export class EditMarineQuoteComponent implements OnInit, OnDestroy
     }
 
     listenForSumInsuredChanges(): void {
+        this.shipmentForm.get('dateOfDispatch')?.valueChanges.subscribe((dispatchDate: Date) => {
+            if (dispatchDate) {
+                const arrivalDate = new Date(dispatchDate);
+                arrivalDate.setMonth(arrivalDate.getMonth() + 3);
+
+                this.shipmentForm.get('estimatedArrival')?.setValue(arrivalDate);
+            }
+        });
         this.shipmentForm.get('sumInsured')?.valueChanges.pipe(
             debounceTime(300),
             distinctUntilChanged(),
@@ -958,7 +1009,8 @@ export class EditMarineQuoteComponent implements OnInit, OnDestroy
                 const formValue = this.shipmentForm.getRawValue();
                 const modeOfShipment =  formValue.modeOfShipment;
                 const  marineCargoType = formValue.salesCategory;
-                const selectedCategory = this.filteredMarineCargoTypes.find(c => c.ctname === marineCargoType);
+                const selectedCategory = this.filteredMarineCargoTypess.find(c => c.ctname === marineCargoType);
+                console.log('marineCargoType:', marineCargoType,'selectedCategory:', selectedCategory);
                 if(selectedCategory && modeOfShipment) {
                     this.quotationService.computePremium(sumInsured, selectedCategory.id, modeOfShipment).subscribe({
                         next: (res) => {
@@ -980,13 +1032,16 @@ export class EditMarineQuoteComponent implements OnInit, OnDestroy
 
     onCategorySelectedVal(categoryValue: string) {
         const selectedCategory = this.marineCategories.find(c => c.catname === categoryValue);
-        if (!selectedCategory) return of([]); // or throw error
+        if (!selectedCategory) return of([]);
 
-        return this.userService.getCargoTypesByCategory(selectedCategory.id)
-            .pipe(tap(cargoTypes => {
+        return this.userService.getCargoTypesByCategory(selectedCategory.id).pipe(
+            tap(cargoTypes => {
                 this.marineCargoTypess = cargoTypes || [];
-                this.filteredMarineCargoTypess = this.marineCargoTypess.slice();
-            }));
+                this.filteredMarineCargoTypess = [...this.marineCargoTypess];
+            }),
+            // IMPORTANT: return the cargoTypes to the subscriber
+            map(cargoTypes => cargoTypes || [])
+        );
     }
 
 
@@ -1180,13 +1235,28 @@ export class EditMarineQuoteComponent implements OnInit, OnDestroy
                 this.userDocs = data;
                 this.isLoadingMarineData = false;
                 this.shipmentForm.get('idNumber')?.setValue(data.idNo);
+                if (data.idNo) {
+                    this.shipmentForm.get('idNumber')?.disable();
+                } else {
+                    this.shipmentForm.get('idNumber')?.enable();
+                }
                 this.shipmentForm.get('streetAddress')?.setValue(data.postalAddress);
                 this.shipmentForm.get('postalCode')?.setValue(data.postalCode);
                 this.shipmentForm.get('firstName')?.setValue(data.firstName);
                 this.shipmentForm.get('lastName')?.setValue(data.lastName);
                 this.shipmentForm.get('emailAddress')?.setValue(data.emailAddress);
+                if (data.emailAddress) {
+                    this.shipmentForm.get('emailAddress')?.disable();
+                } else {
+                    this.shipmentForm.get('emailAddress')?.enable();
+                }
                 this.shipmentForm.get('phoneNumber')?.setValue(this.extractPhoneNumber(data.phoneNumber));
                 this.shipmentForm.get('kraPin')?.setValue(data.pinNo);
+                if (data.pinNo) {
+                    this.shipmentForm.get('kraPin')?.disable();
+                } else {
+                    this.shipmentForm.get('kraPin')?.enable();
+                }
                 if (data.idfDocumentExists) {
                     this.shipmentForm.get('nationalId')?.clearValidators();
                     this.shipmentForm.get('nationalId')?.updateValueAndValidity();
@@ -1208,13 +1278,36 @@ export class EditMarineQuoteComponent implements OnInit, OnDestroy
         });
     }
 
+    goToDashboard(): void {
+        this.router.navigate(['/dashboard']);
+    }
+
     private extractPhoneNumber(input: string): string {
         if (!input) return '';
-        const digitsOnly = input.replace(/\D/g, '');
-        const lastTenDigits = digitsOnly.slice(-10);
-        return lastTenDigits.startsWith('0')
-            ? lastTenDigits
-            : '0' + lastTenDigits;
+
+        let sanitized = input.trim().replace(/[^\d+]/g, '');
+
+        if (sanitized.startsWith('+254')) {
+            let local = sanitized.slice(4); // remove "+254"
+            if (local.length === 9 && local.startsWith('7')) {
+                return '0' + local;
+            }
+            return '0' + local.slice(-9);
+        } else if (sanitized.startsWith('254')) {
+            // without + sign
+            let local = sanitized.slice(3);
+            return '0' + local.slice(-9);
+        } else if (sanitized.length === 9 && sanitized.startsWith('7')) {
+            return '0' + sanitized;
+        } else if (sanitized.length === 10 && sanitized.startsWith('0')) {
+            return sanitized;
+        }
+
+        if (sanitized.startsWith('+1') || sanitized.startsWith('+2')) {
+            return sanitized;
+        }
+
+        return sanitized;
     }
 
 }

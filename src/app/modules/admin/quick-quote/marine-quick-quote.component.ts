@@ -222,10 +222,11 @@ export class MarineQuickQuoteComponent implements OnInit, OnDestroy
             selfAsImporter: [false],
             sumInsured: [null, [Validators.required, Validators.min(1)]],
             termsAndPolicyConsent: [false, Validators.requiredTrue],
-            firstName: ['', [Validators.required, CustomValidators.firstName]],
-            lastName: ['', [Validators.required, CustomValidators.lastName]],
+            // These personal details are currently hidden in the UI, so make them optional
+            firstName: [''],
+            lastName: [''],
             email: ['', [Validators.required, CustomValidators.email]],
-            phoneNumber: ['', [Validators.required, CustomValidators.phoneNumber]],
+            phoneNumber: [''],
         });
 
         // Step 2: Coverage Details (example fields)
