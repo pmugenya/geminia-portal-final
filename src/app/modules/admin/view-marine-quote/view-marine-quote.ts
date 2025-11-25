@@ -8,6 +8,7 @@ import { QuoteService } from '../../../core/services/quote.service';
 import { MatProgressBar } from '@angular/material/progress-bar';
 import { HttpEventType } from '@angular/common/http';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
+import { interval, Subscription, switchMap, takeUntil, timer } from 'rxjs';
 
 // Interfaces matching your Java model
 interface ApplicationShippingItemsData {
@@ -115,6 +116,8 @@ export class ViewMarineQuote implements OnInit {
     isLoading = false;
     error: string | null = null;
 
+    private pollingSubscription!: Subscription;
+
     // Individual properties for easy template binding
     id: number;
     refno: string;
@@ -196,57 +199,21 @@ export class ViewMarineQuote implements OnInit {
     ) {}
 
     ngOnInit(): void {
-        // Get application ID from route params
+        const maxPollingTime = 2 * 60 * 1000;
         this.quoteId = this.route.snapshot.paramMap.get('quoteId')!;
-        this.isLoading = true;
-        this.cdr.detectChanges();
-        this.quoteService.retrieveOneTransaction(Number(this.quoteId!)).subscribe({
-            next: (data) => {
-                this.refno = data.refno;
-                this.paid = data.paid;
-                this.originCountryName = data.originCountryName;
-                this.originPortName = data.originPortName;
-                this.destCountryName = data.destCountryName;
-                this.destPortName = data.destPortName;
-                this.shippingModeName = data.shippingModeName;
-                this.dateArrival = data.dateArrival;
-                this.dischageDate = data.dischageDate;
-                this.countyName = data.countyName;
-                this.transshippingAt = data.transshippingAt;
-                this.idfNumber = data.idfNumber;
-                this.vesselName = data.vesselName;
-                this.vesselNumber = data.vesselNumber;
-                this.rotationNumber = data.rotationNumber;
-                this.voyageNumber = data.voyageNumber;
-                this.ucrNumber = data.ucrNumber;
-                this.productName = data.productName;
-                this.erprefno = data.erprefno;
-                this.sumassured = data.sumassured;
-                this.premium = data.premium;
-                this.traininglevy = data.traininglevy;
-                this.premrate  = data.premrate;
-                this.phf = data.phf;
-                this.stampduty = data.stampduty;
-                this.totalPaid = data.totalPaid;
-                this.netpremium = data.netpremium;
-                this.agencyName = data.agencyName;
-                this.approvedStatus = data.approvedStatus;
-                this.isLoading = false;
-                this.cdr.detectChanges();
-                console.log(data);
-            },
-            error: (err) => {
-                this.isLoading = false;
-                this.cdr.detectChanges();
-                console.error('Error fetching transaction:', err);
-            }
-        });
-        this.route.params.subscribe(params => {
-            const appId = params['id'];
-            if (appId) {
-
-            }
-        });
+        const stopPolling$ = timer(maxPollingTime);
+        this.pollingSubscription = interval(500)
+            .pipe(
+                switchMap(() => this.quoteService.retrieveOneTransaction(Number(this.quoteId))),
+                takeUntil(stopPolling$) // stops polling after maxPollingTime
+            )
+            .subscribe(data => {
+                this.setTransactionData(data);
+                if (data.erprefno) {
+                    console.log('erprefno has arrived:', data.erprefno);
+                    this.pollingSubscription.unsubscribe(); // stop polling immediately
+                }
+            });
 
         // Alternative: Load data passed via navigation state
         const navigation = this.router.getCurrentNavigation();
@@ -255,6 +222,40 @@ export class ViewMarineQuote implements OnInit {
         }
     }
 
+
+    setTransactionData(data: any) {
+        this.refno = data.refno;
+        this.paid = data.paid;
+        this.id = data.id;
+        this.originCountryName = data.originCountryName;
+        this.originPortName = data.originPortName;
+        this.destCountryName = data.destCountryName;
+        this.destPortName = data.destPortName;
+        this.shippingModeName = data.shippingModeName;
+        this.dateArrival = data.dateArrival;
+        this.dischageDate = data.dischageDate;
+        this.countyName = data.countyName;
+        this.transshippingAt = data.transshippingAt;
+        this.idfNumber = data.idfNumber;
+        this.vesselName = data.vesselName;
+        this.vesselNumber = data.vesselNumber;
+        this.rotationNumber = data.rotationNumber;
+        this.voyageNumber = data.voyageNumber;
+        this.ucrNumber = data.ucrNumber;
+        this.productName = data.productName;
+        this.erprefno = data.erprefno;
+        this.sumassured = data.sumassured;
+        this.premium = data.premium;
+        this.traininglevy = data.traininglevy;
+        this.premrate  = data.premrate;
+        this.phf = data.phf;
+        this.stampduty = data.stampduty;
+        this.totalPaid = data.totalPaid;
+        this.netpremium = data.netpremium;
+        this.agencyName = data.agencyName;
+        this.approvedStatus = data.approvedStatus;
+        this.batchNo = data.batchNo;
+    }
 
     /**
      * Set application data and map to component properties
@@ -340,7 +341,7 @@ export class ViewMarineQuote implements OnInit {
         }
 
 
-        this.quoteService.downloadDigitalCert(''+this.batchNo).subscribe({
+        this.quoteService.downloadDigitalCert(this.id).subscribe({
             next: (event) => {
                 switch (event.type) {
                     case HttpEventType.DownloadProgress:
@@ -363,7 +364,7 @@ export class ViewMarineQuote implements OnInit {
                 }
             },
             error: (err) => {
-                this.showError('Unable to get Certificate to Download the certificate');
+                this.showError('Certificate Processing in progress. Try again later');
                 this.progress = -1;
             }
         });

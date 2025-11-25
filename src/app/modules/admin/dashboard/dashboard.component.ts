@@ -10,10 +10,16 @@ import { MatTableModule } from '@angular/material/table';
 import { NgApexchartsModule } from 'ng-apexcharts';
 import { MatDivider } from '@angular/material/divider';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
-import { PolicyRecord } from '../../../core/user/user.types';
+import { PolicyRecord, QuotesAnalysis, YTDAnalysis } from '../../../core/user/user.types';
 import { UserService } from '../../../core/user/user.service';
 import { finalize, forkJoin } from 'rxjs';
 import { Router } from '@angular/router';
+import { HttpEventType } from '@angular/common/http';
+import { QuoteService } from '../../../core/services/quote.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatProgressSpinner } from '@angular/material/progress-spinner';
+import { QuoteProductDialogsComponent } from '../quote-product-dialog/quote-product-dialog.component';
+import { MatDialog } from '@angular/material/dialog';
 
 // Chart options interface
 interface ApexChartOptions {
@@ -74,6 +80,7 @@ interface DashboardData {
         NgApexchartsModule,
         MatDivider,
         MatPaginator,
+        MatProgressSpinner,
     ],
 })
 export class InsuranceDashboardComponent implements OnInit,AfterViewInit {
@@ -122,15 +129,23 @@ export class InsuranceDashboardComponent implements OnInit,AfterViewInit {
     isLoading = false;
     isInitialLoad = true;
 
+    progress = -1;
+
     policiesTotalRecords = 0;
     policiesPage = 0;
     policiesPageSize = 10;
+
+    ytd!: YTDAnalysis;
+    quot!: QuotesAnalysis;
 
     // Policy Performance Chart Options
     policyPerformanceOptions: ApexChartOptions;
 
     constructor(private userService: UserService,
                 private cdr: ChangeDetectorRef,
+                private quoteService: QuoteService,
+                private snackBar: MatSnackBar,
+                private dialog: MatDialog,
                 private router: Router,) {
         // Initialize the data source for recent policies
 
@@ -141,65 +156,37 @@ export class InsuranceDashboardComponent implements OnInit,AfterViewInit {
                 height: '100%',
                 parentHeightOffset: 0,
                 fontFamily: 'inherit',
-                toolbar: {
-                    show: false
-                },
-                animations: {
-                    enabled: false
-                },
-                zoom: {
-                    enabled: false
-                }
+                toolbar: { show: false },
+                animations: { enabled: false },
+                zoom: { enabled: false }
             },
-            colors: ['#3B82F6', '#EF4444'],
-            fill: {
-                opacity: 0.5,
-                type: 'solid'
-            },
-            series: [
-                {
-                    name: 'Premium Growth',
-                    type: 'line',
-                    data: [10.2, 11.5, 9.8, 12.1, 13.4, 11.2, 12.8, 14.1, 13.5, 12.2, 11.8, 12.5]
-                },
-                {
-                    name: 'Claim Frequency',
-                    type: 'line',
-                    data: [3.8, 4.1, 3.5, 4.2, 4.8, 4.5, 4.1, 3.9, 4.3, 4.6, 4.2, 4.2]
-                }
-            ],
+            colors: ['#3B82F6'],
+            fill: { opacity: 0.5, type: 'solid' },
+
+            series: [], // will be filled dynamically
+
             stroke: {
                 width: 2,
                 curve: 'smooth'
             },
+
             tooltip: {
                 theme: 'dark',
                 shared: true,
                 intersect: false,
                 y: {
-                    formatter: (value: number, { seriesIndex }: { seriesIndex: number }) => {
-                        return seriesIndex === 0 ? `${value}%` : value.toString();
-                    }
+                    formatter: (value: number) => `${value}%`
                 }
             },
+
             xaxis: {
-                categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-                axisBorder: {
-                    show: false
-                },
-                axisTicks: {
-                    show: false
-                },
-                tooltip: {
-                    enabled: false
-                },
-                labels: {
-                    style: {
-                        colors: '#6B7280'
-                    }
-                }
+                categories: [],
+                axisBorder: { show: false },
+                axisTicks: { show: false },
+                labels: { style: { colors: '#6B7280' } }
             }
         };
+
     }
 
 
@@ -220,9 +207,14 @@ export class InsuranceDashboardComponent implements OnInit,AfterViewInit {
     loadPolicyData(): void {
         this.isLoading = true;
         this.cdr.detectChanges();
+
         const policiesOffset = this.policiesPage * this.policiesPageSize;
+
         forkJoin({
-            policies: this.userService.getClientPolicies(policiesOffset, this.policiesPageSize)
+            policies: this.userService.getClientPolicies(policiesOffset, this.policiesPageSize),
+            ytd: this.quoteService.getAgencyCoverage(),
+            quot: this.quoteService.getQuotAnalysis(),
+            growthData: this.quoteService.getGrowthAnalysis(3)
         })
             .pipe(
                 finalize(() => {
@@ -230,25 +222,93 @@ export class InsuranceDashboardComponent implements OnInit,AfterViewInit {
                     this.isInitialLoad = false;
                     this.cdr.detectChanges();
                 })
-            ).subscribe({
-            next: ({ policies }) => {
+            )
+            .subscribe({
+                next: ({ policies, ytd,quot,growthData }) => {
+                    const policiesData = policies.pageItems.map((p: any) => ({
+                        ...p,
+                        coverFrom: this.toDate(p.dischageDate),
+                        clientName: `${p.firstname} ${p.lastname}`,
+                        coverTo: this.toDate(p.dateArrival),
+                    }));
 
-                console.log(policies);
-                const policiesData = policies.pageItems.map((p: any) => ({
-                    ...p,
-                    coverFrom: this.toDate(p.dischageDate),
-                    clientName: `${p.firstname} ${p.lastname}`,
-                    coverTo: this.toDate(p.dateArrival),
-                }));
-                this.myPolicyDataSource.data =  policiesData;
-                this.policiesTotalRecords = policies.totalFilteredRecords;
+                    this.myPolicyDataSource.data = policiesData;
+                    this.policiesTotalRecords = policies.totalFilteredRecords;
+                    this.ytd = ytd;
+                    this.quot = quot;
 
-            },
-            error: (err) => {
-                console.error('Error loading dashboard data', err);
-            },
+                    const labels = growthData.map(d => d.month);   // e.g. ["Jan 2025", "Feb 2025"]
+                    const values = growthData.map(d => d.growthPercentage);
+
+                    this.policyPerformanceOptions = {
+                        ...this.policyPerformanceOptions,
+
+                        xaxis: {
+                            categories: labels
+                        },
+
+                        series: [
+                            {
+                                name: 'Premium Growth',
+                                type: 'line',
+                                data: values
+                            }
+                        ]
+                    };
+                },
+                error: (err) => {
+                    console.error('Dashboard Load Error:', err);
+                }
+            });
+    }
+
+
+    loadGrowthChart(months: number) {
+        this.quoteService.getGrowthAnalysis(months).subscribe(data => {
+
+            const labels = data.map(d => d.month);   // e.g. ["Jan 2025", "Feb 2025"]
+            const values = data.map(d => d.growthPercentage);
+            console.log(labels);
+            console.log(values);
+
+            this.policyPerformanceOptions = {
+                ...this.policyPerformanceOptions,
+
+                xaxis: {
+                    categories: labels
+                },
+
+                series: [
+                    {
+                        name: 'Premium Growth',
+                        type: 'line',
+                        data: values
+                    }
+                ]
+            };
         });
     }
+
+    openProductQuoteDialog(): void {
+        const dialogRef = this.dialog.open(QuoteProductDialogsComponent, {
+            width: '100%',
+            maxWidth: '480px',
+            panelClass: ['fuse-dialog'],
+            autoFocus: false
+        });
+
+        dialogRef.afterClosed().subscribe((selectedProduct) => {
+            if (selectedProduct) {
+                if(selectedProduct==='Marine'){
+                    this.router.navigate(['/marinequote']);
+                }
+                else{
+
+                }
+            }
+        });
+    }
+
 
 
     private toDate(dateArray?: number[]): Date | null {
@@ -278,6 +338,68 @@ export class InsuranceDashboardComponent implements OnInit,AfterViewInit {
 
     viewPolicy(policy: PolicyRecord): void {
         this.router.navigate(['/viewmarinequote', policy.id]);
+    }
+
+    gotoPolicies(): void {
+        this.router.navigate(['/clientpolicies']);
+    }
+
+    gotoQuotes(): void {
+        this.router.navigate(['/clientquotes']);
+    }
+
+    downloadPolicy(policy: PolicyRecord): void {
+        if(policy.error){
+            this.showError('An Error Occured while trying to retrieve certificate '+policy.error);
+            return;
+        }
+
+
+        this.quoteService.downloadDigitalCert(policy.id).subscribe({
+            next: (event) => {
+                switch (event.type) {
+                    case HttpEventType.DownloadProgress:
+                        if (event.total) {
+                            this.progress = Math.round((100 * event.loaded) / event.total);
+                        }
+                        break;
+
+                    case HttpEventType.Response:
+                        const blob = event.body!;
+                        const filename = this.getFileNameFromHeaders(event.headers) || 'digital_cert.pdf';
+
+                        const link = document.createElement('a');
+                        link.href = window.URL.createObjectURL(blob);
+                        link.download = filename;
+                        link.click();
+                        window.URL.revokeObjectURL(link.href);
+                        this.progress = -1; // reset progress
+                        break;
+                }
+            },
+            error: (err) => {
+                this.showError('Unable to get Certificate to Download the certificate');
+                this.progress = -1;
+            }
+        });
+    }
+
+
+    private getFileNameFromHeaders(headers: any): string | null {
+        const contentDisposition = headers.get('Content-Disposition');
+        if (!contentDisposition) return null;
+
+        const matches = /filename="(.+)"/.exec(contentDisposition);
+        return matches && matches.length > 1 ? matches[1] : null;
+    }
+
+    showError(message: string): void {
+        this.snackBar.open(message, 'Close', {
+            duration: 7000,
+            panelClass: ['error-snackbar'],
+            horizontalPosition: 'end',
+            verticalPosition: 'top'
+        });
     }
 
     onPoliciesPageChange(event: PageEvent): void {

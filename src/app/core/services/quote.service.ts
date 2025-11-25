@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpEvent, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { PostalCode, QuotesData, RecentActivity } from '../user/user.types';
+import { GrowthDTO, PostalCode, QuotesAnalysis, QuotesData, RecentActivity, YTDAnalysis } from '../user/user.types';
 
 @Injectable({ providedIn: 'root' })
 export class QuoteService {
@@ -21,6 +21,19 @@ export class QuoteService {
         return this.http.get<RecentActivity[]>(`${this.baseUrl}/recentactivity`);
     }
 
+    getAgencyCoverage(): Observable<YTDAnalysis> {
+        return this.http.get<YTDAnalysis>(`${this.baseUrl}/dashboard/agencycoverage`);
+    }
+
+    getQuotAnalysis(): Observable<QuotesAnalysis> {
+        return this.http.get<QuotesAnalysis>(`${this.baseUrl}/dashboard/quotanalysis`);
+    }
+
+    getGrowthAnalysis(months: number) {
+        return this.http.get<GrowthDTO[]>(`${this.baseUrl}/dashboard/growthanalysis/${months}`);
+
+    }
+
     getPostalCodes(): Observable<PostalCode[]> {
         return this.http.get<PostalCode[]>(`${this.baseUrl}/self/countries/postalcodes`);
     }
@@ -37,10 +50,10 @@ export class QuoteService {
         return this.http.post(`${this.baseUrl}/shippingapplication`, formData);
     }
 
-    downloadDigitalCert(refNo: string): Observable<HttpEvent<Blob>> {
-        const params = new HttpParams().set('refNo', refNo);
+    downloadDigitalCert(id: number): Observable<HttpEvent<Blob>> {
+        const params = new HttpParams().set('id', id);
 
-        return this.http.get(`${this.baseUrl}/shippingapplication/digitalCert`, {
+        return this.http.get(`${this.baseUrl}/shippingapplication/coredigitalCert`, {
             params,
             responseType: 'blob',
             observe: 'events',      // observe events for progress

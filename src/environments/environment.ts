@@ -1,6 +1,6 @@
 export const environment = {
     production: false,
-    apiUrl: 'http://192.168.165.79:8080/fineract-provider/api/v1',
+    apiUrl: 'http://10.1.1.64:9090/marineportaltest/api/v1',
     apiTimeout: 30000,
     maxFileSize: 10485760, // 10MB
     allowedFileTypes: ['.pdf', '.jpg', '.jpeg', '.png', '.doc', '.docx'],

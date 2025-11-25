@@ -1,5 +1,9 @@
 <div class="flex w-full flex-auto flex-col">
-    <div class="mx-auto flex w-full max-w-screen-xl flex-wrap p-6 md:p-8">
+    <div *ngIf="isLoading" class="flex flex-col items-center justify-center h-[60vh] w-full">
+        <mat-spinner diameter="60" color="primary"></mat-spinner>
+        <p class="mt-4 text-gray-600 font-medium">Loading quote details...</p>
+    </div>
+    <div class="mx-auto flex w-full max-w-screen-xl flex-wrap p-6 md:p-8" *ngIf="!isLoading">
         <!-- Title and action buttons -->
         <div class="flex w-full items-center justify-between">
             <div>
@@ -11,30 +15,31 @@
                 </div>
             </div>
             <div class="ml-6 flex items-center">
-                <button class="hidden sm:inline-flex" mat-stroked-button>
-                    <mat-icon
-                        class="icon-size-5"
-                        [svgIcon]="'heroicons_solid:chart-bar'"
-                    ></mat-icon>
-                    <span class="ml-2">Reports</span>
-                </button>
-                <button class="ml-3 hidden sm:inline-flex" mat-stroked-button>
-                    <mat-icon
-                        class="icon-size-5"
-                        [svgIcon]="'heroicons_solid:cog-8-tooth'"
-                    ></mat-icon>
-                    <span class="ml-2">Settings</span>
-                </button>
+                <!--                <button class="hidden sm:inline-flex" mat-stroked-button>-->
+                <!--                    <mat-icon-->
+                <!--                        class="icon-size-5"-->
+                <!--                        [svgIcon]="'heroicons_solid:chart-bar'"-->
+                <!--                    ></mat-icon>-->
+                <!--                    <span class="ml-2">Reports</span>-->
+                <!--                </button>-->
+                <!--                <button class="ml-3 hidden sm:inline-flex" mat-stroked-button>-->
+                <!--                    <mat-icon-->
+                <!--                        class="icon-size-5"-->
+                <!--                        [svgIcon]="'heroicons_solid:cog-8-tooth'"-->
+                <!--                    ></mat-icon>-->
+                <!--                    <span class="ml-2">Settings</span>-->
+                <!--                </button>-->
                 <button
                     class="ml-3 hidden sm:inline-flex"
                     mat-flat-button
                     [color]="'primary'"
+                    (click)="openProductQuoteDialog()"
                 >
                     <mat-icon
                         class="icon-size-5"
                         [svgIcon]="'heroicons_solid:plus'"
                     ></mat-icon>
-                    <span class="ml-2">New Policy</span>
+                    <span class="ml-2">New Quote</span>
                 </button>
 
                 <!-- Actions menu (visible on xs) -->
@@ -72,9 +77,9 @@
                             >
                                 Active Policies
                             </div>
-                            <div class="text-sm font-medium text-green-600">
-                                {{ data.activePolicies.renewalCount }} renewals due this month
-                            </div>
+                            <!--                            <div class="text-sm font-medium text-green-600">-->
+                            <!--                                {{ policiesTotalRecords }} renewals due this month-->
+                            <!--                            </div>-->
                         </div>
                         <div class="-mt-2 ml-auto">
                             <button
@@ -89,7 +94,7 @@
                                 ></mat-icon>
                             </button>
                             <mat-menu #activePoliciesMenu="matMenu">
-                                <button mat-menu-item>
+                                <button mat-menu-item (click)="gotoPolicies()">
                                     <span class="flex items-center">
                                         <mat-icon
                                             class="mr-3 icon-size-5"
@@ -100,40 +105,40 @@
                                         <span>View All Policies</span>
                                     </span>
                                 </button>
-                                <button mat-menu-item>
-                                    <span class="flex items-center">
-                                        <mat-icon
-                                            class="mr-3 icon-size-5"
-                                            [svgIcon]="
-                                                'heroicons_solid:clock'
-                                            "
-                                        ></mat-icon>
-                                        <span>Renewal Schedule</span>
-                                    </span>
-                                </button>
-                                <button mat-menu-item>
-                                    <span class="flex items-center">
-                                        <mat-icon
-                                            class="mr-3 icon-size-5"
-                                            [svgIcon]="
-                                                'heroicons_solid:chart-bar'
-                                            "
-                                        ></mat-icon>
-                                        <span>Coverage Analysis</span>
-                                    </span>
-                                </button>
-                                <mat-divider class="my-2"></mat-divider>
-                                <button mat-menu-item>
-                                    <span class="flex items-center">
-                                        <mat-icon
-                                            class="mr-3 icon-size-5"
-                                            [svgIcon]="
-                                                'heroicons_solid:printer'
-                                            "
-                                        ></mat-icon>
-                                        <span>Print Summary</span>
-                                    </span>
-                                </button>
+                                <!--                                <button mat-menu-item>-->
+                                <!--                                    <span class="flex items-center">-->
+                                <!--                                        <mat-icon-->
+                                <!--                                            class="mr-3 icon-size-5"-->
+                                <!--                                            [svgIcon]="-->
+                                <!--                                                'heroicons_solid:clock'-->
+                                <!--                                            "-->
+                                <!--                                        ></mat-icon>-->
+                                <!--                                        <span>Renewal Schedule</span>-->
+                                <!--                                    </span>-->
+                                <!--                                </button>-->
+                                <!--                                <button mat-menu-item>-->
+                                <!--                                    <span class="flex items-center">-->
+                                <!--                                        <mat-icon-->
+                                <!--                                            class="mr-3 icon-size-5"-->
+                                <!--                                            [svgIcon]="-->
+                                <!--                                                'heroicons_solid:chart-bar'-->
+                                <!--                                            "-->
+                                <!--                                        ></mat-icon>-->
+                                <!--                                        <span>Coverage Analysis</span>-->
+                                <!--                                    </span>-->
+                                <!--                                </button>-->
+                                <!--                                <mat-divider class="my-2"></mat-divider>-->
+                                <!--                                <button mat-menu-item>-->
+                                <!--                                    <span class="flex items-center">-->
+                                <!--                                        <mat-icon-->
+                                <!--                                            class="mr-3 icon-size-5"-->
+                                <!--                                            [svgIcon]="-->
+                                <!--                                                'heroicons_solid:printer'-->
+                                <!--                                            "-->
+                                <!--                                        ></mat-icon>-->
+                                <!--                                        <span>Print Summary</span>-->
+                                <!--                                    </span>-->
+                                <!--                                </button>-->
                             </mat-menu>
                         </div>
                     </div>
@@ -145,19 +150,19 @@
                                 Total Policies
                             </div>
                             <div class="mt-2 text-3xl font-medium leading-none">
-                                {{ data.activePolicies.total }}
+                                {{ policiesTotalRecords }}
                             </div>
                         </div>
                         <div class="mx-6 my-3 flex flex-col">
                             <div
                                 class="text-secondary text-sm font-medium leading-none"
                             >
-                                Annual Premium
+                                YTD Premium
                             </div>
                             <div class="mt-2 text-3xl font-medium leading-none">
                                 {{
-                                    data.activePolicies.annualPremium
-                                        | currency: 'USD'
+                                    ytd.ytdPremium
+                                        | currency: 'KSH '
                                 }}
                             </div>
                         </div>
@@ -165,12 +170,12 @@
                             <div
                                 class="text-secondary text-sm font-medium leading-none"
                             >
-                                Coverage Value
+                                YTD Coverage
                             </div>
                             <div class="mt-2 text-3xl font-medium leading-none">
                                 {{
-                                    data.activePolicies.coverageValue
-                                        | currency: 'USD'
+                                    ytd.ytdSumAssured
+                                        | currency: 'KSH '
                                 }}
                             </div>
                         </div>
@@ -191,10 +196,10 @@
                             <div
                                 class="truncate text-lg font-medium leading-6 tracking-tight"
                             >
-                                Claims Overview
+                                Quotes Overview
                             </div>
-                            <div class="text-sm font-medium text-blue-600">
-                                {{ data.claimsOverview.pending }} pending claims
+                            <div class="text-sm font-medium text-blue-600" *ngIf="quot.totalQuotes - quot.totalConvertedQuotes > 0">
+                                {{ quot.totalQuotes - quot.totalConvertedQuotes }} pending quotes
                             </div>
                         </div>
                         <div class="-mt-2 ml-auto">
@@ -210,7 +215,7 @@
                                 ></mat-icon>
                             </button>
                             <mat-menu #claimsMenu="matMenu">
-                                <button mat-menu-item>
+                                <button mat-menu-item (click)="openProductQuoteDialog()">
                                     <span class="flex items-center">
                                         <mat-icon
                                             class="mr-3 icon-size-5"
@@ -218,10 +223,10 @@
                                                 'heroicons_solid:plus'
                                             "
                                         ></mat-icon>
-                                        <span>File New Claim</span>
+                                        <span>New Quote</span>
                                     </span>
                                 </button>
-                                <button mat-menu-item>
+                                <button mat-menu-item (click)="gotoQuotes()">
                                     <span class="flex items-center">
                                         <mat-icon
                                             class="mr-3 icon-size-5"
@@ -229,32 +234,32 @@
                                                 'heroicons_solid:list-bullet'
                                             "
                                         ></mat-icon>
-                                        <span>View All Claims</span>
+                                        <span>View All Quotes</span>
                                     </span>
                                 </button>
-                                <button mat-menu-item>
-                                    <span class="flex items-center">
-                                        <mat-icon
-                                            class="mr-3 icon-size-5"
-                                            [svgIcon]="
-                                                'heroicons_solid:chart-bar'
-                                            "
-                                        ></mat-icon>
-                                        <span>Claims Analytics</span>
-                                    </span>
-                                </button>
-                                <mat-divider class="my-2"></mat-divider>
-                                <button mat-menu-item>
-                                    <span class="flex items-center">
-                                        <mat-icon
-                                            class="mr-3 icon-size-5"
-                                            [svgIcon]="
-                                                'heroicons_solid:printer'
-                                            "
-                                        ></mat-icon>
-                                        <span>Print Claims Report</span>
-                                    </span>
-                                </button>
+                                <!--                                <button mat-menu-item>-->
+                                <!--                                    <span class="flex items-center">-->
+                                <!--                                        <mat-icon-->
+                                <!--                                            class="mr-3 icon-size-5"-->
+                                <!--                                            [svgIcon]="-->
+                                <!--                                                'heroicons_solid:chart-bar'-->
+                                <!--                                            "-->
+                                <!--                                        ></mat-icon>-->
+                                <!--                                        <span>Claims Analytics</span>-->
+                                <!--                                    </span>-->
+                                <!--                                </button>-->
+                                <!--                                <mat-divider class="my-2"></mat-divider>-->
+                                <!--                                <button mat-menu-item>-->
+                                <!--                                    <span class="flex items-center">-->
+                                <!--                                        <mat-icon-->
+                                <!--                                            class="mr-3 icon-size-5"-->
+                                <!--                                            [svgIcon]="-->
+                                <!--                                                'heroicons_solid:printer'-->
+                                <!--                                            "-->
+                                <!--                                        ></mat-icon>-->
+                                <!--                                        <span>Print Claims Report</span>-->
+                                <!--                                    </span>-->
+                                <!--                                </button>-->
                             </mat-menu>
                         </div>
                     </div>
@@ -263,32 +268,32 @@
                             <div
                                 class="text-secondary text-sm font-medium leading-none"
                             >
-                                Total Claims
+                                Total Quotes
                             </div>
                             <div class="mt-2 text-3xl font-medium leading-none">
-                                {{ data.claimsOverview.total }}
+                                {{ quot.totalQuotes }}
                             </div>
                         </div>
                         <div class="mx-6 my-3 flex flex-col">
                             <div
                                 class="text-secondary text-sm font-medium leading-none"
                             >
-                                Approved
+                                Converted Quotes
                             </div>
                             <div class="mt-2 text-3xl font-medium leading-none">
-                                {{ data.claimsOverview.approved }}
+                                {{ quot.totalConvertedQuotes }}
                             </div>
                         </div>
                         <div class="mx-6 my-3 flex flex-col">
                             <div
                                 class="text-secondary text-sm font-medium leading-none"
                             >
-                                Total Payout
+                                Total Quote Premium
                             </div>
                             <div class="mt-2 text-3xl font-medium leading-none">
                                 {{
-                                    data.claimsOverview.totalPayout
-                                        | currency: 'USD'
+                                    quot.totalPremium
+                                        | currency: 'KSH '
                                 }}
                             </div>
                         </div>
@@ -308,51 +313,16 @@
                                 Policy Performance
                             </div>
                             <div class="text-secondary font-medium">
-                                Monthly premium growth and claim frequency
+                                Monthly premium growth
                             </div>
                         </div>
                         <div class="ml-2">
-                            <button
-                                class="bg-hover h-6 min-h-6 rounded-full px-2"
-                                mat-button
-                                [matMenuTriggerFor]="performanceMenu"
-                            >
-                                <span class="text-secondary text-sm font-medium"
-                                >12 months</span
-                                >
-                            </button>
-                            <mat-menu #performanceMenu="matMenu">
-                                <button mat-menu-item>3 months</button>
-                                <button mat-menu-item>6 months</button>
-                                <button mat-menu-item>9 months</button>
-                                <button mat-menu-item>12 months</button>
-                            </mat-menu>
-                        </div>
-                    </div>
-                    <div class="mr-2 mt-6 flex items-start">
-                        <div class="flex flex-col">
-                            <div
-                                class="text-3xl font-semibold tracking-tighter md:text-5xl"
-                            >
-                                {{ data.policyPerformance.premiumGrowth }}%
-                            </div>
-                            <div
-                                class="text-secondary text-sm font-medium leading-none"
-                            >
-                                Premium Growth
-                            </div>
-                        </div>
-                        <div class="ml-8 flex flex-col md:ml-16">
-                            <div
-                                class="text-3xl font-semibold tracking-tighter md:text-5xl"
-                            >
-                                {{ data.policyPerformance.claimFrequency }}
-                            </div>
-                            <div
-                                class="text-secondary text-sm font-medium leading-none"
-                            >
-                                Avg. Monthly Claims
-                            </div>
+                            <select (change)="loadGrowthChart($event.target.value)"
+                                    class="border p-2 rounded">
+                                <option value="3">Last 3 Months</option>
+                                <option value="6">Last 6 Months</option>
+                                <option value="12">Last 12 Months</option>
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -371,7 +341,7 @@
             </div>
         </div>
 
-        <div class="mt-8 grid w-full grid-cols-1 gap-8 xl:grid-cols-3">
+        <div class="mt-8 grid w-full grid-cols-1 gap-8 xl:grid-cols-1">
             <!-- Recent Policies -->
             <div
                 class="bg-card flex flex-auto flex-col overflow-hidden rounded-2xl shadow xl:col-span-2"
@@ -380,264 +350,103 @@
                     <div
                         class="mr-4 truncate text-lg font-medium leading-6 tracking-tight"
                     >
-                         Policies Listing
+                        Policies Listing
                     </div>
                     <div class="text-secondary text-sm" *ngIf="!isInitialLoad">
                         Showing {{ myPolicyDataSource.data.length }} of {{ policiesTotalRecords }} policies
                     </div>
                 </div>
                 <div class="mx-6 overflow-x-auto">
-                        <table
-                            class="w-full"
-                            mat-table
-                            matSort
-                            [dataSource]="myPolicyDataSource"
-                            [trackBy]="trackByFn"
-                            #myPoliciesTable
-                        >
-
-                            <ng-container matColumnDef="productName">
-                                <th mat-header-cell *matHeaderCellDef>Product</th>
-                                <td mat-cell *matCellDef="let policy">
-                                    <div class="flex items-center">
-                                        {{ policy.productName }}
-                                    </div>
-                                </td>
-                            </ng-container>
-                            <ng-container matColumnDef="clientName">
-                                <th mat-header-cell *matHeaderCellDef mat-sort-header>Client Name</th>
-                                <td mat-cell *matCellDef="let policy">
-                                    <div class="flex items-center">
-                                        {{ policy.clientName }}
-                                    </div>
-                                </td>
-                            </ng-container>
-
-                            <ng-container matColumnDef="erprefno">
-                                <th mat-header-cell *matHeaderCellDef>Policy No</th>
-                                <td mat-cell *matCellDef="let policy">{{ policy.erprefno }}</td>
-                            </ng-container>
-
-                            <!-- Coverage Amount -->
-                            <ng-container matColumnDef="netpremium">
-                                <th mat-header-cell *matHeaderCellDef>Premium</th>
-                                <td mat-cell *matCellDef="let policy">
-                                    <span class="font-medium">{{ policy.netpremium | currency:'KES ' }}</span>
-                                </td>
-                            </ng-container>
-
-                            <!-- Premium -->
-                            <ng-container matColumnDef="coverFrom">
-                                <th mat-header-cell *matHeaderCellDef>Cover From</th>
-                                <td mat-cell *matCellDef="let policy">
-                                    {{ policy.coverFrom | date }}
-                                </td>
-                            </ng-container>
-
-                            <!-- Renewal Date -->
-                            <ng-container matColumnDef="coverTo">
-                                <th mat-header-cell *matHeaderCellDef>Cover To</th>
-                                <td mat-cell *matCellDef="let policy">
-                                    <div [class.text-red-600]="isExpiringSoon(policy.coverTo)"
-                                         [class.font-semibold]="isExpiringSoon(policy.coverTo)">
-                                        {{ formatDate(policy.coverTo) }}
-                                        <div class="text-xs text-secondary" *ngIf="isExpiringSoon(policy.coverTo)">
-                                            {{ getDaysUntilRenewal(policy.coverTo) }} days left
-                                        </div>
-                                    </div>
-                                </td>
-                            </ng-container>
-
-                            <!-- Actions -->
-                            <ng-container matColumnDef="actions">
-                                <th mat-header-cell *matHeaderCellDef>Actions</th>
-                                <td mat-cell *matCellDef="let policy">
-                                    <div class="flex space-x-2">
-                                        <button mat-icon-button (click)="viewPolicy(policy)" title="View Policy">
-                                            <mat-icon class="icon-size-4" [svgIcon]="'heroicons_outline:eye'"></mat-icon>
-                                        </button>
-                                        <button mat-icon-button (click)="downloadPolicy(policy)" title="Download">
-                                            <mat-icon class="icon-size-4" [svgIcon]="'heroicons_outline:arrow-down-tray'"></mat-icon>
-                                        </button>
-                                        <button
-                                            *ngIf="policy.status === 'renewal'"
-                                            mat-icon-button
-                                            (click)="renewPolicy(policy)"
-                                            title="Renew Policy"
-                                        >
-                                            <mat-icon class="icon-size-4 text-green-600" [svgIcon]="'heroicons_outline:arrow-path'"></mat-icon>
-                                        </button>
-                                    </div>
-                                </td>
-                            </ng-container>
-
-                            <tr mat-header-row *matHeaderRowDef="myPolicyTableColumns"></tr>
-                            <tr mat-row *matRowDef="let row; columns: myPolicyTableColumns;"></tr>
-                        </table>
-                    </div>
-                    <mat-paginator
-                        *ngIf="!isInitialLoad && policiesTotalRecords > 0"
-                        [length]="policiesTotalRecords"
-                        [pageSize]="policiesPageSize"
-                        [pageSizeOptions]="pageSizeOptions"
-                        [pageIndex]="currentPage"
-                        (page)="onPoliciesPageChange($event)"
-                        showFirstLastButtons="true"
+                    <table
+                        class="w-full"
+                        mat-table
+                        matSort
+                        [dataSource]="myPolicyDataSource"
+                        [trackBy]="trackByFn"
+                        #myPoliciesTable
                     >
-                    </mat-paginator>
-            </div>
 
-            <!-- Insurance Portfolio -->
-            <div class="bg-card flex flex-auto flex-col rounded-2xl p-6 shadow">
-                <div class="flex items-center">
-                    <div class="flex flex-col">
-                        <div
-                            class="mr-4 truncate text-lg font-medium leading-6 tracking-tight"
-                        >
-                            Insurance Portfolio
-                        </div>
-                        <div class="text-secondary font-medium">
-                            Coverage distribution by product type
-                        </div>
-                    </div>
-                    <div class="-mr-2 -mt-2 ml-auto">
-                        <button
-                            mat-icon-button
-                            [matMenuTriggerFor]="portfolioMenu"
-                        >
-                            <mat-icon
-                                class="icon-size-5"
-                                [svgIcon]="'heroicons_mini:ellipsis-vertical'"
-                            ></mat-icon>
-                        </button>
-                        <mat-menu #portfolioMenu="matMenu">
-                            <button mat-menu-item>Coverage Analysis</button>
-                            <button mat-menu-item>Risk Assessment</button>
-                            <button mat-menu-item>Portfolio Summary</button>
-                            <mat-divider class="my-2"></mat-divider>
-                            <button mat-menu-item>
-                                <span class="flex items-center">
-                                    <mat-icon
-                                        class="mr-3 icon-size-5"
-                                        [svgIcon]="'heroicons_solid:printer'"
-                                    ></mat-icon>
-                                    <span>Print Portfolio</span>
-                                </span>
-                            </button>
-                        </mat-menu>
-                    </div>
+                        <ng-container matColumnDef="productName">
+                            <th mat-header-cell *matHeaderCellDef>Product</th>
+                            <td mat-cell *matCellDef="let policy">
+                                <div class="flex items-center">
+                                    {{ policy.productName }}
+                                </div>
+                            </td>
+                        </ng-container>
+                        <ng-container matColumnDef="clientName">
+                            <th mat-header-cell *matHeaderCellDef mat-sort-header>Client Name</th>
+                            <td mat-cell *matCellDef="let policy">
+                                <div class="flex items-center">
+                                    {{ policy.clientName }}
+                                </div>
+                            </td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="erprefno">
+                            <th mat-header-cell *matHeaderCellDef>Policy No</th>
+                            <td mat-cell *matCellDef="let policy">{{ policy.erprefno }}</td>
+                        </ng-container>
+
+                        <!-- Coverage Amount -->
+                        <ng-container matColumnDef="netpremium">
+                            <th mat-header-cell *matHeaderCellDef>Premium</th>
+                            <td mat-cell *matCellDef="let policy">
+                                <span class="font-medium">{{ policy.netpremium | currency:'KES ' }}</span>
+                            </td>
+                        </ng-container>
+
+                        <!-- Premium -->
+                        <ng-container matColumnDef="coverFrom">
+                            <th mat-header-cell *matHeaderCellDef>Cover From</th>
+                            <td mat-cell *matCellDef="let policy">
+                                {{ policy.coverFrom | date }}
+                            </td>
+                        </ng-container>
+
+                        <!-- Renewal Date -->
+                        <ng-container matColumnDef="coverTo">
+                            <th mat-header-cell *matHeaderCellDef>Cover To</th>
+                            <td mat-cell *matCellDef="let policy">
+                                <div [class.text-red-600]="isExpiringSoon(policy.coverTo)"
+                                     [class.font-semibold]="isExpiringSoon(policy.coverTo)">
+                                    {{ formatDate(policy.coverTo) }}
+                                    <div class="text-xs text-secondary" *ngIf="isExpiringSoon(policy.coverTo)">
+                                        {{ getDaysUntilRenewal(policy.coverTo) }} days left
+                                    </div>
+                                </div>
+                            </td>
+                        </ng-container>
+
+                        <!-- Actions -->
+                        <ng-container matColumnDef="actions">
+                            <th mat-header-cell *matHeaderCellDef>Actions</th>
+                            <td mat-cell *matCellDef="let policy">
+                                <div class="flex space-x-2">
+                                    <button mat-icon-button (click)="viewPolicy(policy)" title="View Policy">
+                                        <mat-icon class="icon-size-4" [svgIcon]="'heroicons_outline:eye'"></mat-icon>
+                                    </button>
+                                    <button *ngIf="policy.erprefno" mat-icon-button (click)="downloadPolicy(policy)" title="Download Cerficate">
+                                        <mat-icon class="icon-size-4" [svgIcon]="'heroicons_outline:arrow-down-tray'"></mat-icon>
+                                    </button>
+                                </div>
+                            </td>
+                        </ng-container>
+
+                        <tr mat-header-row *matHeaderRowDef="myPolicyTableColumns"></tr>
+                        <tr mat-row *matRowDef="let row; columns: myPolicyTableColumns;"></tr>
+                    </table>
                 </div>
-                <div class="mt-6">
-                    Your portfolio includes <strong>{{ data.portfolio.totalProducts }}</strong> insurance products with total coverage of <strong>{{ data.portfolio.totalCoverage | currency:'USD' }}</strong>.
-                </div>
-                <div class="my-8 space-y-8">
-                    <div class="flex flex-col">
-                        <div class="flex items-center">
-                            <div
-                                class="flex h-14 w-14 items-center justify-center rounded bg-blue-100 text-blue-800 dark:bg-blue-600 dark:text-blue-50"
-                            >
-                                <mat-icon
-                                    class="text-current"
-                                    [svgIcon]="'heroicons_outline:home'"
-                                ></mat-icon>
-                            </div>
-                            <div class="ml-4 flex-auto leading-none">
-                                <div class="text-secondary text-sm font-medium">
-                                    Property Insurance
-                                </div>
-                                <div class="mt-2 text-2xl font-medium">
-                                    {{ data.portfolio.property | currency: 'USD' }}
-                                </div>
-                                <mat-progress-bar
-                                    class="mt-3 rounded-full"
-                                    [color]="'primary'"
-                                    [mode]="'determinate'"
-                                    [value]="
-                                        (data.portfolio.property * 100) /
-                                        data.portfolio.totalCoverage
-                                    "
-                                ></mat-progress-bar>
-                            </div>
-                            <div
-                                class="ml-6 mt-auto flex min-w-18 items-end justify-end"
-                            >
-                                <div class="text-lg leading-none">45%</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="flex flex-col">
-                        <div class="flex items-center">
-                            <div
-                                class="flex h-14 w-14 items-center justify-center rounded bg-green-100 text-green-800 dark:bg-green-600 dark:text-green-50"
-                            >
-                                <mat-icon
-                                    class="text-current"
-                                    [svgIcon]="'heroicons_outline:heart'"
-                                ></mat-icon>
-                            </div>
-                            <div class="ml-4 flex-auto leading-none">
-                                <div class="text-secondary text-sm font-medium">
-                                    Health Insurance
-                                </div>
-                                <div class="mt-2 text-2xl font-medium">
-                                    {{ data.portfolio.health | currency: 'USD' }}
-                                </div>
-                                <mat-progress-bar
-                                    class="mt-3 rounded-full"
-                                    [color]="'accent'"
-                                    [mode]="'determinate'"
-                                    [value]="
-                                        (data.portfolio.health * 100) /
-                                        data.portfolio.totalCoverage
-                                    "
-                                ></mat-progress-bar>
-                            </div>
-                            <div
-                                class="ml-6 mt-auto flex min-w-18 items-end justify-end"
-                            >
-                                <div class="text-lg leading-none">30%</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="flex flex-col">
-                        <div class="flex items-center">
-                            <div
-                                class="flex h-14 w-14 items-center justify-center rounded bg-purple-100 text-purple-800 dark:bg-purple-600 dark:text-purple-50"
-                            >
-                                <mat-icon
-                                    class="text-current"
-                                    [svgIcon]="'heroicons_outline:truck'"
-                                ></mat-icon>
-                            </div>
-                            <div class="ml-4 flex-auto leading-none">
-                                <div class="text-secondary text-sm font-medium">
-                                    Auto Insurance
-                                </div>
-                                <div class="mt-2 text-2xl font-medium">
-                                    {{ data.portfolio.auto | currency: 'USD' }}
-                                </div>
-                                <mat-progress-bar
-                                    class="mt-3 rounded-full"
-                                    [mode]="'determinate'"
-                                    [value]="
-                                        (data.portfolio.auto * 100) /
-                                        data.portfolio.totalCoverage
-                                    "
-                                ></mat-progress-bar>
-                            </div>
-                            <div
-                                class="ml-6 mt-auto flex min-w-18 items-end justify-end"
-                            >
-                                <div class="text-lg leading-none">25%</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="mt-auto flex items-center">
-                    <button class="mt-2" mat-stroked-button>
-                        Portfolio Analysis
-                    </button>
-                </div>
+                <mat-paginator
+                    *ngIf="!isInitialLoad && policiesTotalRecords > 0"
+                    [length]="policiesTotalRecords"
+                    [pageSize]="policiesPageSize"
+                    [pageSizeOptions]="pageSizeOptions"
+                    [pageIndex]="currentPage"
+                    (page)="onPoliciesPageChange($event)"
+                    showFirstLastButtons="true"
+                >
+                </mat-paginator>
             </div>
         </div>
     </div>

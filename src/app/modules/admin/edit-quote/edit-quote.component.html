@@ -197,7 +197,7 @@
                                         formControlName="postalCode">
                                         <option value="">Select postal code</option>
                                         <option *ngFor="let pc of postalCodes"
-                                                [value]="pc.postalCode">
+                                                [value]="pc.id">
                                             {{ pc.postalCode }} - {{ pc.postalTown }}
                                         </option>
                                     </select>

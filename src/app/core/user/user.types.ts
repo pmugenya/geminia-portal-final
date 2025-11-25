@@ -179,6 +179,8 @@ export interface PolicyRecord {
     ucrNumber:string;
     coverFrom: Date;
     coverTo: Date;
+    error: string;
+    batchNo: number;
 }
 
 
@@ -212,4 +214,22 @@ export interface PostalCode {
     id: number,
     postalCode: string;
     postalTown: string;
+}
+
+
+export interface YTDAnalysis {
+    ytdPremium: number;
+    ytdSumAssured: number;
+}
+
+
+export interface QuotesAnalysis {
+    totalQuotes: number;
+    totalPremium: number;
+    totalConvertedQuotes: number;
+}
+
+export interface GrowthDTO {
+    month: string;
+    growthPercentage: number;
 }
