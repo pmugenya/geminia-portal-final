@@ -57,6 +57,8 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MY_DATE_FORMATS } from '../../../core/directives/date-formats';
 import { MomentDateAdapter } from '@angular/material-moment-adapter';
 import { Router } from '@angular/router';
+import { ShipmentRequestModalComponent } from '../shipment-request-modal/shipment-request-modal.component';
+import { MatDialog } from '@angular/material/dialog';
 
 @Component({
     selector: 'marine-quick-quote',
@@ -167,6 +169,7 @@ export class MarineQuickQuoteComponent implements OnInit, OnDestroy
                 private quotationService: QuoteService,
                 private _fuseAlertService: FuseAlertService,
                 private datePipe: DatePipe,
+                private dialog: MatDialog,
                 private router: Router,
                 private _snackBar: MatSnackBar) { }
 
@@ -491,6 +494,22 @@ export class MarineQuickQuoteComponent implements OnInit, OnDestroy
                 // Load first page of countries
             }
         });
+
+        // this.quotationForm.get('tradeType')?.valueChanges.pipe(takeUntil(this.destroy$)).subscribe((type) => {
+        //     if (type === '2') {
+        //         this.dialog.open(ShipmentRequestModalComponent, {
+        //             width: '700px',
+        //             data: {
+        //                 isExport: false,
+        //                 showExportModal: false
+        //             }
+        //         }).afterClosed().subscribe(result => {
+        //             if (result) {
+        //
+        //             }
+        //         });
+        //     }
+        // });
     }
 
     private setupSearchFilters(): void {

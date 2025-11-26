@@ -1,0 +1,70 @@
+<h2 class="mb-4 text-2xl font-bold">
+    {{ isExport ? 'Export Shipment Details' : 'High-Risk Shipment Details' }}
+</h2>
+
+<p class="mb-6 text-gray-600">
+    {{ isExport
+    ? 'Please provide the following details for your export request.'
+    : 'Shipments from this origin require manual underwriting. Please provide your details to proceed.'
+    }}
+</p>
+
+<form [formGroup]="showExportModal ? exportRequestForm : highRiskRequestForm" (ngSubmit)="showExportModal ? onExportRequestSubmit() : onHighRiskRequestSubmit()">
+
+    <div class="grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2">
+        <!-- Personal Information -->
+        <div><label class="mb-2 block text-base font-medium">First Name <span class="text-red-500">*</span></label><input type="text" formControlName="firstName" class="w-full rounded-md border bg-white px-3 py-2 text-base" (input)="onModalFirstNameInput($event, showExportModal ? 'export' : 'highRisk')" [ngClass]="((showExportModal ? exportRequestForm : highRiskRequestForm).get('firstName')?.invalid && (showExportModal ? exportRequestForm : highRiskRequestForm).get('firstName')?.touched) || !(showExportModal ? exportRequestForm : highRiskRequestForm).get('firstName')?.value ? 'border-red-500 focus:ring-2 focus:ring-red-500' : 'border-gray-300 focus:ring-2 focus:ring-blue-500'"/></div>
+        <div><label class="mb-2 block text-base font-medium">Last Name <span class="text-red-500">*</span></label><input type="text" formControlName="lastName" class="w-full rounded-md border bg-white px-3 py-2 text-base" (input)="onModalLastNameInput($event, showExportModal ? 'export' : 'highRisk')" [ngClass]="((showExportModal ? exportRequestForm : highRiskRequestForm).get('lastName')?.invalid && (showExportModal ? exportRequestForm : highRiskRequestForm).get('lastName')?.touched) || !(showExportModal ? exportRequestForm : highRiskRequestForm).get('lastName')?.value ? 'border-red-500 focus:ring-2 focus:ring-red-500' : 'border-gray-300 focus:ring-2 focus:ring-blue-500'"/></div>
+        <div><label class="mb-2 block text-base font-medium">Email Address <span class="text-red-500">*</span></label><input type="email" formControlName="email" class="w-full rounded-md border bg-white px-3 py-2 text-base" (keydown)="preventSpaceInEmail($event)" (input)="onModalEmailInput($event, showExportModal ? 'export' : 'highRisk')" autocapitalize="off" autocomplete="email" autocorrect="off" spellcheck="false" inputmode="email" [ngClass]="((showExportModal ? exportRequestForm : highRiskRequestForm).get('email')?.invalid && (showExportModal ? exportRequestForm : highRiskRequestForm).get('email')?.touched) || !(showExportModal ? exportRequestForm : highRiskRequestForm).get('email')?.value ? 'border-red-500 focus:ring-2 focus:ring-red-500' : 'border-gray-300 focus:ring-2 focus:ring-blue-500'"/></div>
+        <div><label class="mb-2 block text-base font-medium">Phone Number <span class="text-red-500">*</span></label><input type="tel" formControlName="phoneNumber" class="w-full rounded-md border bg-white px-3 py-2 text-base" (input)="onModalPhoneNumberInput($event, showExportModal ? 'export' : 'highRisk')" [ngClass]="((showExportModal ? exportRequestForm : highRiskRequestForm).get('phoneNumber')?.invalid && (showExportModal ? exportRequestForm : highRiskRequestForm).get('phoneNumber')?.touched) || !(showExportModal ? exportRequestForm : highRiskRequestForm).get('phoneNumber')?.value ? 'border-red-500 focus:ring-2 focus:ring-red-500' : 'border-gray-300 focus:ring-2 focus:ring-blue-500'"/></div>
+
+        <!-- Shipment Information -->
+        <div>
+            <label class="mb-2 block text-base font-medium">Country of Origin <span class="text-red-500">*</span></label>
+            <input *ngIf="showExportModal" type="text" formControlName="originCountry" class="w-full rounded-md border bg-gray-100 px-3 py-2 text-base font-semibold text-gray-700" readonly/>
+            <select *ngIf="!showExportModal" formControlName="originCountry" class="w-full rounded-md border bg-white px-3 py-2 text-base font-semibold" [ngClass]="(highRiskRequestForm.get('originCountry')?.invalid && highRiskRequestForm.get('originCountry')?.touched) || !highRiskRequestForm.get('originCountry')?.value ? 'border-red-500 focus:ring-2 focus:ring-red-500' : 'border-gray-300 focus:ring-2 focus:ring-blue-500'">
+                <option value="" disabled>Select a country</option>
+                <option *ngFor="let country of allCountriesList" [value]="country">{{ country }}</option>
+            </select>
+        </div>
+
+        <div>
+            <label class="mb-2 block text-base font-medium">Destination Country <span class="text-red-500">*</span></label>
+            <!-- Input for High Risk Modal -->
+            <input *ngIf="!showExportModal" type="text" formControlName="destinationCountry" class="w-full rounded-md border bg-gray-100 px-3 py-2 text-base font-bold text-gray-900" readonly/>
+            <!-- Select for Export Modal -->
+            <select *ngIf="showExportModal" formControlName="destinationCountry" class="w-full rounded-md border bg-white px-3 py-2 text-base font-semibold" [ngClass]="(exportRequestForm.get('destinationCountry')?.invalid && exportRequestForm.get('destinationCountry')?.touched) || !exportRequestForm.get('destinationCountry')?.value ? 'border-red-500 focus:ring-2 focus:ring-red-500' : 'border-gray-300 focus:ring-2 focus:ring-blue-500'">
+                <option value="" disabled>Select a country</option>
+                <option *ngFor="let country of exportDestinationCountries" [value]="country">{{ country }}</option>
+            </select>
+        </div>
+
+        <div>
+            <label class="mb-2 block text-base font-medium">Shipment Date <span class="text-red-500">*</span></label>
+            <mat-form-field appearance="outline" class="w-full" style="font-size: 16px;"
+                            [ngClass]="{'mat-form-field-invalid': ((showExportModal ? exportRequestForm : highRiskRequestForm).get('shipmentDate')?.invalid && (showExportModal ? exportRequestForm : highRiskRequestForm).get('shipmentDate')?.touched) || !(showExportModal ? exportRequestForm : highRiskRequestForm).get('shipmentDate')?.value}">
+                <input matInput [matDatepicker]="shipmentPicker" formControlName="shipmentDate" [min]="minDate" readonly>
+                <mat-datepicker-toggle matSuffix [for]="shipmentPicker"></mat-datepicker-toggle>
+                <mat-datepicker #shipmentPicker></mat-datepicker>
+            </mat-form-field>
+        </div>
+
+        <div>
+            <label class="mb-2 block text-base font-medium">Sum Insured (KES) <span class="text-red-500">*</span></label>
+            <input type="text" formControlName="sumInsured" appThousands placeholder="e.g., 1,500,000" inputmode="numeric" class="w-full rounded-md border bg-white px-3 py-2 text-base" [ngClass]="((showExportModal ? exportRequestForm : highRiskRequestForm).get('sumInsured')?.invalid && (showExportModal ? exportRequestForm : highRiskRequestForm).get('sumInsured')?.touched) || !(showExportModal ? exportRequestForm : highRiskRequestForm).get('sumInsured')?.value ? 'border-red-500 focus:ring-2 focus:ring-red-500' : 'border-gray-300 focus:ring-2 focus:ring-blue-500'"/>
+        </div>
+
+        <div class="md:col-span-2">
+            <label class="mb-2 block text-base font-medium">Goods Description (Max 100 words) <span class="text-red-500">*</span></label>
+            <textarea formControlName="goodsDescription" rows="3" placeholder="Describe the goods being shipped..." class="w-full rounded-md border bg-white px-3 py-2 text-base" style="min-height: 80px;" (blur)="trimInput($event, 'goodsDescription', showExportModal ? 'export' : 'highRisk')" [ngClass]="((showExportModal ? exportRequestForm : highRiskRequestForm).get('goodsDescription')?.invalid && (showExportModal ? exportRequestForm : highRiskRequestForm).get('goodsDescription')?.touched) || !(showExportModal ? exportRequestForm : highRiskRequestForm).get('goodsDescription')?.value ? 'border-red-500 focus:ring-2 focus:ring-red-500' : 'border-gray-300 focus:ring-2 focus:ring-blue-500'"></textarea>
+        </div>
+    </div>
+
+    <div class="mt-6 space-y-2">
+        <label class="flex items-start"><input type="checkbox" formControlName="termsAndPolicyConsent" class="mt-1 h-4 w-4 rounded border-gray-300 text-primary focus-ring-primary"/><span class="ml-3 text-sm text-gray-700">I agree to the <a (click)="openTermsModal($event)" class="cursor-pointer font-medium text-primary hover:underline">Terms of Use</a> and to the <a (click)="openPrivacyModal($event)" class="cursor-pointer font-medium text-primary hover:underline">Data Privacy Policy</a>.*</span></label>
+    </div>
+    <div class="mt-8 flex justify-end gap-4 border-t pt-6">
+        <button type="button" (click)="close()" class="rounded-md border border-gray-300 px-4 py-2 hover:bg-gray-50">Cancel</button>
+        <button type="submit" [disabled]="(showExportModal ? exportRequestForm : highRiskRequestForm).invalid" class="btn-primary">Submit Request</button>
+    </div>
+</form>
