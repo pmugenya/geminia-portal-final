@@ -42,6 +42,12 @@ export class UserService {
         sessionStorage.setItem('accessToken', accessToken);
     }
 
+    getUserDetails(): Observable<UserDocumentData> {
+        return this._httpClient.get<UserDocumentData>(`${this.baseUrl}/users/userdetails`).pipe(
+            catchError(this.handleError)
+        );
+    }
+
 
     getCurrentUser(): StoredUser | null {
         return this.currentUserSubject.value;

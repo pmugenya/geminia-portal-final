@@ -15,6 +15,7 @@ export interface StoredUser {
     name: string;
     email: string;
     phoneNumber?: string;
+    dateOfBirth: Date
 }
 
 
@@ -195,6 +196,7 @@ export interface UserDocumentData {
     phoneNumber: string;
     postalAddress: string;
     postalCode: string;
+    dateOfBirth: Date
 }
 
 export interface RecentActivity {
@@ -232,4 +234,85 @@ export interface QuotesAnalysis {
 export interface GrowthDTO {
     month: string;
     growthPercentage: number;
+}
+
+
+export interface TravelDuration {
+    id: number;
+    durationDesc: string;
+    durationVal:number
+}
+
+export interface TravelBenefitsData {
+    id: number;
+    benefitName: string;
+    benefitIncluded: string;
+    currencySymbol: string;
+    currency: string;
+    status: string;
+    frequency: string;
+    notes: string;
+    benefitLimit: number;
+}
+
+export interface TravelPlanTagsData {
+    id: number;
+    tag: string;
+}
+
+export interface TravelCoversData {
+    id: number;
+    coverDesc: string;
+}
+
+export interface TravelPlansData {
+    id: number;
+    coverId: number;
+    planShtDesc: string;
+    planName: string;
+    planType: string;
+    planPopular: string;
+}
+
+export interface TravelRatesData {
+    id: number;
+    planId: number;
+    rateAmount: number;
+    exchangeRate: number;
+    plansData: TravelPlansData;
+    benefitsData: TravelBenefitsData[];
+    planTagsData: TravelPlanTagsData[];
+    travelCoversData: TravelCoversData;
+}
+
+export interface TravellersData {
+    id: number;
+    travellerName: string;
+    passportNo: string;
+    passportFileName: string;
+    dob: Date;
+}
+
+export interface TravelQuoteData {
+    travelQuoteId: number;
+    planName: string;
+    durationDesc: string;
+    countryFrom: string;
+    countryTo: string;
+    fromDate: Date;
+    toDate: Date;
+    travellersCnt: number;
+    email: string;
+    mobile: string;
+    travelBenefits: TravelBenefitsData[];
+    travellers: TravellersData[];
+    premium: number;
+    phcf: number;
+    tl: number;
+    sd: number;
+    netPrem: number;
+    winterPrem: number;
+    discount: number;
+    surcharge: number;
+    prsCode: number;
 }

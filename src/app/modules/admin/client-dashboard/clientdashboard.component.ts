@@ -436,12 +436,13 @@ export class ClientInsuranceDashboardComponent implements OnInit,AfterViewInit {
         });
 
         dialogRef.afterClosed().subscribe((selectedProduct) => {
+            console.log(selectedProduct);
             if (selectedProduct) {
                 if(selectedProduct==='Marine'){
                     this.router.navigate(['/marinequote']);
                 }
-                else{
-
+                else if(selectedProduct==='Travel'){
+                    this.router.navigate(['/travelquote']);
                 }
             }
         });

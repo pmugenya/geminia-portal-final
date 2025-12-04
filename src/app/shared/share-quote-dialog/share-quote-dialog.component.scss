@@ -1,0 +1,24 @@
+.share-quote-dialog-panel .mat-mdc-dialog-container {
+  padding: 0;
+}
+
+.share-quote-dialog-panel .mat-mdc-dialog-container .mdc-dialog__surface {
+  border-radius: 1.25rem;
+  padding: 0;
+  background: #ffffff;
+}
+
+// WhatsApp brand styling inside share dialog (applies to all callers)
+.share-quote-dialog-panel .whatsapp-option .icon-circle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 9999px;
+  border: 2px solid #22c55e; // green border
+  background-color: #ffffff;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #22c55e;
+}

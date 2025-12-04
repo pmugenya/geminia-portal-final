@@ -326,7 +326,7 @@
                                 <button
                                     type="button"
                                     class="inline-flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-medium bg-white text-gray-700 hover:bg-gray-50 share-trigger-btn"
-                                    (click)="openShareModal()">
+                                    (click)="openShareDialog()">
                                     <mat-icon class="icon-size-4">share</mat-icon>
                                     <span>Share Quote</span>
                                 </button>
@@ -1050,40 +1050,39 @@
     </div>
 </div>
 
-<!-- Share Payment Details Modal -->
-<div *ngIf="showShareModal" class="share-modal-backdrop">
-    <div class="share-modal">
-        <div class="share-modal-header">
-            <h3>Share Quote Details</h3>
-            <button type="button" class="close-btn" (click)="closeShareModal()">
+<!-- Share Quote Dialog Template (MatDialog) -->
+<ng-template #shareDialog>
+    <div class="w-full max-w-md p-6">
+        <div class="flex items-center justify-between mb-4">
+            <div>
+                <h2 class="text-lg font-semibold text-gray-900">Share Quote Details</h2>
+                <p class="text-sm text-gray-500">Choose how you'd like to share the quote information.</p>
+            </div>
+            <button type="button" mat-icon-button (click)="closeShareDialog()">
                 <mat-icon>close</mat-icon>
             </button>
         </div>
-        <p class="share-modal-subtitle">Choose how you'd like to share the Quote information</p>
 
-        <div class="share-options">
-            <button type="button" class="share-option whatsapp" (click)="shareViaWhatsApp()">
-                <span class="icon-circle whatsapp-icon">WA</span>
-                <span>WhatsApp</span>
+        <div class="grid grid-cols-2 gap-4">
+            <button type="button" class="border rounded-xl p-4 flex flex-col items-center justify-center hover:bg-gray-50 whatsapp-option" (click)="shareViaWhatsApp(); closeShareDialog()">
+                <span class="icon-circle mb-2">WA</span>
+                <span class="text-sm font-medium text-gray-800">WhatsApp</span>
             </button>
-            <button type="button" class="share-option" (click)="shareViaGmail()">
-                <span class="icon-circle">
-                    <mat-icon>mail</mat-icon>
-                </span>
-                <span>Gmail</span>
+
+            <button type="button" class="border rounded-xl p-4 flex flex-col items-center justify-center hover:bg-gray-50" (click)="shareViaGmail(); closeShareDialog()">
+                <mat-icon class="text-red-500 mb-2">mail</mat-icon>
+                <span class="text-sm font-medium text-gray-800">Gmail</span>
             </button>
-            <button type="button" class="share-option" (click)="shareViaOutlook()">
-                <span class="icon-circle">
-                    <mat-icon>mail</mat-icon>
-                </span>
-                <span>Outlook</span>
+
+            <button type="button" class="border rounded-xl p-4 flex flex-col items-center justify-center hover:bg-gray-50" (click)="shareViaOutlook(); closeShareDialog()">
+                <mat-icon class="text-blue-600 mb-2">mail</mat-icon>
+                <span class="text-sm font-medium text-gray-800">Outlook</span>
             </button>
-            <button type="button" class="share-option">
-                <span class="icon-circle">
-                    <mat-icon>mail</mat-icon>
-                </span>
-                <span>Other Email</span>
+
+            <button type="button" class="border rounded-xl p-4 flex flex-col items-center justify-center hover:bg-gray-50" (click)="shareViaOutlook(); closeShareDialog()">
+                <mat-icon class="text-blue-400 mb-2">mail</mat-icon>
+                <span class="text-sm font-medium text-gray-800">Other Email</span>
             </button>
         </div>
     </div>
-</div>
+</ng-template>

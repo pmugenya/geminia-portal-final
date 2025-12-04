@@ -9,6 +9,8 @@ import { UserService } from '../../../core/user/user.service';
 import { FuseAlertComponent, FuseAlertService } from '../../../../@fuse/components/alert';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatDialog } from '@angular/material/dialog';
+import { ShareQuoteDialogComponent, ShareChannel } from '../../../shared/share-quote-dialog/share-quote-dialog.component';
 import {
     catchError,
     finalize,
@@ -49,7 +51,7 @@ export class ViewQuote implements OnInit,OnDestroy {
     private paymentPollingSub?: Subscription;
     isProcessingStk = false;
     paymentSuccess?: boolean;
-    showShareModal = false;
+    showShareModal = false; // legacy flag, no longer used by UI
 
     constructor(private datePipe: DatePipe,
                 private quoteService: QuoteService,
@@ -58,7 +60,8 @@ export class ViewQuote implements OnInit,OnDestroy {
                 private _fuseAlertService: FuseAlertService,
                 private router: Router,
                 private _snackBar: MatSnackBar,
-                private fb: FormBuilder) {
+                private fb: FormBuilder,
+                private dialog: MatDialog) {
 
         this.paymentForm = this.fb.group({
             mpesaNumber: ['', [Validators.required, Validators.pattern(/^07\d{8}$/)]]
@@ -100,7 +103,7 @@ export class ViewQuote implements OnInit,OnDestroy {
             });
             return;
         }
-        this.quoteService.stkPush(mpesaNumber, 1, this.quote?.refno).pipe(
+        this.quoteService.stkPush(mpesaNumber, 1, this.quote?.refno,"M").pipe(
             timeout(15000),
             catchError(err => {
                 console.error('STK Push error', err);
@@ -216,11 +219,20 @@ export class ViewQuote implements OnInit,OnDestroy {
     }
 
     openShareModal(): void {
-        this.showShareModal = true;
-    }
+        const ref = this.dialog.open(ShareQuoteDialogComponent, {
+            panelClass: 'share-quote-dialog-panel'
+        });
 
-    closeShareModal(): void {
-        this.showShareModal = false;
+        ref.componentInstance.choose.subscribe((channel: ShareChannel) => {
+            if (channel === 'whatsapp') {
+                this.shareViaWhatsApp();
+            } else if (channel === 'gmail') {
+                this.shareViaGmail();
+            } else if (channel === 'outlook' || channel === 'otherEmail') {
+                this.shareViaOutlook();
+            }
+            ref.close();
+        });
     }
 
     shareViaGmail(): void {

@@ -44,6 +44,7 @@ import { ThousandsSeparatorValueAccessor } from '../../../core/directives/thousa
 import { QuoteService } from '../../../core/services/quote.service';
 import { FuseAlertComponent, FuseAlertService } from '../../../../@fuse/components/alert';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatDialog } from '@angular/material/dialog';
 import { FuseAlertType } from '@fuse/components/alert';
 import { MatCheckbox } from '@angular/material/checkbox';
 import {
@@ -57,6 +58,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MY_DATE_FORMATS } from '../../../core/directives/date-formats';
 import { MomentDateAdapter } from '@angular/material-moment-adapter';
 import { Router } from '@angular/router';
+import { ShareQuoteDialogComponent, ShareChannel } from '../../../shared/share-quote-dialog/share-quote-dialog.component';
 
 @Component({
     selector: 'example',
@@ -197,16 +199,14 @@ export class MarineQuoteComponent implements OnInit, OnDestroy
     private paymentPollingSub?: Subscription;
     private _unsubscribeAll: Subject<any> = new Subject<any>();
 
-    showShareModal = false;
-
-
     constructor(private fb: FormBuilder,
                 private userService: UserService,
                 private quotationService: QuoteService,
                 private _fuseAlertService: FuseAlertService,
                 private datePipe: DatePipe,
                 private router: Router,
-                private _snackBar: MatSnackBar) { }
+                private _snackBar: MatSnackBar,
+                private dialog: MatDialog) { }
 
     ngOnInit(): void {
         this._fuseAlertService.dismiss('quoteDownloadError');
@@ -268,12 +268,21 @@ export class MarineQuoteComponent implements OnInit, OnDestroy
 
     }
 
-    openShareModal(): void {
-        this.showShareModal = true;
-    }
+    openShareDialog(): void {
+        const ref = this.dialog.open(ShareQuoteDialogComponent, {
+            panelClass: 'share-quote-dialog-panel'
+        });
 
-    closeShareModal(): void {
-        this.showShareModal = false;
+        ref.componentInstance.choose.subscribe((channel: ShareChannel) => {
+            if (channel === 'whatsapp') {
+                this.shareViaWhatsApp();
+            } else if (channel === 'gmail') {
+                this.shareViaGmail();
+            } else if (channel === 'outlook' || channel === 'otherEmail') {
+                this.shareViaOutlook();
+            }
+            ref.close();
+        });
     }
 
     shareViaGmail(): void {
@@ -1960,7 +1969,7 @@ export class MarineQuoteComponent implements OnInit, OnDestroy
          this.isProcessPayment = true;
          this.isProcessingStk = true;
 
-         this.quotationService.stkPush(mpesaNumber, 1, this.paymentRefNo).pipe(
+         this.quotationService.stkPush(mpesaNumber, 1, this.paymentRefNo,"M").pipe(
              timeout(15000),
              catchError(err => {
                  console.error('STK Push error', err);

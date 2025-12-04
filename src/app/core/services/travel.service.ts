@@ -19,6 +19,34 @@ export class TravelService {
         return this.http.get<TravelRatesData[]>(`${this.baseUrl}/travel/rates/${durationId}`);
     }
 
+    submitPolicy(
+        travelersJson: any,
+        kraFile: File | null,
+        idFile: File | null,
+        documents: File[]
+    ):Observable<any> {
+        const formData = new FormData();
+        if (kraFile) {
+            formData.append("kraPinUpload", kraFile, kraFile.name);
+        }
+        else{
+            formData.append("kraPinUpload", "");
+        }
+        if (idFile) {
+            formData.append("nationalIdUpload", idFile, idFile.name);
+        }
+        else{
+            formData.append("nationalIdUpload","");
+        }
+        formData.append("json", JSON.stringify(travelersJson));
+        documents.forEach(doc => {
+            formData.append("documents", doc, doc.name);
+        });
+
+        return this.http.post(`${this.baseUrl}/travelquote/policy`, formData);
+    }
+
+
     saveTravelQuote(requestBody: any): Observable<any> {
         const headers = new HttpHeaders({
             'Content-Type': 'application/json'

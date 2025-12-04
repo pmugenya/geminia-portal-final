@@ -656,7 +656,7 @@ export class EditMarineQuoteComponent implements OnInit, OnDestroy
         this.isProcessPayment = true;
         this.isProcessingStk = true;
 
-        this.quotationService.stkPush(mpesaNumber, 1, this.paymentRefNo).pipe(
+        this.quotationService.stkPush(mpesaNumber, 1, this.paymentRefNo,"M").pipe(
             timeout(15000),
             catchError(err => {
                 console.error('STK Push error', err);

@@ -1,4 +1,4 @@
-import { Component, EventEmitter, OnDestroy, OnInit, Output, ViewChild, ViewEncapsulation } from '@angular/core';
+import { Component, ElementRef, EventEmitter, OnDestroy, OnInit, Output, ViewChild, ViewEncapsulation } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import {
     CargoTypeData,
@@ -44,6 +44,7 @@ import { ThousandsSeparatorValueAccessor } from '../../../core/directives/thousa
 import { QuoteService } from '../../../core/services/quote.service';
 import { FuseAlertComponent, FuseAlertService } from '../../../../@fuse/components/alert';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatDialog } from '@angular/material/dialog';
 import { FuseAlertType } from '@fuse/components/alert';
 import { MatCheckbox } from '@angular/material/checkbox';
 import {
@@ -58,7 +59,7 @@ import { MY_DATE_FORMATS } from '../../../core/directives/date-formats';
 import { MomentDateAdapter } from '@angular/material-moment-adapter';
 import { Router } from '@angular/router';
 import { ShipmentRequestModalComponent } from '../shipment-request-modal/shipment-request-modal.component';
-import { MatDialog } from '@angular/material/dialog';
+import { ShareQuoteDialogComponent, ShareChannel } from '../../../shared/share-quote-dialog/share-quote-dialog.component';
 
 @Component({
     selector: 'marine-quick-quote',
@@ -114,6 +115,8 @@ export class MarineQuickQuoteComponent implements OnInit, OnDestroy
     @ViewChild('cargoTypeSelect') cargoTypeSelect!: MatSelect;
     @ViewChild('cargoTypeSelect2') cargoTypeSelect2!: MatSelect;
     @Output() closeQuote = new EventEmitter<void>();
+    // Notify parent (sign-in) when Buy Now is confirmed so it can show login panel
+    @Output() showLoginForQuote = new EventEmitter<void>();
 
     // Stepper Form Groups
     quotationForm!: FormGroup;
@@ -161,9 +164,6 @@ export class MarineQuickQuoteComponent implements OnInit, OnDestroy
 
     private paymentPollingSub?: Subscription;
 
-
-
-
     constructor(private fb: FormBuilder,
                 private userService: UserService,
                 private quotationService: QuoteService,
@@ -171,7 +171,8 @@ export class MarineQuickQuoteComponent implements OnInit, OnDestroy
                 private datePipe: DatePipe,
                 private dialog: MatDialog,
                 private router: Router,
-                private _snackBar: MatSnackBar) { }
+                private _snackBar: MatSnackBar,
+    ) { }
 
     ngOnInit(): void {
         this._fuseAlertService.dismiss('quoteDownloadError');
@@ -804,17 +805,18 @@ export class MarineQuickQuoteComponent implements OnInit, OnDestroy
     }
 
     downloadQuote(): void {
-        if (!this.quoteResult.id) {
+        if (!this.quoteResult?.id) {
             this._fuseAlertService.show('quoteDownloadError');
             return;
         }
-        this.userService.downloadQuote(''+this.quoteResult.id).subscribe({
+
+        this.userService.downloadQuote(String(this.quoteResult.id)).subscribe({
             next: (base64String) => {
                 try {
                     console.log('Base64 response:', base64String);
 
                     const base64 = base64String.split(',')[1] || base64String;
-                    const byteCharacters = atob(base64); // ⚠️ can throw
+                    const byteCharacters = atob(base64);
                     const byteNumbers = new Array(byteCharacters.length);
                     for (let i = 0; i < byteCharacters.length; i++) {
                         byteNumbers[i] = byteCharacters.charCodeAt(i);
@@ -828,8 +830,6 @@ export class MarineQuickQuoteComponent implements OnInit, OnDestroy
                     a.download = 'quote.pdf';
                     a.click();
                     window.URL.revokeObjectURL(url);
-
-                    // Optional: show success
                 } catch (error) {
                     console.error('Error decoding base64:', error);
                     this._fuseAlertService.show('quoteDownloadError');
@@ -842,16 +842,72 @@ export class MarineQuickQuoteComponent implements OnInit, OnDestroy
                 setTimeout(() => this._fuseAlertService.dismiss('quoteDownloadError'), 4000);
             }
         });
-
-
     }
 
     buyNow(): void {
-        this.closeQuote.emit();
-        this.router.navigate(['/editquote', this.quoteResult.id]);
+        const message = "You're almost there!\nTo get your cover, you'll need to sign into your account, or create an account by clicking Sign up.";
+
+        const snackRef = this._snackBar.open(message, 'OK', {
+            horizontalPosition: 'right',
+            verticalPosition: 'top',
+            duration: undefined,
+            panelClass: ['marine-quote-snackbar']
+        });
+
+        snackRef.onAction().subscribe(() => {
+            snackRef.dismiss();
+            // Let parent component decide how to show login; keep quote open
+            this.showLoginForQuote.emit();
+        });
     }
 
+    openShareDialog(): void {
+        const ref = this.dialog.open(ShareQuoteDialogComponent, {
+            panelClass: 'share-quote-dialog-panel'
+        });
 
+        ref.componentInstance.choose.subscribe((channel: ShareChannel) => {
+            this.shareVia(channel);
+            ref.close();
+        });
+    }
 
+    shareVia(channel: ShareChannel): void {
+        if (!this.quote && !this.quoteResult) {
+            return;
+        }
 
+        const lines: string[] = [];
+        const quote = this.quote;
+
+        if (quote) {
+            lines.push('Please find below the marine quote details.');
+            lines.push('');
+            lines.push(`Reference: ${quote.refno}`);
+            lines.push(`Customer: ${quote.firstName || ''} ${quote.lastName || ''}`.trim());
+            lines.push(`Email: ${quote.email || ''}`);
+            lines.push(`Phone: ${quote.phoneNo || ''}`);
+            lines.push('');
+            lines.push(`Sum Assured: KES ${quote.sumassured}`);
+            lines.push(`Net Premium: KES ${quote.netprem}`);
+            lines.push('');
+        }
+
+        lines.push('You can also attach a screenshot or PDF of the quote details before sending.');
+
+        const encodedBody = encodeURIComponent(lines.join('\n'));
+
+        if (channel === 'whatsapp') {
+            const url = `https://wa.me/?text=${encodedBody}`;
+            window.open(url, '_blank');
+        } else if (channel === 'gmail') {
+            const subject = encodeURIComponent('Marine Quote Details');
+            const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&su=${subject}&body=${encodedBody}`;
+            window.open(gmailUrl, '_blank');
+        } else {
+            const subject = encodeURIComponent('Marine Quote Details');
+            const mailtoUrl = `mailto:?subject=${subject}&body=${encodedBody}`;
+            window.location.href = mailtoUrl;
+        }
+    }
 }

@@ -59,6 +59,9 @@ export class AuthSignInComponent implements OnInit,OnDestroy {
     loginState: 'credentials' | 'otp' = 'credentials';
     otpCountdown: number = 0;
     showMarineQuote = false;
+    showTravelQuote = false;
+    // When set, show login alongside Marine quick quote
+    forceShowLoginForQuote = false;
     private otpCountdownInterval: any;
 
     /**
@@ -126,9 +129,9 @@ export class AuthSignInComponent implements OnInit,OnDestroy {
                     this.loginState = 'otp';
                     this.startOtpCountdown();
                 } else {
-                    this.alert = { 
-                        type: 'error', 
-                        message: res.message || 'Login failed: Invalid response.' 
+                    this.alert = {
+                        type: 'error',
+                        message: res.message || 'Login failed: Invalid response.'
                     };
                     this.showAlert = true;
                 }
@@ -167,24 +170,24 @@ export class AuthSignInComponent implements OnInit,OnDestroy {
      */
     resendOtp(): void {
         if (this.otpCountdown > 0) return;
-        
+
         this.signInForm.disable();
         this.showAlert = false;
-        
+
         // Get the current temp token
         const tempToken = this._authService.tempToken;
-        
+
         if (!tempToken) {
-            this.alert = { 
-                type: 'error', 
-                message: 'Session expired. Please sign in again.' 
+            this.alert = {
+                type: 'error',
+                message: 'Session expired. Please sign in again.'
             };
             this.showAlert = true;
             this.loginState = 'credentials';
             this.signInForm.enable();
             return;
         }
-        
+
         // Call the API to resend OTP
         this._authService.resendOtp({ tempToken }).subscribe({
             next: (response) => {
@@ -192,27 +195,27 @@ export class AuthSignInComponent implements OnInit,OnDestroy {
                 if (response?.tempToken) {
                     this._authService.tempToken = response.tempToken;
                 }
-                
+
                 // Restart the countdown
                 this.startOtpCountdown();
                 this.signInForm.enable();
                 this.signInForm.get('otp')?.setValue('');
-                
+
                 // Show success message
-                this.alert = { 
-                    type: 'success', 
-                    message: response?.message || 'A new OTP has been sent to your registered contact.' 
+                this.alert = {
+                    type: 'success',
+                    message: response?.message || 'A new OTP has been sent to your registered contact.'
                 };
                 this.showAlert = true;
             },
             error: (error) => {
                 this.signInForm.enable();
-                this.alert = { 
-                    type: 'error', 
-                    message: error?.error?.message || 'Failed to resend OTP. Please try again.' 
+                this.alert = {
+                    type: 'error',
+                    message: error?.error?.message || 'Failed to resend OTP. Please try again.'
                 };
                 this.showAlert = true;
-                
+
                 // If the error is due to an invalid/expired token, go back to credentials
                 if (error?.status === 401 || error?.status === 403) {
                     this.loginState = 'credentials';
@@ -236,7 +239,7 @@ export class AuthSignInComponent implements OnInit,OnDestroy {
         this.signInForm.disable();
         this.showAlert = false;
         const { otp } = this.signInForm.value;
-        
+
         // Validate OTP format (6-8 digits)
         if (!/^\d{6,8}$/.test(otp)) {
             this.alert = { type: 'error', message: 'Please enter a valid 6-8 digit OTP code.' };
@@ -244,7 +247,7 @@ export class AuthSignInComponent implements OnInit,OnDestroy {
             this.signInForm.enable();
             return;
         }
-        
+
         this._authService.verifyOtp({ tempToken: this._authService.tempToken, otp }).pipe(
             finalize(() => this.signInForm.enable())
         ).subscribe({
@@ -303,6 +306,51 @@ export class AuthSignInComponent implements OnInit,OnDestroy {
     }
 
     toggleMarineQuote() {
-        this.showMarineQuote = true;
+        // When user starts a new Marine quote journey from the left panel,
+        // hide login again and force a fresh instance of the quick-quote component.
+        this.forceShowLoginForQuote = false;
+
+        if (this.showMarineQuote) {
+            // Toggle off then on to destroy and recreate the component
+            this.showMarineQuote = false;
+            setTimeout(() => {
+                this.showMarineQuote = true;
+            }, 0);
+        } else {
+            this.showMarineQuote = true;
+        }
+    }
+
+    toggleTravelQuote() {
+        // When user starts a new Marine quote journey from the left panel,
+        // hide login again and force a fresh instance of the quick-quote component.
+        this.forceShowLoginForQuote = false;
+
+        if (this.showTravelQuote) {
+            // Toggle off then on to destroy and recreate the component
+            this.showTravelQuote = false;
+            setTimeout(() => {
+                this.showTravelQuote = true;
+            }, 0);
+        } else {
+            this.showTravelQuote = true;
+        }
+    }
+
+    onCloseMarineQuote(): void {
+        // Close the quote panel and clear the "show login with quote" flag
+        this.showMarineQuote = false;
+        this.forceShowLoginForQuote = false;
+    }
+
+    onCloseTravelQuote(): void {
+        // Close the quote panel and clear the "show login with quote" flag
+        this.showTravelQuote = false;
+        this.forceShowLoginForQuote = false;
+    }
+
+    onShowLoginForQuote(): void {
+        // Called when Buy Now toast is confirmed in Marine quick quote
+        this.forceShowLoginForQuote = true;
     }
 }

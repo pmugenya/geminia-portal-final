@@ -229,42 +229,5 @@
             </p>
         </div>
 
-        <!-- Share Payment Details Modal -->
-        <div *ngIf="showShareModal" class="share-modal-backdrop">
-            <div class="share-modal">
-                <div class="share-modal-header">
-                    <h3>Share Quote Details</h3>
-                    <button type="button" class="close-btn" (click)="closeShareModal()">
-                        <mat-icon>close</mat-icon>
-                    </button>
-                </div>
-                <p class="share-modal-subtitle">Choose how you'd like to share the Quote information</p>
-
-                <div class="share-options">
-                    <button type="button" class="share-option whatsapp" (click)="shareViaWhatsApp()">
-                        <span class="icon-circle whatsapp-icon">WA</span>
-                        <span>WhatsApp</span>
-                    </button>
-                    <button type="button" class="share-option" (click)="shareViaGmail()">
-                        <span class="icon-circle">
-                            <mat-icon>mail</mat-icon>
-                        </span>
-                        <span>Gmail</span>
-                    </button>
-                    <button type="button" class="share-option" (click)="shareViaOutlook()">
-                        <span class="icon-circle">
-                            <mat-icon>mail</mat-icon>
-                        </span>
-                        <span>Outlook</span>
-                    </button>
-                    <button type="button" class="share-option">
-                        <span class="icon-circle">
-                            <mat-icon>mail</mat-icon>
-                        </span>
-                        <span>Other Email</span>
-                    </button>
-                </div>
-            </div>
-        </div>
     </div>
 </div>

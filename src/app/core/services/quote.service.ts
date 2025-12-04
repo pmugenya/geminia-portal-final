@@ -87,10 +87,11 @@ export class QuoteService {
         });
     }
 
-    stkPush(phone: string, amount: number, refNo: string): Observable<any> {
+    stkPush(phone: string, amount: number, refNo: string, type:string): Observable<any> {
         const params = new HttpParams()
             .set('phone', phone)
             .set('amount', amount.toString())
+            .set('type', amount.toString())
             .set('refNo', refNo);
 
         return this.http.get(`${this.baseUrl}/payments/stkpush`, { params });

@@ -11,6 +11,25 @@
     }
 }
 
+.header-share-btn {
+    border-radius: 9999px;
+    border: 1px solid #e5e7eb;
+    background-color: #ffffff;
+    color: #111827;
+
+    mat-icon {
+        font-size: 18px;
+    }
+
+    &:hover,
+    &:focus,
+    &:focus-visible {
+        background-color: #f3f4f6;
+        outline: none;
+        box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.12);
+    }
+}
+
 // Quote Details Buy Now button styling
 .buy-now-btn {
     background-color: #04b2e1;
@@ -243,3 +262,99 @@ textarea {
         box-shadow: 0 0 0 2px #21275c;
     }
 }
+
+// -----------------------------------------------------------------------------
+// Toast styling for Marine quick quote
+// -----------------------------------------------------------------------------
+
+// Backup of previous blue-pill toast style (kept for reference / reuse)
+.mat-mdc-snack-bar-container.marine-quote-snackbar--blue-pill-backup {
+    .mdc-snackbar__surface {
+        background-color: #04b2e1; // solid brand blue
+        border-radius: 1.75rem;
+        box-shadow: 0 14px 30px rgba(0, 0, 0, 0.18);
+        padding: 1.5rem 2.25rem;
+        min-width: 360px;
+        max-width: 460px;
+        display: flex;
+        align-items: center;
+    }
+
+    .mdc-snackbar__label {
+        color: #ffffff;
+        font-size: 0.98rem;
+        line-height: 1.5;
+        white-space: pre-line;
+        font-weight: 400;
+        text-align: left;
+    }
+
+    .mat-mdc-snack-bar-action {
+        color: #ffffff;
+        font-weight: 600;
+        margin-left: 1.5rem;
+    }
+
+    .mdc-snackbar__surface::before {
+        content: none;
+    }
+}
+
+// Redesigned toast to match white card with blue check icon + blue heading
+.mat-mdc-snack-bar-container.marine-quote-snackbar {
+    .mdc-snackbar__surface {
+        background-color: #ffffff;
+        border-radius: 1.5rem;
+        box-shadow: 0 18px 45px rgba(15, 23, 42, 0.22);
+        padding: 1.25rem 1.75rem 1.25rem 1.75rem;
+        min-width: 360px;
+        max-width: 480px;
+        display: flex;
+        align-items: center;
+    }
+
+    // Left blue check-circle icon
+    .mdc-snackbar__surface::before {
+        content: '✔';
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        margin-right: 1rem;
+        border-radius: 9999px;
+        background-color: #04b2e1;
+        color: #ffffff;
+        font-size: 1rem;
+        font-weight: 700;
+        flex-shrink: 0;
+    }
+
+    .mdc-snackbar__label {
+        color: #0f172a;
+        font-size: 0.95rem;
+        line-height: 1.5;
+        white-space: pre-line;
+        font-weight: 400;
+        text-align: left;
+    }
+
+    // First line ("You're almost there!") bold + blue
+    .mdc-snackbar__label::first-line {
+        font-weight: 700;
+        color: #0b3c80;
+    }
+
+    .mat-mdc-snack-bar-action {
+        color: #ffffff;
+        font-weight: 700;
+        margin-left: 1.5rem;
+        background-color: #04b2e1;
+        border-radius: 9999px;
+        padding: 0.4rem 1.4rem;
+        text-transform: none;
+    }
+}
+
+// (Share quote dialog panel and WhatsApp styling is centralized in
+//  shared/share-quote-dialog/share-quote-dialog.component.scss.)

@@ -1,5 +1,5 @@
 <div class="flex flex-col flex-auto w-full p-4 md:p-8">
-    <div class="bg-card rounded-xl shadow w-full">
+    <div class="bg-card rounded-xl shadow w-full max-w-5xl mx-auto">
         <!-- Header -->
         <div class="p-6 border-b flex items-center justify-between">
             <h2 class="text-xl font-semibold">Quick Marine Quote Details</h2>
@@ -19,7 +19,7 @@
                 <!-- Step 1 -->
                 <mat-step [stepControl]="quotationForm">
                     <ng-template matStepLabel>Shipment Details</ng-template>
-                    <form [formGroup]="quotationForm" class="space-y-6 w-full">
+                    <form [formGroup]="quotationForm" class="space-y-6 w-full max-w-4xl mx-auto">
                         <fuse-alert
                             *ngIf="submissionError"
                             [title]="'Submission Failed!'"
@@ -302,20 +302,33 @@
                             </div>
 
                             <div class="flex items-center space-x-3">
+                                <!-- Buy Now primary - larger style -->
+                                <button
+                                    type="button"
+                                    mat-flat-button
+                                    color="primary"
+                                    (click)="buyNow()"
+                                    class="inline-flex items-center px-6 py-2 rounded-full text-sm font-semibold text-white buy-now-btn">
+                                    Buy Now
+                                </button>
+
+                                <!-- Download Quote - slightly smaller -->
                                 <button
                                     mat-flat-button
                                     color="primary"
-                                    class="download-btn"
-                                    (click)="downloadQuote()">
+                                    (click)="downloadQuote()"
+                                    class="download-btn">
                                     <mat-icon svgIcon="heroicons_outline:arrow-down-tray" class="mr-2"></mat-icon>
                                     Download Quote
                                 </button>
+
+                                <!-- Share Quote next to Download Quote -->
                                 <button
                                     type="button"
-                                    (click)="closeQuote.emit()"
-                                    class="inline-flex items-center gap-2 px-4 py-1 rounded-full border text-sm font-medium bg-white header-close-btn">
-                                    <span class="text-base font-normal" aria-hidden="true">&times;</span>
-                                    <span>Close</span>
+                                    (click)="openShareDialog()"
+                                    class="inline-flex items-center gap-2 px-5 py-2 rounded-full text-sm font-semibold bg-white text-gray-800 header-share-btn">
+                                    <mat-icon>share</mat-icon>
+                                    <span>Share Quote</span>
                                 </button>
                             </div>
                         </div>
@@ -469,7 +482,7 @@
                                 mat-stroked-button
                                 (click)="stepper.previous()"
                                 class="w-full sm:w-auto px-6 py-2 rounded-lg shadow-sm text-gray-900 font-semibold hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition-all">
-                                Cancel
+                                Back
                             </button>
 
                             <button

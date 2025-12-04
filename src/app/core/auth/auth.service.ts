@@ -124,7 +124,7 @@ export class AuthService {
      */
     resendOtp(payload: { tempToken: string }): Observable<any> {
         const resendOtpUrl = `${this.baseUrl}/login/resend-otp`;
-        
+
         return this._httpClient.post(resendOtpUrl, payload).pipe(
             tap((response: any) => {
                 // Update temp token if a new one is provided in the response
@@ -151,6 +151,7 @@ export class AuthService {
                     username: response.username || response.email || payload.tempToken,
                     name: response.name || response.fullName || 'User',
                     email: response.email || response.username || '',
+                    dateOfBirth: response.dateOfBirth,
                     userType: response.userType || 'C',
                     loginTime: Date.now(),
                     phoneNumber: response.phoneNumber || response.phone || ''

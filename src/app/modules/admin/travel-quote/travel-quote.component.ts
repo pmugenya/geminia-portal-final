@@ -13,7 +13,8 @@ import {
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import {
     AsyncPipe,
-    CurrencyPipe, DatePipe,
+    CurrencyPipe,
+    DatePipe,
     DecimalPipe,
     NgClass,
     NgForOf,
@@ -30,19 +31,41 @@ import { MatRadioButton, MatRadioGroup } from '@angular/material/radio';
 import { ThousandsSeparatorValueAccessor } from '../../../core/directives/thousands-separator-value-accessor';
 import { MatCheckbox } from '@angular/material/checkbox';
 import { MomentDateAdapter } from '@angular/material-moment-adapter';
-import { AuthService } from '../../../core/auth/auth.service';
 import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { TravelService } from '../../../core/services/travel.service';
-import { Country, TravelDuration, TravelQuoteData, TravelRatesData } from '../../../core/user/user.types';
+import {
+    Country,
+    StoredUser,
+    TravelDuration,
+    TravelQuoteData,
+    TravelRatesData,
+    UserDocumentData,
+} from '../../../core/user/user.types';
 import { noWhitespaceValidator } from '../../../core/validators/white-space-validator';
 import { kenyanPhoneNumberValidator } from '../../../core/validators/kenyan-phone-validator';
 import { duplicateTravelerValidator } from '../../../core/validators/duplicator-traveller-validator';
-import { map, startWith, Subject, takeUntil } from 'rxjs';
+import {
+    catchError,
+    finalize,
+    interval,
+    map,
+    of,
+    startWith,
+    Subject,
+    Subscription,
+    switchMap,
+    takeUntil,
+    takeWhile,
+    throwError,
+    timeout,
+} from 'rxjs';
 import { fullNameValidator } from '../../../core/validators/full-name-validator';
 import { dobValidator } from '../../../core/validators/dob-validator';
 import { UserService } from '../../../core/user/user.service';
 import { CustomValidators } from '../../../core/validators/custom.validators';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { QuoteService } from '../../../core/services/quote.service';
 
 // @ts-ignore
 export const MY_DATE_FORMATS: MatDateFormats = {
@@ -106,6 +129,7 @@ export class TravelQuoteComponent implements OnInit, OnDestroy
 
     @ViewChild('stepper') stepper!: MatStepper;
     private unsubscribe$ = new Subject<void>();
+    private paymentPollingSub?: Subscription;
     quoteForm: FormGroup;
     paymentForm: FormGroup;
     travelerDetailsForm: FormGroup;
@@ -115,12 +139,15 @@ export class TravelQuoteComponent implements OnInit, OnDestroy
     submissionError: string | null = null;
     countries: Country[] = [];
     destCountries: Country[] = [];
+    userDocs?: UserDocumentData;
+    duplicateFileErrors: { [key: string]: string } = {};
     applicationSubmitted: boolean = false;
     isSubmitting: boolean = false;
     isProcessPayment: boolean = false;
     isProcessingStk = false;
     paymentSuccess?: boolean;
     paymentRefNo: string ='';
+    applicationId: number;
     today = new Date();
     totalDays: number = 0;
     filteredCountries$;
@@ -128,15 +155,22 @@ export class TravelQuoteComponent implements OnInit, OnDestroy
     searchCtrl = new FormControl('');
     searchDestCtrl = new FormControl('');
     isLoadingData: boolean;
+    isLoadingMarineData: boolean;
     quotId: number;
+    clientQuoting: boolean;
+    loggedInUser : StoredUser;
+    travelerPassportControls: FormControl[] = [];
+    passportFiles: File[] = [];
 
     constructor(
         private fb: FormBuilder,
-        private router: Router,
+        public router: Router,
         private dialog: MatDialog,
         private datePipe: DatePipe,
+        private _snackBar: MatSnackBar,
         private _fuseAlertService: FuseAlertService,
         private travelService: TravelService,
+        private quotationService: QuoteService,
         private userService: UserService
     ) {
         this.quoteForm = this.fb.group({
@@ -160,26 +194,57 @@ export class TravelQuoteComponent implements OnInit, OnDestroy
 
         this.paymentForm = this.fb.group({
             mpesaNumber: ['', [ CustomValidators.mpesaNumber]],
-
+            kraPinCertificate: [null, Validators.required],
+            nationalId: [null, Validators.required],
+            agreeToTerms: [false, Validators.requiredTrue],
+            firstName: ['', [Validators.required, CustomValidators.firstName]],
+            lastName: ['', [Validators.required, CustomValidators.lastName]],
+            emailAddress: ['', [Validators.required, CustomValidators.email]],
+            phoneNumber: ['', [Validators.required, CustomValidators.phoneNumber]],
+            kraPin: ['', [Validators.required, CustomValidators.kraPin]],
+            idNumber: ['', [Validators.required, CustomValidators.idNumber]],
         });
 
+    }
 
+    isPassportFileMissing(index: number): boolean {
+        return !this.passportFiles[index];
+    }
+
+
+    validateTravellers(): boolean {
+        const allNumbersValid = this.travelerPassportControls.every(c => c.valid);
+        const allFilesValid = this.passportFiles.every(f => !!f);
+        return allNumbersValid && allFilesValid;
+    }
+
+
+
+    initTravelerControls() {
+        this.travelerPassportControls = this.quoteDetails.travellers.map(t =>
+            new FormControl(t.passportNo || '', Validators.required)
+        );
     }
 
     ngOnDestroy(): void {
         this.unsubscribe$.next(); this.unsubscribe$.complete();
+        this.paymentPollingSub?.unsubscribe();
     }
 
     ngOnInit(): void {
         const authUser =  this.userService.getCurrentUser();
-        if(authUser.userType==='C'){
+        this.loggedInUser = authUser;
+        if(authUser && authUser.userType==='C'){
+            this.travelerDetailsForm.get('phoneNumber')?.setValue(authUser.phoneNumber);
+            this.travelerDetailsForm.get('email')?.setValue(authUser.email);
             this.travelerDetailsForm.get('phoneNumber')?.disable();
             this.travelerDetailsForm.get('email')?.disable();
-             this.fetchProspectDocuments();
+            this.clientQuoting = true;
         }
         else{
             this.travelerDetailsForm.get('phoneNumber')?.enable();
             this.travelerDetailsForm.get('email')?.enable();
+            this.clientQuoting = false;
         }
         this._fuseAlertService.dismiss('submissionError');
         this.loadConfig();
@@ -222,7 +287,6 @@ export class TravelQuoteComponent implements OnInit, OnDestroy
     }
 
     calculateDays() {
-        console.log('calc days...');
         const start = this.quoteForm.get('dateOfTravel')?.value;
         const end = this.quoteForm.get('estimatedArrival')?.value;
 
@@ -262,6 +326,83 @@ export class TravelQuoteComponent implements OnInit, OnDestroy
         });
     }
 
+
+    fetchProspectDocuments(prospectId: number): void {
+        this.isLoadingMarineData = true;
+        this.userService.checkProspectDocument(prospectId).subscribe({
+            next: (data) => {
+                this.userDocs = data;
+                this.isLoadingMarineData = false;
+                this.paymentForm.get('idNumber')?.setValue(data.idNo);
+                if (data.idNo) {
+                    this.paymentForm.get('idNumber')?.disable();
+                } else {
+                    this.paymentForm.get('idNumber')?.enable();
+                }
+                this.paymentForm.get('firstName')?.setValue(data.firstName);
+                this.paymentForm.get('lastName')?.setValue(data.lastName);
+                this.paymentForm.get('emailAddress')?.setValue(data.emailAddress);
+                if (data.emailAddress) {
+                    this.paymentForm.get('emailAddress')?.disable();
+                } else {
+                    this.paymentForm.get('emailAddress')?.enable();
+                }
+                this.paymentForm.get('phoneNumber')?.setValue(this.extractPhoneNumber(data.phoneNumber));
+                this.paymentForm.get('kraPin')?.setValue(data.pinNo);
+                if (data.pinNo) {
+                    this.paymentForm.get('kraPin')?.disable();
+                } else {
+                    this.paymentForm.get('kraPin')?.enable();
+                }
+                if (data.idfDocumentExists) {
+                    this.paymentForm.get('nationalId')?.clearValidators();
+                    this.paymentForm.get('nationalId')?.updateValueAndValidity();
+                } else {
+                    this.paymentForm.get('nationalId')?.setValidators(Validators.required);
+                    this.paymentForm.get('nationalId')?.updateValueAndValidity();
+                }
+                if (data.kraDocumentExists) {
+                    this.paymentForm.get('kraPinCertificate')?.clearValidators();
+                    this.paymentForm.get('kraPinCertificate')?.updateValueAndValidity();
+                } else {
+                    this.paymentForm.get('kraPinCertificate')?.setValidators(Validators.required);
+                    this.paymentForm.get('kraPinCertificate')?.updateValueAndValidity();
+                }
+            },
+            error: (err) => {
+                this.isLoadingMarineData = false;
+            }
+        });
+    }
+
+    private extractPhoneNumber(input: string): string {
+        if (!input) return '';
+
+        let sanitized = input.trim().replace(/[^\d+]/g, '');
+
+        if (sanitized.startsWith('+254')) {
+            let local = sanitized.slice(4); // remove "+254"
+            if (local.length === 9 && local.startsWith('7')) {
+                return '0' + local;
+            }
+            return '0' + local.slice(-9);
+        } else if (sanitized.startsWith('254')) {
+            // without + sign
+            let local = sanitized.slice(3);
+            return '0' + local.slice(-9);
+        } else if (sanitized.length === 9 && sanitized.startsWith('7')) {
+            return '0' + sanitized;
+        } else if (sanitized.length === 10 && sanitized.startsWith('0')) {
+            return sanitized;
+        }
+
+        if (sanitized.startsWith('+1') || sanitized.startsWith('+2')) {
+            return sanitized;
+        }
+
+        return sanitized;
+    }
+
     loadRates(durationId): void {
         this.travelService.getRatesByDuration(durationId).subscribe({
             next: (data) => {
@@ -273,9 +414,82 @@ export class TravelQuoteComponent implements OnInit, OnDestroy
         });
     }
 
+    onFileSelected(event: Event, controlName: string): void {
+        const input = event.target as HTMLInputElement;
+        const file = input.files?.[0];
+
+        if (file) {
+            // Clear any existing error for this field
+            delete this.duplicateFileErrors[controlName];
+
+            // Validate file type
+            const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+            if (!allowedTypes.includes(file.type)) {
+                this.duplicateFileErrors[controlName] = 'Only PDF, JPG, and PNG files are allowed';
+                input.value = '';
+                this.paymentForm.get(controlName)?.setValue(null);
+                return;
+            }
+
+            // Validate file size (500KB = 500 * 1024 bytes)
+            const maxSize = 500 * 1024; // 500KB in bytes
+            if (file.size > maxSize) {
+                this.duplicateFileErrors[controlName] = 'File size must be less than 500KB';
+                input.value = '';
+                this.paymentForm.get(controlName)?.setValue(null);
+                return;
+            }
+
+            // Check if this file is already uploaded in another field
+            const documentFields = ['idfDocument', 'invoice', 'kraPinCertificate', 'nationalId'];
+            const fieldNames: { [key: string]: string } = {
+                kraPinCertificate: 'KRA PIN Certificate',
+                nationalId: 'National ID'
+            };
+
+            let duplicateFieldName: string | null = null;
+            const isDuplicate = documentFields.some((fieldName: string) => {
+                if (fieldName === controlName) return false; // Skip current field
+                const existingFile = this.paymentForm.get(fieldName)?.value;
+                if (!existingFile) return false;
+
+                // Compare file name, size, and last modified date
+                const isSame = existingFile.name === file.name &&
+                    existingFile.size === file.size &&
+                    existingFile.lastModified === file.lastModified;
+
+                if (isSame) {
+                    duplicateFieldName = fieldNames[fieldName] || fieldName;
+                }
+
+                return isSame;
+            });
+
+            if (isDuplicate) {
+                // User message: same file reused across different document cards, show specific card name
+                const nameToShow = duplicateFieldName || 'this document type';
+                this.duplicateFileErrors[controlName] = `This file is already uploaded as ${nameToShow}.`;
+                input.value = '';
+                this.paymentForm.get(controlName)?.setValue(null);
+                return;
+            }
+
+            // Store the valid, non-duplicate file on the form control
+            this.paymentForm.get(controlName)?.setValue(file);
+        }
+    }
+
     get tdf() { return this.travelerDetailsForm.controls; }
 
     get travelers() { return this.travelerDetailsForm.get('travelers') as FormArray; }
+
+    openTermsOfUse(event: Event): void {
+        event.preventDefault();
+    }
+
+    openPrivacyPolicy(event: Event): void {
+        event.preventDefault();
+    }
 
     moveToNext(): void {
 
@@ -307,7 +521,8 @@ export class TravelQuoteComponent implements OnInit, OnDestroy
         const numTravelers = this.travelerDetailsForm.get('numTravelers')?.value;
         const winterSports = this.travelerDetailsForm.get('winterSports')?.value;
         const name = this.travelerDetailsForm.get('name')?.value;
-        const travellers = this.travelerDetailsForm.get('travelers')?.value;
+        const travellersArray = this.travelerDetailsForm.get('travelers') as FormArray;
+        const travellers = travellersArray.getRawValue();
 
         const requestBody = {
             durationId: this.totalDays,
@@ -325,6 +540,7 @@ export class TravelQuoteComponent implements OnInit, OnDestroy
             dateFrom: this.datePipe.transform(dateOfTravel, 'dd MMM yyyy'),
             dateTo: this.datePipe.transform(estimatedArrival, 'dd MMM yyyy'),
         };
+        console.log(requestBody);
         this.travelService.saveTravelQuote(requestBody).subscribe({
             next: (response) => {
                this.quotId = response.id;
@@ -332,6 +548,7 @@ export class TravelQuoteComponent implements OnInit, OnDestroy
             },
             error: (err) => {
                 console.error("Error:", err);
+                this.submissionError = err?.error?.errors[0]?.developerMessage;
             }
         });
     }
@@ -342,6 +559,8 @@ export class TravelQuoteComponent implements OnInit, OnDestroy
                 this.stepper.next();
                 console.log('Quote Data:', data);
                 this.quoteDetails = data;
+                this.fetchProspectDocuments(data.prsCode);
+                this.initTravelerControls();
             },
             error: (err) => {
                 console.error('Error fetching quote:', err);
@@ -352,8 +571,46 @@ export class TravelQuoteComponent implements OnInit, OnDestroy
     createTravelerGroup(): FormGroup {
         return this.fb.group({
             fullName: ['', [Validators.required, fullNameValidator, noWhitespaceValidator]],
-            dob: ['', [Validators.required, dobValidator]]
+            dob: ['', [Validators.required, dobValidator]],
+            sameAsPrimary: [false],
+            passportFile: [null],
+            passportFileName: [null]
         });
+    }
+
+
+    onSameAsPrimaryChange() {
+        const primaryForm = this.quoteForm;
+        const traveler0 = this.travelers.at(0);
+
+        const isChecked = traveler0.get('sameAsPrimary')?.value;
+        console.log(this.loggedInUser);
+
+        if (isChecked) {
+            let  dobDate:Date;
+            if(this.loggedInUser.dateOfBirth) {
+                const dobArray = this.loggedInUser.dateOfBirth;
+                 dobDate = new Date(dobArray[0], dobArray[1] - 1, dobArray[2]);
+            }
+            traveler0.patchValue({
+                fullName: this.loggedInUser.name,
+                dob: dobDate
+            });
+
+            if(this.loggedInUser.dateOfBirth){
+                traveler0.get('dob')?.disable();
+            }
+            else{
+                traveler0.get('dob')?.enable();
+            }
+            traveler0.get('fullName')?.disable();
+        } else {
+            traveler0.get('fullName')?.reset();
+            traveler0.get('dob')?.reset();
+
+            traveler0.get('fullName')?.enable();
+            traveler0.get('dob')?.enable();
+        }
     }
 
     updateTravelersArray(count: number): void {
@@ -374,16 +631,61 @@ export class TravelQuoteComponent implements OnInit, OnDestroy
     }
 
     getPassportControl(index: number): FormControl {
-        const travelersArray = this.travelerDetailsForm.get('travelers') as FormArray;
-        return travelersArray.at(index).get('passportNumber') as FormControl;
+        return this.travelerPassportControls[index];
     }
 
     onPassportUpload(event: any, index: number) {
         const file = event.target.files[0];
-        if (file) {
-            const travelersArray = this.travelerDetailsForm.get('travelers') as FormArray;
-            travelersArray.at(index).patchValue({ passportFile: file, passportFileName: file.name });
+        if (!file) return;
+        this.passportFiles[index] = file;
+        this.quoteDetails.travellers[index].passportFileName = file.name;
+    }
+
+    buildTravelersJson() {
+        return this.quoteDetails.travellers.map(
+            (t: any, i: number) => ({
+                id: t.id,
+                fullName: t.travellerName,
+                passportNumber: this.travelerPassportControls[i].value,
+                passportFileName: this.passportFiles[i]?.name || null
+            })
+        );
+    }
+
+    submitPolicy() {
+
+        const travelersJson = this.buildTravelersJson();
+        const kycDocs = this.paymentForm.getRawValue();
+        const kraFile = kycDocs.kraPinCertificate;
+        const idFile =  kycDocs.nationalId;
+
+        const json  = {
+            "travellers": travelersJson,
+            "quoteId": this.quotId,
+            kraPin: kycDocs.kraPin,
+            firstName: kycDocs.firstName,
+            lastName: kycDocs.lastName,
+            phoneNumber: kycDocs.phoneNumber,
+            emailAddress: kycDocs.emailAddress,
+            idNumber: kycDocs.idNumber
         }
+
+        console.log(json);
+
+        this.travelService.submitPolicy(json,kraFile,idFile, this.passportFiles)
+            .subscribe({
+                next: (res) => {
+                    console.log('Success', res);
+                    const refNo = res?.transactionId;
+                    this.applicationId = res?.commandId;
+                    this.paymentRefNo = refNo;
+                    this.isSubmitting = false;
+                    this.applicationSubmitted = true;
+                },
+                error: (err) => {
+                    this.submissionError = err?.error?.errors[0]?.developerMessage;
+                }
+            });
     }
 
     preventLeadingSpace(event: KeyboardEvent): void {
@@ -415,7 +717,82 @@ export class TravelQuoteComponent implements OnInit, OnDestroy
     }
 
     initiatePayment(): void {
+        const mpesaNumber = this.paymentForm.get('mpesaNumber')?.value?.slice(-10); // last 10 digits
 
+        if (!mpesaNumber || mpesaNumber.length !== 10) {
+            this._snackBar.open('Please enter a valid M-PESA number', 'Close', {
+                duration: 6000,
+                panelClass: ['error-snackbar']
+            });
+            return;
+        }
+
+        this.isProcessPayment = true;
+        this.isProcessingStk = true;
+
+        this.quotationService.stkPush(mpesaNumber, 1, this.paymentRefNo,"Travel").pipe(
+            timeout(15000),
+            catchError(err => {
+                console.error('STK Push error', err);
+                this.isProcessPayment = false;
+                this.isProcessingStk = false;
+                this._snackBar.open('STK Push failed. Please try again.', 'Close', { duration: 5000 });
+                return throwError(() => err);
+            })
+        ).subscribe({
+            next: (res) => {
+                console.log('STK Push response', res);
+                const { checkOutRequestId, merchantRequestId } = res;
+
+                this.paymentPollingSub?.unsubscribe();
+
+                let attempts = 0;
+                const maxAttempts = 12; // 12 * 5s = 60 seconds max polling time
+
+                this.paymentPollingSub = interval(5000).pipe(
+                    switchMap(() => {
+                        attempts++;
+                        return this.quotationService.validatePayment(merchantRequestId, checkOutRequestId);
+                    }),
+                    takeWhile(() => attempts <= maxAttempts, true),
+                    catchError(err => {
+                        console.error('Polling error', err);
+                        return of({ resultCode: -1 }); // fail gracefully
+                    }),
+                    finalize(() => {
+                        this.isProcessingStk = false;
+                        this.isProcessPayment = false;
+                    })
+                ).subscribe((statusRes) => {
+                    console.log('Payment status', statusRes);
+
+                    if (statusRes.resultCode === 0 && statusRes.mpesaCode) {
+                        this.paymentSuccess = true;
+                        this._snackBar.open('Payment successful!', 'Close', { duration: 4000 });
+                        this.paymentPollingSub?.unsubscribe();
+                        this.router.navigate(['/viewmarinequote', this.applicationId]);
+                    }
+
+                    else if (statusRes.resultCode !== 0) {
+                        this.paymentSuccess = false;
+                        this._snackBar.open('Payment failed or cancelled.', 'Close', { duration: 4000 });
+                        this.paymentPollingSub?.unsubscribe();
+                    }
+
+                    else if (attempts >= maxAttempts) {
+                        this.paymentSuccess = false;
+                        this._snackBar.open('Payment unsuccessful. Request timed out.', 'Close', { duration: 4000 });
+                        this.paymentPollingSub?.unsubscribe();
+                    }
+                });
+            },
+            error: (err) => {
+                console.error('Error during STK request', err);
+                this.isProcessingStk = false;
+                this.isProcessPayment = false;
+                this._snackBar.open('STK request failed. Please try again.', 'Close', { duration: 5000 });
+            }
+        });
     }
 
     onSubmit(): void {
@@ -467,21 +844,21 @@ export class TravelQuoteComponent implements OnInit, OnDestroy
         }
     }
 
-    fetchProspectDocuments(): void {
-        this.isLoadingData = true;
-        this.userService.getUserDetails().subscribe({
-            next: (data) => {
-                this.isLoadingData = false;
-                this.travelerDetailsForm.patchValue({
-                    phoneNumber: data.phoneNumber,
-                    email: data.emailAddress,
-                });
-            },
-            error: (err) => {
-                this.isLoadingData = false;
-            }
-        });
-    }
+    // fetchProspectDocuments(): void {
+    //     this.isLoadingData = true;
+    //     this.userService.getUserDetails().subscribe({
+    //         next: (data) => {
+    //             this.isLoadingData = false;
+    //             this.travelerDetailsForm.patchValue({
+    //                 phoneNumber: data.phoneNumber,
+    //                 email: data.emailAddress,
+    //             });
+    //         },
+    //         error: (err) => {
+    //             this.isLoadingData = false;
+    //         }
+    //     });
+    // }
 
 
 }

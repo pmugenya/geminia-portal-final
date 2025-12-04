@@ -2,7 +2,7 @@
     class="flex min-h-screen min-w-0 flex-auto flex-col overflow-hidden items-center sm:flex-row sm:justify-center md:items-stretch md:justify-stretch">
     <!-- LEFT: Quick Quote Section -->
     <div
-        class="relative hidden h-full max-h-screen flex-auto items-start justify-start overflow-y-auto bg-[#04b2e1] p-16 pt-6 md:pt-8 text-white dark:border-r md:flex lg:px-28">
+        class="relative hidden h-full max-h-screen flex-auto overflow-y-auto bg-[#04b2e1] p-16 pt-6 md:pt-8 text-white dark:border-r md:flex md:items-start md:justify-center lg:px-28">
         <!-- Decorative Rings -->
         <svg class="absolute inset-0 pointer-events-none opacity-20" viewBox="0 0 960 540" width="100%" height="100%"
             preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">
@@ -12,10 +12,15 @@
             </g>
         </svg>
 
-        <marine-quick-quote *ngIf="showMarineQuote" (closeQuote)="showMarineQuote = false"></marine-quick-quote>
+        <marine-quick-quote
+            *ngIf="showMarineQuote"
+            (closeQuote)="onCloseMarineQuote()"
+            (showLoginForQuote)="onShowLoginForQuote()"></marine-quick-quote>
+
+        <app-quick-travel *ngIf="showTravelQuote"  (closeQuote)="onCloseTravelQuote()" (showLoginForQuote)="onShowLoginForQuote()"></app-quick-travel>
 
         <!-- Quick Quote Content -->
-        <div class="relative z-10 w-full max-w-xl text-left flex flex-col justify-center h-full mx-auto" *ngIf="!showMarineQuote">
+        <div class="relative z-10 w-full max-w-xl text-left flex flex-col justify-center h-full mx-auto" *ngIf="!showMarineQuote && !showTravelQuote">
             <h2 class="text-4xl font-extrabold mb-6">Get a Quick Quote</h2>
             <p class="opacity-90 mb-8 text-lg">
                 Start instantly — no login required. Choose a product below to begin.
@@ -46,7 +51,7 @@
                     </button>
                 </div>
 
-               
+
 
                 <!-- Travel Insurance card -->
                 <div class="flex flex-col items-start gap-3 rounded-2xl bg-white/10 p-4
@@ -70,10 +75,10 @@
                            transition-all duration-200 hover:bg-gray-800 md:w-auto" (click)="toggleTravelQuote()">
                         Get Quote
                     </button>
-               
+
 			   </div>
-			   
-			   
+
+
 			    <!-- Motor Insurance card -->
                 <div class="flex flex-col items-start gap-3 rounded-2xl bg-white/10 p-4
                        sm:flex-row sm:items-center sm:justify-between sm:p-5
@@ -97,13 +102,13 @@
                         Get Quote
                     </button>
                 </div>
-			   
+
             </div>
         </div>
     </div>
 
     <!-- RIGHT: Login Form -->
-    <div class="w-full px-4 py-10 sm:bg-card sm:w-auto sm:rounded-2xl sm:p-12 sm:shadow
+    <div *ngIf="!showMarineQuote || forceShowLoginForQuote || showTravelQuote" class="w-full px-4 py-10 sm:bg-card sm:w-auto sm:rounded-2xl sm:p-12 sm:shadow
                md:flex md:h-full md:justify-end md:rounded-none md:p-16 md:shadow-none bg-white">
         <div class="mx-auto w-full max-w-80 sm:mx-0 sm:w-80">
 
@@ -171,7 +176,7 @@
                             formControlName="otp" placeholder="_ _ _ _ _ _ _ _" maxlength="8"
                             [disabled]="otpCountdown <= 0 && signInForm.disabled"
                             (keydown.enter)="handleSignIn()" />
-                        
+
                         <div class="mt-3 flex items-center justify-between">
                             <button type="button"
                                 *ngIf="otpCountdown > 0"
@@ -179,7 +184,7 @@
                                 disabled>
                                 Resend OTP in {{ formatCountdown(otpCountdown) }}
                             </button>
-                            
+
                             <button type="button"
                                 *ngIf="otpCountdown <= 0"
                                 (click)="resendOtp()"
@@ -187,7 +192,7 @@
                                 [disabled]="signInForm.disabled">
                                 Resend OTP
                             </button>
-                            
+
                             <button type="button"
                                 (click)="backToCredentials()"
                                 [disabled]="otpCountdown > 0"
@@ -198,7 +203,7 @@
                                 Back to Login
                             </button>
                         </div>
-                        
+
                         <div class="mt-2 text-xs text-gray-500">
                             Didn't receive the code? Check your spam folder or request a new code after the timer expires.
                         </div>
@@ -218,7 +223,7 @@
   color="primary"
   [disabled]="signInForm.disabled"
   (click)="handleSignIn()"
-  class="w-full h-12 rounded-full bg-primary-500 text-white flex items-center justify-center 
+  class="w-full h-12 rounded-full bg-primary-500 text-white flex items-center justify-center
          hover:bg-primary-600 transition-colors fuse-mat-button-large mt-6 !min-h-0 !p-0"
 >
   <span *ngIf="!signInForm.disabled">Sign in</span>

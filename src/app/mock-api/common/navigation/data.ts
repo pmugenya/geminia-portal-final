@@ -47,11 +47,11 @@ const PERM_ARR: FuseNavigationItem[] = [
                 link: '/marinequote'
             },
             {
-                id: 'example2',
+                id: 'travelquote',
                 title: 'Travel Quote',
                 type: 'basic',
                 icon: 'heroicons_outline:map',
-                link: '/example'
+                link: '/travelquote'
             },
             {
                 id: 'quotlisting',

@@ -30,9 +30,8 @@
                 <!--                    <span class="ml-2">Settings</span>-->
                 <!--                </button>-->
                 <button
-                    class="ml-3 hidden sm:inline-flex"
+                    class="ml-3 hidden sm:inline-flex new-quote-cta"
                     mat-flat-button
-                    [color]="'primary'"
                     (click)="openProductQuoteDialog()"
                 >
                     <mat-icon
@@ -422,12 +421,23 @@
                         <ng-container matColumnDef="actions">
                             <th mat-header-cell *matHeaderCellDef>Actions</th>
                             <td mat-cell *matCellDef="let policy">
-                                <div class="flex space-x-2">
-                                    <button mat-icon-button (click)="viewPolicy(policy)" title="View Policy">
+                                <div class="flex flex-wrap gap-2">
+                                    <button
+                                        mat-stroked-button
+                                        color="primary"
+                                        class="px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1"
+                                        (click)="viewPolicy(policy)">
                                         <mat-icon class="icon-size-4" [svgIcon]="'heroicons_outline:eye'"></mat-icon>
+                                        <span>View Policy</span>
                                     </button>
-                                    <button *ngIf="policy.erprefno" mat-icon-button (click)="downloadPolicy(policy)" title="Download Cerficate">
+                                    <button
+                                        *ngIf="policy.erprefno"
+                                        mat-stroked-button
+                                        color="primary"
+                                        class="px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1"
+                                        (click)="downloadPolicy(policy)">
                                         <mat-icon class="icon-size-4" [svgIcon]="'heroicons_outline:arrow-down-tray'"></mat-icon>
+                                        <span>Download Certificate</span>
                                     </button>
                                 </div>
                             </td>

@@ -1,0 +1,41 @@
+<div class="w-full max-w-md p-6">
+  <div class="flex items-center justify-between mb-4">
+    <div>
+      <h2 class="text-lg font-semibold text-gray-900">Share Quote Details</h2>
+      <p class="text-sm text-gray-500">Choose how you'd like to share the quote information.</p>
+    </div>
+    <button type="button" mat-icon-button (click)="close()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <div class="grid grid-cols-2 gap-4">
+    <button type="button"
+            class="border rounded-xl p-4 flex flex-col items-center justify-center hover:bg-gray-50 whatsapp-option"
+            (click)="onChoose('whatsapp')">
+      <span class="icon-circle mb-2">WA</span>
+      <span class="text-sm font-medium text-gray-800">WhatsApp</span>
+    </button>
+
+    <button type="button"
+            class="border rounded-xl p-4 flex flex-col items-center justify-center hover:bg-gray-50"
+            (click)="onChoose('gmail')">
+      <mat-icon class="text-red-500 mb-2">mail</mat-icon>
+      <span class="text-sm font-medium text-gray-800">Gmail</span>
+    </button>
+
+    <button type="button"
+            class="border rounded-xl p-4 flex flex-col items-center justify-center hover:bg-gray-50"
+            (click)="onChoose('outlook')">
+      <mat-icon class="text-blue-600 mb-2">mail</mat-icon>
+      <span class="text-sm font-medium text-gray-800">Outlook</span>
+    </button>
+
+    <button type="button"
+            class="border rounded-xl p-4 flex flex-col items-center justify-center hover:bg-gray-50"
+            (click)="onChoose('otherEmail')">
+      <mat-icon class="text-blue-400 mb-2">mail</mat-icon>
+      <span class="text-sm font-medium text-gray-800">Other Email</span>
+    </button>
+  </div>
+</div>
