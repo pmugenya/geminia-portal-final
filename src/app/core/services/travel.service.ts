@@ -1,0 +1,36 @@
+import { Injectable } from '@angular/core';
+import { environment } from '../../../environments/environment';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Country, TravelDuration, TravelQuoteData, TravelRatesData } from '../user/user.types';
+import { Observable } from 'rxjs';
+
+@Injectable({ providedIn: 'root' })
+export class TravelService {
+
+    private baseUrl = environment.apiUrl;
+
+    constructor(private http: HttpClient) {}
+
+    getTravelDurations(): Observable<TravelDuration[]> {
+        return this.http.get<TravelDuration[]>(`${this.baseUrl}/travel/durations`);
+    }
+
+    getRatesByDuration(durationId: number): Observable<TravelRatesData[]> {
+        return this.http.get<TravelRatesData[]>(`${this.baseUrl}/travel/rates/${durationId}`);
+    }
+
+    saveTravelQuote(requestBody: any): Observable<any> {
+        const headers = new HttpHeaders({
+            'Content-Type': 'application/json'
+        });
+        return this.http.post(`${this.baseUrl}/quote/saveTravelQuote`, JSON.stringify(requestBody), { headers });
+    }
+
+    getSingleQuote(quoteId: number): Observable<TravelQuoteData> {
+        return this.http.get<TravelQuoteData>(`${this.baseUrl}/travelquote/singlequote/${quoteId}`);
+    }
+
+    getCountries(): Observable<Country[]> {
+        return this.http.get<Country[]>(`${this.baseUrl}/travelquote/countries`);
+    }
+}

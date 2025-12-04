@@ -1,0 +1,427 @@
+<div class="flex flex-col flex-auto w-full p-6 md:p-10">
+    <div class="bg-card rounded-xl shadow w-full">
+        <!-- Header -->
+        <div class="p-6 border-b">
+            <h2 class="text-xl font-semibold">Travel Quote Details</h2>
+        </div>
+        <div class="p-6">
+            <mat-horizontal-stepper [linear]="true" #stepper class="w-full">
+                <mat-step [stepControl]="quoteForm">
+                    <ng-template matStepLabel>Available Plans</ng-template>
+                    <h2 class="mb-2 text-2xl font-semibold text-gray-900">Get Your Travel Insurance Quote</h2>
+                    <p class="mb-6 text-gray-600">Tell us about your trip to see available plans and pricing.</p>
+                    <form [formGroup]="quoteForm" class="space-y-6 w-full">
+                        <fuse-alert
+                            *ngIf="submissionError"
+                            [title]="'Submission Failed!'"
+                            [type]="'error'"
+                            [dismissible]="true"
+                            (dismiss)="submissionError = null">
+                            {{ submissionError }}
+                        </fuse-alert>
+                        <div class="mb-8 grid grid-cols-1 gap-8 md:grid-cols-2">
+
+                            <!-- Travelling From -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Travelling From <span class="text-red-500">*</span>
+                                </label>
+
+                                <mat-form-field appearance="outline" class="w-full">
+                                    <mat-label>Travelling From</mat-label>
+
+                                    <mat-select formControlName="countryFromId" panelClass="country-search-panel">
+
+                                        <!-- Search input -->
+                                        <mat-option disabled class="search-option">
+                                            <input
+                                                matInput
+                                                (click)="$event.stopPropagation()"
+                                                (keydown)="$event.stopPropagation()"
+                                                placeholder="Search..."
+                                                class="w-full px-3 py-2 outline-none"
+                                                [formControl]="searchCtrl"
+                                            >
+                                        </mat-option>
+
+                                        <mat-option *ngFor="let c of filteredCountries$ | async" [value]="c.id">
+                                            {{ c.countryname }}
+                                        </mat-option>
+
+                                    </mat-select>
+
+                                    <mat-icon matSuffix class="text-gray-500">public</mat-icon>
+                                </mat-form-field>
+
+                            </div>
+
+                            <!-- Travelling To -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Travelling To <span class="text-red-500">*</span>
+                                </label>
+
+                                <mat-form-field appearance="outline" class="w-full">
+                                    <mat-label> Travelling To </mat-label>
+
+                                    <mat-select formControlName="countryToId">
+                                        <mat-option>
+                                            <input
+                                                matInput
+                                                (click)="$event.stopPropagation()"
+                                                (keydown)="$event.stopPropagation()"
+                                                placeholder="Search..."
+                                                class="w-full px-3 py-2 outline-none"
+                                                [formControl]="searchDestCtrl"
+                                            >
+                                        </mat-option>
+
+                                        <mat-option *ngFor="let c of filteredDestCountries$ | async" [value]="c.id">
+                                            {{ c.countryname }}
+                                        </mat-option>
+
+                                    </mat-select>
+
+                                    <mat-icon matSuffix class="text-gray-500">public</mat-icon>
+                                </mat-form-field>
+                            </div>
+
+                        </div>
+                        <div class="mb-8 grid grid-cols-1 gap-8 md:grid-cols-2">
+                            <div>
+                                <label class="block text-base font-medium text-gray-700 mb-1">Date of Travel *</label>
+                                <mat-form-field appearance="outline" class="w-full"
+                                                [ngClass]="{'mat-form-field-invalid': (quoteForm.get('dateOfTravel')?.invalid && quoteForm.get('dateOfTravel')?.touched) || !quoteForm.get('dateOfTravel')?.value}">
+                                    <input matInput [matDatepicker]="dispatchPicker" formControlName="dateOfTravel" [min]="today" readonly>
+                                    <mat-datepicker-toggle matSuffix [for]="dispatchPicker"></mat-datepicker-toggle>
+                                    <mat-datepicker #dispatchPicker></mat-datepicker>
+                                </mat-form-field>
+                            </div>
+                            <div>
+                                <label class="block text-base font-medium text-gray-700 mb-1">Date of Arrival *</label>
+                                <mat-form-field appearance="outline" class="w-full"
+                                                [ngClass]="{'mat-form-field-invalid': (quoteForm.get('estimatedArrival')?.invalid && quoteForm.get('estimatedArrival')?.touched) || !quoteForm.get('estimatedArrival')?.value}">
+                                    <input matInput [matDatepicker]="arrivalPicker" formControlName="estimatedArrival" [min]="quoteForm.get('dateOfTravel')?.value || today" readonly>
+                                    <mat-datepicker-toggle matSuffix [for]="arrivalPicker"></mat-datepicker-toggle>
+                                    <mat-datepicker #arrivalPicker></mat-datepicker>
+                                    <mat-error *ngIf="quoteForm.get('estimatedArrival')?.hasError('beforeDispatch')">
+                                        Date of Arrival cannot be before Date of Travel
+                                    </mat-error>
+                                </mat-form-field>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-lg font-semibold text-gray-700">
+                                Trip Duration:
+                                <span class="text-blue-600">{{ totalDays }} day{{ totalDays > 1 ? 's' : '' }}</span>
+                            </label>
+                        </div>
+                        <div *ngIf="totalDays > 1" class="mt-10">
+                            <h3 class="mb-6 text-2xl font-bold text-gray-900">Select a Plan</h3>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                                <div
+                                    *ngFor="let plan of rates"
+                                    class="plan-card group relative flex flex-col rounded-2xl border bg-white shadow-sm hover:shadow-md transition-all cursor-pointer"
+                                    [ngClass]="{ 'ring-2 ring-primary-500 shadow-md': quoteForm.get('plan')?.value === plan.id }"
+                                    (click)="quoteForm.get('plan')?.setValue(plan.id)"
+                                >
+
+                                    <!-- Price Section -->
+                                    <div class="p-6 pb-4">
+                                        <div class="flex items-baseline space-x-2">
+                    <span class="text-3xl font-bold text-primary-600">
+                        KES {{ (plan.rateAmount * plan.exchangeRate) | number:'1.0-0' }}
+                    </span>
+                                            <span class="text-gray-500 text-sm">per person</span>
+                                        </div>
+
+                                        <!-- Tags -->
+                                        <div class="flex flex-wrap gap-2 mt-3">
+                    <span
+                        *ngFor="let tag of plan.planTagsData"
+                        class="text-xs bg-primary-50 text-primary-700 px-2 py-1 rounded-md border border-primary-100"
+                    >
+                        {{ tag.tag }}
+                    </span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Benefits -->
+                                    <ul class="px-6 flex-1 space-y-3">
+                                        <li
+                                            *ngFor="let benefit of plan.benefitsData"
+                                            class="flex items-start space-x-3"
+                                        >
+                                            <mat-icon class="text-green-600 mt-1">check_circle</mat-icon>
+
+                                            <div>
+                                                <div class="font-medium text-gray-800">{{ benefit.benefitName }}</div>
+                                                <div class="text-sm text-gray-500">
+                                                    <span *ngIf="benefit.benefitLimit">{{ benefit.benefitLimit }}</span>
+                                                    <span *ngIf="benefit.notes"> - {{ benefit.notes }}</span>
+                                                </div>
+                                            </div>
+                                        </li>
+                                    </ul>
+
+                                    <!-- Select Button -->
+                                    <div class="p-6 pt-4 mt-auto">
+                                        <label class="block text-center">
+                                            <input type="radio" formControlName="plan" [value]="plan.id" class="sr-only"/>
+                                            <span
+                                                class="w-full inline-block bg-primary-600 text-white py-2 rounded-lg font-semibold group-hover:bg-primary-700 transition"
+                                            >
+                        Select Plan
+                    </span>
+                                        </label>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end mt-6">
+                            <button
+                                mat-flat-button
+                                color="primary"
+                                (click)="moveToNext()"
+                                class="bg-primary-600 hover:bg-primary-700 text-white px-6 py-2 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-all">
+                                Next
+                            </button>
+                        </div>
+                    </form>
+                </mat-step>
+                <mat-step [stepControl]="quoteForm">
+                    <ng-template matStepLabel>Traveler Details</ng-template>
+                    <form [formGroup]="travelerDetailsForm" *ngIf="!isLoadingData">
+                        <h3 class="mb-4 border-b pb-2 text-lg font-semibold text-gray-800">Primary Contact & Trip Info</h3>
+                        <div class="grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2">
+                            <div>
+                                <label class="mb-2 block text-sm font-medium text-gray-700">Email Address<span class="text-red-500">*</span></label>
+                                <input type="email" formControlName="email"  (input)="handleInputChange($event, 'email')" (blur)="trimInput($event, 'email')" (keydown)="preventLeadingSpace($event)" class="w-full rounded-md border border-gray-300 bg-white px-3 py-2" />
+                                <div *ngIf="tdf.email.invalid && (tdf.email.dirty || tdf.email.touched)" class="mt-1 text-xs text-red-500">
+                                    <div *ngIf="tdf.email.errors?.['required']">Email address is required.</div>
+                                    <div *ngIf="tdf.email.errors?.['email']">Please enter a valid email address.</div>
+                                    <div *ngIf="tdf.email.errors?.['whitespace']">Email cannot contain only whitespace.</div>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="mb-2 block text-sm font-medium text-gray-700">Phone Number<span class="text-red-500">*</span></label>
+                                <input type="tel" formControlName="phoneNumber" (input)="handleInputChange($event, 'phoneNumber')" (blur)="trimInput($event, 'phoneNumber')" (keydown)="preventLeadingSpace($event)" class="w-full rounded-md border border-gray-300 bg-white px-3 py-2" placeholder="+254712345678" />
+                                <div *ngIf="tdf.phoneNumber.invalid && (tdf.phoneNumber.dirty || tdf.phoneNumber.touched)" class="mt-1 text-xs text-red-500">
+                                    <div *ngIf="tdf.phoneNumber.errors?.['required']">Phone number is required.</div>
+                                    <div *ngIf="tdf.phoneNumber.errors?.['invalidPhoneNumber']">Please enter a valid phone number (9-15 digits).</div>
+                                    <div *ngIf="tdf.phoneNumber.errors?.['whitespace']">Phone number cannot contain only whitespace.</div>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="mb-2 block text-sm font-medium text-gray-700">Number of Travelers<span class="text-red-500">*</span></label>
+                                <input type="number" formControlName="numTravelers" min="1" class="w-full rounded-md border border-gray-300 bg-white px-3 py-2" />
+                                <div *ngIf="tdf.numTravelers.invalid && (tdf.numTravelers.dirty || tdf.numTravelers.touched)" class="mt-1 text-xs text-red-500">
+                                    <div *ngIf="tdf.numTravelers.errors?.['required']">Number of travelers is required.</div>
+                                    <div *ngIf="tdf.numTravelers.errors?.['min']">At least one traveler is required.</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-8" formArrayName="travelers">
+                            <h3 class="mb-4 border-b pb-2 text-lg font-semibold text-gray-800">Traveler Information</h3>
+
+                            <!-- NEW: Duplicate Traveler Error Message -->
+                            <div *ngIf="travelers.hasError('duplicateTraveler') && travelers.touched" class="mb-4 rounded-md bg-red-50 p-3 text-center text-sm text-red-600">
+                                Error: Each traveler must have a unique combination of full name and date of birth.
+                            </div>
+
+                            <div *ngFor="let travelerGroup of travelers.controls; let i = index" [formGroupName]="i" class="mb-6 rounded-md border bg-gray-50/50 p-4">
+                                <h4 class="mb-4 font-medium text-gray-700">
+                                    {{ i === 0 ? 'Primary Traveler' : 'Traveler ' + (i + 1) }}
+                                </h4>
+                                <div class="grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2">
+                                    <div>
+                                        <label class="mb-2 block text-sm font-medium text-gray-700">Full Name<span class="text-red-500">*</span></label>
+                                        <input type="text" formControlName="fullName" (blur)="trimTravelerInput($event, i, 'fullName')" class="w-full rounded-md border border-gray-300 bg-white px-3 py-2" />
+                                        <div *ngIf="travelerGroup.get('fullName')?.invalid && (travelerGroup.get('fullName')?.dirty || travelerGroup.get('fullName')?.touched)" class="mt-1 text-xs text-red-500">
+                                            <div *ngIf="travelerGroup.get('fullName')?.errors?.['required']">Full name is required.</div>
+                                            <div *ngIf="travelerGroup.get('fullName')?.errors?.['invalidName']">Please enter at least two names (e.g., John Doe).</div>
+                                            <div *ngIf="travelerGroup.get('fullName')?.errors?.['whitespace']">Name cannot contain only whitespace.</div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <mat-form-field appearance="outline" class="w-full">
+                                            <mat-label>Date of Birth</mat-label>
+
+                                            <input
+                                                matInput
+                                                [matDatepicker]="picker"
+                                                formControlName="dob"
+                                                placeholder="dd-MMM-yyyy"
+                                            />
+
+                                            <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                                            <mat-datepicker #picker></mat-datepicker>
+                                        </mat-form-field>
+                                        <div *ngIf="travelerGroup.get('dob')?.invalid && (travelerGroup.get('dob')?.dirty || travelerGroup.get('dob')?.touched)" class="mt-1 text-xs text-red-500">
+                                            <div *ngIf="travelerGroup.get('dob')?.errors?.['required']">Date of birth is required.</div>
+                                            <div *ngIf="travelerGroup.get('dob')?.errors?.['futureDate']">Date of birth cannot be in the future.</div>
+                                            <div *ngIf="travelerGroup.get('dob')?.errors?.['tooOld']">Please enter a valid year.</div>
+                                        </div>
+                                        <!-- NEW: Minor Declaration -->
+                                        <div *ngIf="travelerGroup.get('dob')?.valid && getAge(travelerGroup.get('dob')?.value) < 18" class="mt-1 text-xs font-semibold text-blue-600">
+                                            (This traveler is a minor)
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 flex items-center">
+                            <input type="checkbox" formControlName="winterSports" id="winterSports" class="h-4 w-4 rounded border-gray-300 text-geminia-blue focus:ring-geminia-blue" />
+                            <label for="winterSports" class="ml-2 text-sm text-gray-700">Add Winter SporWINts cover (Optional Surcharge)</label>
+                        </div>
+                        <div class="flex justify-end mt-6">
+                            <button
+                                mat-flat-button
+                                color="primary"
+                                (click)="saveTravelQuote()"
+                                class="bg-primary-600 hover:bg-primary-700 text-white px-6 py-2 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-all">
+                                Next
+                            </button>
+                        </div>
+                    </form>
+                </mat-step>
+                <mat-step>
+                    <ng-template matStepLabel>Review & Buy Quote</ng-template>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+                        <!-- LEFT SIDE: Quote Details -->
+                        <div class="lg:col-span-2 space-y-8" *ngIf="quoteDetails">
+
+                            <!-- Trip Details -->
+                            <div class="p-6 bg-white rounded-xl shadow-sm border">
+                                <h4 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Trip Details</h4>
+                                <div class="grid grid-cols-2 gap-y-3 gap-x-6 text-sm">
+                                    <div class="font-medium text-gray-600">Plan</div>
+                                    <div>{{ quoteDetails.planName }}</div>
+
+                                    <div class="font-medium text-gray-600">Cover Period</div>
+                                    <div>{{ this.totalDays+' Days ' }} ({{ quoteDetails.fromDate | date:'mediumDate' }} - {{ quoteDetails.toDate | date:'mediumDate' }})</div>
+
+                                    <div class="font-medium text-gray-600">Travelling From</div>
+                                    <div>{{ quoteDetails.countryFrom }}</div>
+
+                                    <div class="font-medium text-gray-600">Travelling To</div>
+                                    <div>{{ quoteDetails.countryTo }}</div>
+
+                                    <div class="font-medium text-gray-600">Travellers</div>
+                                    <div>{{ quoteDetails.travellersCnt }}</div>
+                                </div>
+                            </div>
+
+                            <!-- Contact Information -->
+                            <div class="p-6 bg-white rounded-xl shadow-sm border">
+                                <h4 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Contact Information</h4>
+                                <div class="grid grid-cols-2 gap-y-3 gap-x-6 text-sm">
+                                    <div class="font-medium text-gray-600">Email</div>
+                                    <div>{{ quoteDetails.email }}</div>
+
+                                    <div class="font-medium text-gray-600">Phone</div>
+                                    <div>{{ quoteDetails.mobile }}</div>
+                                </div>
+                            </div>
+
+                            <!-- Travelers -->
+                            <div class="p-6 bg-white rounded-xl shadow-sm border">
+                                <h4 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Insured Travelers</h4>
+                                <ul class="space-y-1 text-gray-700 text-sm">
+                                    <li *ngFor="let traveler of travelerDetailsForm.value.travelers">
+                                        {{ traveler.fullName }} (DOB: {{ traveler.dob | date:'longDate' }})
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <!-- Benefits -->
+                            <div class="p-6 bg-white rounded-xl shadow-sm border">
+                                <h4 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Full Plan Benefits</h4>
+                                <div class="overflow-x-auto">
+                                    <table *ngIf="quoteDetails.travelBenefits" class="min-w-full text-sm border border-gray-200 rounded-lg">
+                                        <thead>
+                                        <tr class="bg-gray-50 text-left">
+                                            <th class="p-2 font-medium text-gray-700">Benefit</th>
+                                            <th class="p-2 font-medium text-gray-700">Limit</th>
+                                            <th class="p-2 font-medium text-gray-700">Notes</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr *ngFor="let benefit of quoteDetails.travelBenefits" class="border-t hover:bg-gray-50 transition">
+                                            <td class="p-2">{{ benefit.benefitIncluded }}</td>
+                                            <td class="p-2">{{ benefit.benefitLimit }}</td>
+                                            <td class="p-2">{{ benefit.notes || '-' }}</td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- RIGHT SIDE: Premium Summary -->
+                        <div class="sticky top-24 bg-white p-6 shadow-lg rounded-xl h-auto flex flex-col justify-between" *ngIf="quoteDetails">
+                            <div>
+                                <h3 class="mb-4 text-lg font-semibold">Premium Summary</h3>
+
+                                <div class="space-y-3 text-sm">
+                                    <div class="flex justify-between">
+                                        <span>Subtotal</span>
+                                        <span class="font-bold">KES {{ quoteDetails.premium | number:'1.2-2' }}</span>
+                                    </div>
+
+                                    <div *ngIf="quoteDetails.winterPrem > 0" class="flex justify-between text-red-600 font-medium">
+                                        <span>Winter Sports Surcharge</span>
+                                        <span>+ KES {{ quoteDetails.winterPrem | number:'1.2-2' }}</span>
+                                    </div>
+
+                                    <hr class="my-2">
+
+                                    <div class="flex justify-between text-gray-700">
+                                        <span>PHCF (0.25%)</span>
+                                        <span class="font-bold">KES {{ quoteDetails.phcf | number:'1.2-2' }}</span>
+                                    </div>
+
+                                    <div class="flex justify-between text-gray-700">
+                                        <span>Training Levy (0.2%)</span>
+                                        <span class="font-bold">KES {{ quoteDetails.tl | number:'1.2-2' }}</span>
+                                    </div>
+
+                                    <div class="flex justify-between text-gray-700">
+                                        <span>Stamp Duty</span>
+                                        <span class="font-bold">KES {{ quoteDetails.sd | number:'1.2-2' }}</span>
+                                    </div>
+                                </div>
+
+                                <div class="mt-4 p-4 bg-gray-50 border rounded-lg">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-lg font-semibold">Total Payable</span>
+                                        <span class="text-2xl font-bold">KES {{ quoteDetails.netPrem | number:'1.2-2' }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button
+                                mat-flat-button
+                                color="primary"
+                                (click)="buyNow()"
+                                class="w-full sm:w-auto px-6 py-2 rounded-lg shadow-md text-white !font-bold bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-all">
+                                Buy Now
+                            </button>
+                        </div>
+
+
+                    </div>
+                </mat-step>
+            </mat-horizontal-stepper>
+        </div>
+    </div>
+</div>
