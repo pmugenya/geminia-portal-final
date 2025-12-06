@@ -3,6 +3,14 @@
         <mat-spinner diameter="60" color="primary"></mat-spinner>
         <p class="mt-4 text-gray-600 font-medium">Loading quote details...</p>
     </div>
+    <!-- Toast-style certificate error (top-right corner) -->
+    <div
+        *ngIf="certificateInlineError"
+        class="fixed top-6 right-6 z-50 max-w-xs border border-red-300 bg-red-50 text-red-700 text-xs rounded-md px-3 py-2 shadow-md"
+    >
+        {{ certificateInlineError }}
+    </div>
+
     <div class="bg-card rounded-xl shadow w-full" *ngIf="!isLoading">
         <!-- Header -->
         <div class="p-6 border-b bg-gradient-to-r from-blue-50 to-blue-100">
@@ -13,12 +21,12 @@
                     <p class="text-sm text-gray-600 mt-1">Status: <span class="font-semibold text-blue-600">{{approvedStatus}}</span></p>
                 </div>
                 <div class="mt-4 md:mt-0 flex flex-col gap-2" *ngIf="erprefno">
-                    <!-- Download button -->
+                    <!-- Download button (primary style, matches bottom button) -->
                     <button
                         (click)="printCertificate()"
-                        class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
+                        class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition-all"
                     >
-                        <mat-icon class="text-blue-600">download</mat-icon>
+                        <mat-icon class="text-white">download</mat-icon>
                         <span class="text-sm font-medium">Download Certificate</span>
                     </button>
 
@@ -229,7 +237,7 @@
                             <span class="text-sm font-bold text-gray-900">KES {{stampduty | number:'1.2-2'}}</span>
                         </div>
                     </div>
-                    <div class="flex justify-between p-4 bg-blue-600 rounded-lg">
+                    <div class="flex justify-between p-4 bg-secondary rounded-lg">
                         <span class="text-lg font-bold text-white">Total Premium:</span>
                         <span class="text-xl font-bold text-white">KES {{netpremium | number:'1.2-2'}}</span>
                     </div>
@@ -262,8 +270,8 @@
                     <mat-icon class="mr-1">cancel</mat-icon>
                     Request Amendments
                 </button>
-                <button (click)="downloadApplication()" class="px-6 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-all">
-                    <mat-icon class="mr-1">download</mat-icon>
+                <button (click)="printCertificate()" class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition-all">
+                    <mat-icon class="mr-1 text-white">download</mat-icon>
                     Download Certificate
                 </button>
             </div>

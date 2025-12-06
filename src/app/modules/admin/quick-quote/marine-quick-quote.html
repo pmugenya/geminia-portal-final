@@ -244,9 +244,14 @@
                                     class="mt-1 h-4 w-4 rounded border-gray-300 text-primary focus-ring-primary"/>
                                 <span class="ml-3 text-sm text-gray-700">
                                     I agree to the
-                                    <a (click)="openTermsModal($event)" class="cursor-pointer font-medium text-primary hover:underline">Terms of Use</a>
+                                    <span class="font-medium text-gray-900">Terms of Use</span>
                                     and to the
-                                    <a (click)="openPrivacyModal($event)" class="cursor-pointer font-medium text-primary hover:underline">Data Privacy Policy</a>.*
+                                    <button
+                                        type="button"
+                                        (click)="openPrivacyModal($event)"
+                                        class="cursor-pointer font-medium text-primary hover:underline bg-transparent border-none p-0 m-0">
+                                        Data Privacy Policy
+                                    </button>.*
                                 </span>
                             </label>
                             <p
@@ -308,7 +313,7 @@
                                     mat-flat-button
                                     color="primary"
                                     (click)="buyNow()"
-                                    class="inline-flex items-center px-6 py-2 rounded-full text-sm font-semibold text-white buy-now-btn">
+                                    class="inline-flex items-center px-6 py-2 rounded-full text-sm font-semibold text-white bg-primary hover:bg-secondary transition-colors buy-now-btn">
                                     Buy Now
                                 </button>
 
@@ -317,7 +322,7 @@
                                     mat-flat-button
                                     color="primary"
                                     (click)="downloadQuote()"
-                                    class="download-btn">
+                                    class="download-btn bg-primary text-white hover:bg-secondary transition-colors">
                                     <mat-icon svgIcon="heroicons_outline:arrow-down-tray" class="mr-2"></mat-icon>
                                     Download Quote
                                 </button>
@@ -481,7 +486,7 @@
                             <button
                                 mat-stroked-button
                                 (click)="stepper.previous()"
-                                class="w-full sm:w-auto px-6 py-2 rounded-lg shadow-sm text-gray-900 font-semibold hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition-all">
+                                class="w-full sm:w-auto px-6 py-2 rounded-lg shadow-sm bg-secondary text-white font-semibold hover:bg-secondary/90 focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-offset-2 transition-all">
                                 Back
                             </button>
 
@@ -489,7 +494,7 @@
                                 mat-flat-button
                                 color="primary"
                                 (click)="buyNow()"
-                                class="w-full sm:w-auto px-6 py-2 rounded-lg shadow-md text-white !font-bold buy-now-btn transition-all">
+                                class="w-full sm:w-auto px-6 py-2 rounded-lg shadow-md text-white !font-bold bg-primary hover:bg-secondary transition-colors buy-now-btn">
                                 Buy Now
                             </button>
 
@@ -499,6 +504,42 @@
 
                 </mat-step>
             </mat-horizontal-stepper>
+        </div>
+    </div>
+</div>
+
+<!-- Data Privacy Policy Modal -->
+<div *ngIf="showDataPrivacyModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-2 sm:p-4" (click)="closePrivacyModal()">
+    <div class="max-h-[95vh] w-full max-w-4xl overflow-y-auto rounded-lg bg-white shadow-xl" (click)="$event.stopPropagation()">
+        <div class="sticky top-0 bg-white border-b border-gray-200 px-3 py-3 sm:px-6 sm:py-4">
+            <div class="flex items-center justify-between">
+                <h2 class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800">Data Privacy Policy</h2>
+                <button (click)="closePrivacyModal()" class="text-gray-400 hover:text-gray-600 p-1">
+                    <mat-icon class="text-lg sm:text-xl">close</mat-icon>
+                </button>
+            </div>
+        </div>
+        <div class="px-3 py-4 sm:px-6 sm:py-6">
+            <div class="prose max-w-none text-sm sm:text-base md:text-lg text-gray-700">
+                <p class="mb-3 sm:mb-4"><strong>Data Privacy Statement</strong></p>
+                <p class="mb-3 sm:mb-4">Geminia Insurance Company Limited is committed to protecting the fundamental human right to privacy of those with whom we interact. We recognize the need to safeguard personal data that is collected or disclosed to us as part of the Know-your-customer information required by us in order to provide you with the requisite financial product or service.</p>
+                <p class="mb-3 sm:mb-4">We are committed to complying with the requirements of the Data Protection Act and the attendant regulations as well as best global best practices regarding the processing of your personal data. In this regard, you are required to acquaint yourselves with our data privacy statement which is intended to tell you how we use your personal data and describes how we collect and process your personal data during and after your relationship with us.</p>
+
+                <div class="mt-4 sm:mt-6 rounded-md bg-green-50 px-3 py-3 sm:px-4 sm:py-4 text-xs sm:text-sm text-gray-800 border border-green-100">
+                    <div class="font-semibold mb-1">External Link:</div>
+                    <p>
+                        For complete privacy policy details, please visit:
+                        <a href="https://geminia.co.ke/data-privacy-statement/" target="_blank" class="text-sky-500 hover:underline break-all">https://geminia.co.ke/data-privacy-statement/</a>
+                    </p>
+                </div>
+
+                <p class="mt-4 sm:mt-6 text-xs sm:text-sm text-gray-500">Last updated: {{ getCurrentDate() }}</p>
+            </div>
+        </div>
+        <div class="sticky bottom-0 bg-white border-t border-gray-200 px-3 py-3 sm:px-6 sm:py-4">
+            <div class="flex justify-end">
+                <button (click)="closePrivacyModal()" class="rounded-md bg-primary px-3 py-2 sm:px-4 text-sm sm:text-base text-white hover:bg-secondary">I Understand</button>
+            </div>
         </div>
     </div>
 </div>

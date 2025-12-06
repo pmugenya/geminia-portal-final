@@ -55,11 +55,11 @@
                             <div class="grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2">
                                 <div>
                                     <label class="mb-2 block text-base font-medium text-gray-700">First Name <span class="text-red-500">*</span></label>
-                                    <input type="text" formControlName="firstName" class="w-full rounded-md border bg-white px-3 py-2 text-base"/>
+                                    <input type="text" formControlName="firstName" class="w-full rounded-md border bg-white px-3 py-2 text-base" (blur)="normalizeName('firstName')"/>
                                 </div>
                                 <div>
                                     <label class="mb-2 block text-base font-medium text-gray-700">Last Name <span class="text-red-500">*</span></label>
-                                    <input type="text" formControlName="lastName" class="w-full rounded-md border bg-white px-3 py-2 text-base"/>
+                                    <input type="text" formControlName="lastName" class="w-full rounded-md border bg-white px-3 py-2 text-base" (blur)="normalizeName('lastName')"/>
                                 </div>
                                 <div>
                                     <label class="mb-2 block text-base font-medium text-gray-700">Email Address <span class="text-red-500">*</span></label>
@@ -67,7 +67,11 @@
                                 </div>
                                 <div>
                                     <label class="mb-2 block text-base font-medium text-gray-700">Phone Number <span class="text-red-500">*</span></label>
-                                    <input type="tel" formControlName="phoneNumber" class="w-full rounded-md border bg-white px-3 py-2 text-base"/>
+                                    <input
+                                        type="tel"
+                                        formControlName="phoneNumber"
+                                        class="w-full rounded-md border bg-white px-3 py-2 text-base"
+                                        (input)="onStep1PhoneNumberInput($event)"/>
                                 </div>
                             </div>
                         </div>
@@ -245,7 +249,9 @@
 
                         <!-- Terms and Policy Consent -->
                         <div class="mt-6 space-y-2"
-                             [ngClass]="quotationForm.get('termsAndPolicyConsent')?.invalid && quotationForm.get('termsAndPolicyConsent')?.touched ? 'border border-red-500 bg-red-50 rounded-md p-3' : ''">
+                             [ngClass]="quotationForm.get('termsAndPolicyConsent')?.invalid && quotationForm.get('termsAndPolicyConsent')?.touched
+                                ? 'border border-red-500 bg-red-50 rounded-md p-3'
+                                : ''">
                             <label class="flex items-start">
                                 <input
                                     type="checkbox"
@@ -253,14 +259,19 @@
                                     class="mt-1 h-4 w-4 rounded border-gray-300 text-primary focus-ring-primary"/>
                                 <span class="ml-3 text-sm text-gray-700">
                                     I agree to the
-                                    <a (click)="openTermsModal($event)" class="cursor-pointer font-medium text-primary hover:underline">Terms of Use</a>
+                                    <span class="font-medium text-gray-900">Terms of Use</span>
                                     and to the
-                                    <a (click)="openPrivacyModal($event)" class="cursor-pointer font-medium text-primary hover:underline">Data Privacy Policy</a>.*
+                                    <button
+                                        type="button"
+                                        (click)="openPrivacyModal()"
+                                        class="cursor-pointer font-medium text-primary hover:underline bg-transparent border-none p-0 m-0">
+                                        Data Privacy Policy
+                                    </button>.*
                                 </span>
                             </label>
                             <p
                                 *ngIf="quotationForm.get('termsAndPolicyConsent')?.invalid && quotationForm.get('termsAndPolicyConsent')?.touched"
-                                class="text-xs text-red-600 mt-1">
+                                class="text-xs text-red-600 mt-1 ml-7">
                                 You must agree to the Terms of Use and Data Privacy Policy to continue.
                             </p>
                         </div>
@@ -308,13 +319,6 @@
                                 </div>
                             </div>
                             <div class="flex items-center space-x-3">
-                                <button
-                                    mat-flat-button
-                                    color="primary"
-                                    class="buy-now-btn"
-                                    (click)="stepper.next()">
-                                    Buy Now
-                                </button>
                                 <button
                                     mat-flat-button
                                     color="primary"
@@ -447,6 +451,13 @@
                                 class="w-full sm:w-auto px-8 py-3 rounded-lg shadow-sm text-base back-btn-step2 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition-all">
                                 Back
                             </button>
+                            <button
+                                mat-flat-button
+                                color="primary"
+                                class="w-full sm:w-auto px-8 py-3 rounded-lg shadow-md text-base buy-now-btn"
+                                (click)="stepper.next()">
+                                Buy Now
+                            </button>
                         </div>
 
                     </form>
@@ -494,6 +505,13 @@
                                                 <button type="button" mat-button color="primary">Choose file</button>
                                                 <input hidden #idfDocument type="file" accept=".pdf,.jpg,.jpeg,.png" (change)="onFileSelected($event, 'idfDocument')">
                                                 <p class="text-xs text-gray-500 mt-1">{{ shipmentForm.get('idfDocument').value?.name || 'No file chosen' }}</p>
+                                                <button
+                                                    *ngIf="shipmentForm.get('idfDocument')?.value"
+                                                    type="button"
+                                                    class="mt-1 text-xs font-medium text-primary hover:underline"
+                                                    (click)="openDocumentPreview('idfDocument', $event)">
+                                                    View
+                                                </button>
                                                 <p class="text-xs text-gray-400 mt-1">PDF, JPG, PNG (Max 500KB)</p>
                                             </div>
                                             <p *ngIf="duplicateFileErrors['idfDocument']" class="mt-1 text-xs text-red-600 text-left">
@@ -512,6 +530,13 @@
                                                 <button type="button" mat-button color="primary">Choose file</button>
                                                 <input hidden #invoice type="file" accept=".pdf,.jpg,.jpeg,.png" (change)="onFileSelected($event, 'invoice')">
                                                 <p class="text-xs text-gray-500 mt-1">{{ shipmentForm.get('invoice').value?.name || 'No file chosen' }}</p>
+                                                <button
+                                                    *ngIf="shipmentForm.get('invoice')?.value"
+                                                    type="button"
+                                                    class="mt-1 text-xs font-medium text-primary hover:underline"
+                                                    (click)="openDocumentPreview('invoice', $event)">
+                                                    View
+                                                </button>
                                                 <p class="text-xs text-gray-400 mt-1">PDF, JPG, PNG (Max 500KB)</p>
                                             </div>
                                             <p *ngIf="duplicateFileErrors['invoice']" class="mt-1 text-xs text-red-600 text-left">
@@ -533,6 +558,13 @@
                                                 <button type="button" mat-button color="primary">Choose file</button>
                                                 <input hidden #kraPinCertificate type="file" accept=".pdf,.jpg,.jpeg,.png" (change)="onFileSelected($event, 'kraPinCertificate')">
                                                 <p class="text-xs text-gray-500 mt-1">{{ shipmentForm.get('kraPinCertificate').value?.name || 'No file chosen' }}</p>
+                                                <button
+                                                    *ngIf="shipmentForm.get('kraPinCertificate')?.value"
+                                                    type="button"
+                                                    class="mt-1 text-xs font-medium text-primary hover:underline"
+                                                    (click)="openDocumentPreview('kraPinCertificate', $event)">
+                                                    View
+                                                </button>
                                             </div>
                                             <p *ngIf="duplicateFileErrors['kraPinCertificate']" class="mt-1 text-xs text-red-600 text-left">
                                                 {{ duplicateFileErrors['kraPinCertificate'] }}
@@ -550,6 +582,13 @@
                                                 <button type="button" mat-button color="primary">Choose file</button>
                                                 <input hidden #nationalId type="file" accept=".pdf,.jpg,.jpeg,.png" (change)="onFileSelected($event, 'nationalId')">
                                                 <p class="text-xs text-gray-500 mt-1">{{ shipmentForm.get('nationalId').value?.name || 'No file chosen' }}</p>
+                                                <button
+                                                    *ngIf="shipmentForm.get('nationalId')?.value"
+                                                    type="button"
+                                                    class="mt-1 text-xs font-medium text-primary hover:underline"
+                                                    (click)="openDocumentPreview('nationalId', $event)">
+                                                    View
+                                                </button>
                                             </div>
                                             <p *ngIf="duplicateFileErrors['nationalId']" class="mt-1 text-xs text-red-600 text-left">
                                                 {{ duplicateFileErrors['nationalId'] }}
@@ -557,24 +596,6 @@
                                         </div>
                                     </div>
 
-                                    <!-- Terms Checkbox -->
-                                    <div class="mt-3"
-                                         [ngClass]="shipmentForm.get('agreeToTerms')?.invalid && shipmentForm.get('agreeToTerms')?.touched ? 'border border-red-500 bg-red-50 rounded-md p-3' : ''">
-                                        <div class="flex items-start">
-                                            <mat-checkbox formControlName="agreeToTerms" color="primary"></mat-checkbox>
-                                            <label class="text-sm text-gray-600 ml-2">
-                                                I agree to the
-                                                <a (click)="openTermsOfUse($event)" class="hover:underline cursor-pointer" style="color: #04b2e1;">Terms of Use</a>
-                                                and
-                                                <a (click)="openPrivacyPolicy($event)" class="hover:underline cursor-pointer" style="color: #04b2e1;">Privacy Policy</a>
-                                            </label>
-                                        </div>
-                                        <p
-                                            *ngIf="shipmentForm.get('agreeToTerms')?.invalid && shipmentForm.get('agreeToTerms')?.touched"
-                                            class="text-xs text-red-600 mt-1">
-                                            You must agree to the Terms of Use and Privacy Policy to continue.
-                                        </p>
-                                    </div>
                                 </div>
 
                                 <!-- Personal Information -->
@@ -1011,17 +1032,18 @@
                                         <button
                                             mat-raised-button
                                             color="primary"
-                                            class="w-full py-3 text-lg font-semibold rounded-full"
+                                            class="w-full py-3 text-lg font-semibold rounded-full flex items-center justify-center"
                                             [disabled]="isSubmitting"
                                             (click)="onSubmit()"
                                             style="background-color: #21275c; color: #ffffff;">
-                                            <mat-spinner *ngIf="isSubmitting" diameter="24" class="mr-2"></mat-spinner>
-                                            <span *ngIf="!isSubmitting">
-                                                Submit Application
-                                            </span>
-                                            <span *ngIf="isSubmitting">
-                                                Submitting Application...
-                                            </span>
+                                            <ng-container *ngIf="!isSubmitting; else submittingState">
+                                                <span>
+                                                    Submit Application
+                                                </span>
+                                            </ng-container>
+                                            <ng-template #submittingState>
+                                                <mat-spinner diameter="24" class="payment-spinner"></mat-spinner>
+                                            </ng-template>
                                         </button>
 
                                         <p class="mt-3 text-sm text-center font-semibold" style="color: #04b2e1;">
@@ -1046,6 +1068,92 @@
                     </form>
                 </mat-step>
             </mat-horizontal-stepper>
+        </div>
+    </div>
+</div>
+
+<!-- Document Preview Modal -->
+<div *ngIf="showDocumentPreviewModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-2 sm:p-4" (click)="closeDocumentPreview()">
+    <div class="max-h-[95vh] w-full max-w-4xl overflow-hidden rounded-lg bg-white shadow-xl" (click)="$event.stopPropagation()">
+        <div class="sticky top-0 bg-white border-b border-gray-200 px-3 py-3 sm:px-6 sm:py-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-lg sm:text-xl md:text-2xl font-bold text-gray-800">Document Preview</h2>
+                    <p class="text-xs sm:text-sm text-gray-500 truncate mt-1">{{ previewDocumentName }}</p>
+                </div>
+                <button (click)="closeDocumentPreview()" class="text-gray-400 hover:text-gray-600 p-1">
+                    <mat-icon class="text-lg sm:text-xl">close</mat-icon>
+                </button>
+            </div>
+        </div>
+
+        <div class="px-3 py-4 sm:px-6 sm:py-6 max-h-[80vh] overflow-auto bg-gray-50">
+            <ng-container *ngIf="previewDocumentUrl as docUrl">
+                <!-- Image preview -->
+                <img
+                    *ngIf="previewDocumentType.startsWith('image/')"
+                    [src]="docUrl"
+                    class="max-h-[70vh] w-auto mx-auto rounded-md border border-gray-200 bg-white"
+                    alt="Uploaded document preview"/>
+
+                <!-- PDF preview (with fallback link) -->
+                <div *ngIf="previewDocumentType === 'application/pdf'" class="w-full h-[70vh]">
+                    <iframe
+                        [src]="previewSafeUrl"
+                        class="w-full h-full rounded-md border border-gray-200 bg-white"
+                        title="PDF preview"></iframe>
+                    <div class="mt-2 text-xs text-gray-500">
+                        If the PDF does not display correctly, you can
+                        <a [href]="docUrl" target="_blank" class="text-primary hover:underline">open it in a new tab</a>.
+                    </div>
+                </div>
+
+                <!-- Fallback for other types -->
+                <div *ngIf="!previewDocumentType || (previewDocumentType !== 'application/pdf' && !previewDocumentType.startsWith('image/'))" class="text-sm text-gray-700">
+                    <p class="mb-2">This file type cannot be previewed here.</p>
+                    <a [href]="docUrl" target="_blank" class="text-primary hover:underline text-sm">Open document in a new tab</a>
+                </div>
+            </ng-container>
+        </div>
+
+        <div class="sticky bottom-0 bg-white border-t border-gray-200 px-3 py-3 sm:px-6 sm:py-4 flex justify-end">
+            <button (click)="closeDocumentPreview()" class="rounded-md bg-primary px-3 py-2 sm:px-4 text-sm sm:text-base text-white hover:bg-secondary">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- Data Privacy Policy Modal -->
+<div *ngIf="showDataPrivacyModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-2 sm:p-4" (click)="closeDataPrivacyModal()">
+    <div class="max-h-[95vh] w-full max-w-4xl overflow-y-auto rounded-lg bg-white shadow-xl" (click)="$event.stopPropagation()">
+        <div class="sticky top-0 bg-white border-b border-gray-200 px-3 py-3 sm:px-6 sm:py-4">
+            <div class="flex items-center justify-between">
+                <h2 class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800">Data Privacy Policy</h2>
+                <button (click)="closeDataPrivacyModal()" class="text-gray-400 hover:text-gray-600 p-1">
+                    <mat-icon class="text-lg sm:text-xl">close</mat-icon>
+                </button>
+            </div>
+        </div>
+        <div class="px-3 py-4 sm:px-6 sm:py-6">
+            <div class="prose max-w-none text-sm sm:text-base md:text-lg text-gray-700">
+                <p class="mb-3 sm:mb-4"><strong>Data Privacy Statement</strong></p>
+                <p class="mb-3 sm:mb-4">Geminia Insurance Company Limited is committed to protecting the fundamental human right to privacy of those with whom we interact. We recognize the need to safeguard personal data that is collected or disclosed to us as part of the Know-your-customer information required by us in order to provide you with the requisite financial product or service.</p>
+                <p class="mb-3 sm:mb-4">We are committed to complying with the requirements of the Data Protection Act and the attendant regulations as well as best global best practices regarding the processing of your personal data. In this regard, you are required to acquaint yourselves with our data privacy statement which is intended to tell you how we use your personal data and describes how we collect and process your personal data during and after your relationship with us.</p>
+
+                <div class="mt-4 sm:mt-6 rounded-md bg-green-50 px-3 py-3 sm:px-4 sm:py-4 text-xs sm:text-sm text-gray-800 border border-green-100">
+                    <div class="font-semibold mb-1">External Link:</div>
+                    <p>
+                        For complete privacy policy details, please visit:
+                        <a href="https://geminia.co.ke/data-privacy-statement/" target="_blank" class="text-sky-500 hover:underline break-all">https://geminia.co.ke/data-privacy-statement/</a>
+                    </p>
+                </div>
+
+                <p class="mt-4 sm:mt-6 text-xs sm:text-sm text-gray-500">Last updated: {{ getCurrentDate() }}</p>
+            </div>
+        </div>
+        <div class="sticky bottom-0 bg-white border-t border-gray-200 px-3 py-3 sm:px-6 sm:py-4">
+            <div class="flex justify-end">
+                <button (click)="closeDataPrivacyModal()" class="rounded-md bg-primary px-3 py-2 sm:px-4 text-sm sm:text-base text-white hover:bg-secondary">I Understand</button>
+            </div>
         </div>
     </div>
 </div>

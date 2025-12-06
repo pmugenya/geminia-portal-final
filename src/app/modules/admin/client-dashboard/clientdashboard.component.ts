@@ -200,6 +200,20 @@ export class ClientInsuranceDashboardComponent implements OnInit,AfterViewInit {
     }
 
     ngOnInit(): void {
+        // Ensure only retail clients can access this dashboard
+        const storedUserRaw = sessionStorage.getItem('geminia_user_data');
+        if (storedUserRaw) {
+            try {
+                const storedUser = JSON.parse(storedUserRaw) as { userType?: string };
+                if (storedUser.userType && storedUser.userType !== 'C') {
+                    this.router.navigateByUrl('/agentdashboard');
+                    return;
+                }
+            } catch {
+                // If parsing fails, fall through and let auth guard handle if needed
+            }
+        }
+
         this.fuseAlertService.dismiss('quoteDownloadError');
         this.loadDashboardData();
         this.loadRecentActivities();

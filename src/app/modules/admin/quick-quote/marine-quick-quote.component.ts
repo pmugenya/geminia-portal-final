@@ -43,7 +43,7 @@ import { MatRadioButton, MatRadioGroup } from '@angular/material/radio';
 import { ThousandsSeparatorValueAccessor } from '../../../core/directives/thousands-separator-value-accessor';
 import { QuoteService } from '../../../core/services/quote.service';
 import { FuseAlertComponent, FuseAlertService } from '../../../../@fuse/components/alert';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatSnackBar, MatSnackBarRef, SimpleSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
 import { FuseAlertType } from '@fuse/components/alert';
 import { MatCheckbox } from '@angular/material/checkbox';
@@ -118,6 +118,8 @@ export class MarineQuickQuoteComponent implements OnInit, OnDestroy
     // Notify parent (sign-in) when Buy Now is confirmed so it can show login panel
     @Output() showLoginForQuote = new EventEmitter<void>();
 
+    showDataPrivacyModal = false;
+
     // Stepper Form Groups
     quotationForm!: FormGroup;
     coverageFormGroup!: FormGroup;
@@ -163,6 +165,7 @@ export class MarineQuickQuoteComponent implements OnInit, OnDestroy
 
 
     private paymentPollingSub?: Subscription;
+    private validationToastRef: MatSnackBarRef<SimpleSnackBar> | null = null;
 
     constructor(private fb: FormBuilder,
                 private userService: UserService,
@@ -236,6 +239,16 @@ export class MarineQuickQuoteComponent implements OnInit, OnDestroy
         // Step 2: Coverage Details (example fields)
         this.coverageFormGroup = this.fb.group({
         });
+
+        // Automatically hide validation toast once all fields become valid
+        this.quotationForm.statusChanges
+            .pipe(takeUntil(this.destroy$))
+            .subscribe(status => {
+                if (status === 'VALID' && this.validationToastRef) {
+                    this.validationToastRef.dismiss();
+                    this.validationToastRef = null;
+                }
+            });
 
     }
 
@@ -460,6 +473,7 @@ export class MarineQuickQuoteComponent implements OnInit, OnDestroy
             event.preventDefault();
             event.stopPropagation();
         }
+        this.showDataPrivacyModal = true;
     }
 
     openTermsOfUse(event: Event): void {
@@ -622,9 +636,15 @@ export class MarineQuickQuoteComponent implements OnInit, OnDestroy
     }
 
     closePrivacyModal(): void {
+        this.showDataPrivacyModal = false;
     }
 
 
+
+
+    getCurrentDate(): string {
+        return new Date().toLocaleDateString();
+    }
 
 
     private loadCountries(reset = false) {
@@ -650,6 +670,24 @@ export class MarineQuickQuoteComponent implements OnInit, OnDestroy
                     this.loading = false;
                 },
             });
+    }
+
+    private showToast(message: string, action?: string, onAction?: () => void, duration: number = 4000): MatSnackBarRef<SimpleSnackBar> {
+        const snackRef = this._snackBar.open(message, action, {
+            horizontalPosition: 'right',
+            verticalPosition: 'top',
+            duration,
+            panelClass: ['marine-quote-snackbar']
+        });
+
+        if (onAction) {
+            snackRef.onAction().subscribe(() => {
+                snackRef.dismiss();
+                onAction();
+            });
+        }
+
+        return snackRef;
     }
 
     scrollToFirstError(): void {
@@ -723,11 +761,12 @@ export class MarineQuickQuoteComponent implements OnInit, OnDestroy
 
         if (!this.quotationForm.valid) {
             this.scrollToFirstError();
-
-
-
-            // Join them into a readable string
-            this.submissionError = `Please fill in the following required fields correctly`;
+            this.validationToastRef = this.showToast(
+                `A few fields need your attention. Please review the highlights.`,
+                undefined,
+                undefined,
+                4000,
+            );
             this.isSaving = false;
             return;
         }
@@ -847,15 +886,7 @@ export class MarineQuickQuoteComponent implements OnInit, OnDestroy
     buyNow(): void {
         const message = "You're almost there!\nTo get your cover, you'll need to sign into your account, or create an account by clicking Sign up.";
 
-        const snackRef = this._snackBar.open(message, 'OK', {
-            horizontalPosition: 'right',
-            verticalPosition: 'top',
-            duration: undefined,
-            panelClass: ['marine-quote-snackbar']
-        });
-
-        snackRef.onAction().subscribe(() => {
-            snackRef.dismiss();
+        this.showToast(message, 'OK', () => {
             // Let parent component decide how to show login; keep quote open
             this.showLoginForQuote.emit();
         });
@@ -872,30 +903,69 @@ export class MarineQuickQuoteComponent implements OnInit, OnDestroy
         });
     }
 
+    private buildStructuredShareLines(): string[] {
+        const lines: string[] = [];
+
+        if (!this.quote) {
+            lines.push('Marine quote details are not available.');
+            return lines;
+        }
+
+        const q = this.quote;
+
+        lines.push('Please find below the marine quote details.');
+        lines.push('');
+
+        // Reference
+        lines.push(`Reference: ${q.refno}`);
+        lines.push('');
+
+        // Customer
+        lines.push('Customer');
+        lines.push(`Name: ${`${q.firstName || ''} ${q.lastName || ''}`.trim()}`);
+        lines.push(`Email: ${q.email || ''}`);
+        lines.push(`Phone: ${q.phoneNo || ''}`);
+        lines.push('');
+
+        // Category & Product / Shipping & Cargo Details
+        lines.push('Category & Product');
+        lines.push(`Category: ${q.category || ''}`);
+        lines.push(`Product: ${q.prodName || ''}`);
+        lines.push('');
+
+        lines.push('Shipping & Cargo Details');
+        lines.push(`Origin Country: ${q.originCountry || ''}`);
+        lines.push(`Destination: ${q.destination || q.countyName || ''}`);
+        lines.push(`Cargo Type: ${q.cargotype || ''}`);
+        lines.push(`Shipping Mode: ${q.shippingmode || ''}`);
+        lines.push(`Packaging Type: ${q.packagingtype || ''}`);
+        lines.push(`Vessel Name: ${q.vesselName || ''}`);
+        lines.push(`Description: ${q.description || ''}`);
+        lines.push(`Dispatch Date: ${this.datePipe.transform(q.dateDispatch, 'mediumDate') || ''}`);
+        lines.push(`Arrival Date: ${this.datePipe.transform(q.dateArrival, 'mediumDate') || ''}`);
+        lines.push('');
+
+        // Premium Details
+        lines.push('Premium Details');
+        lines.push(`Sum Assured: KES ${q.sumassured}`);
+        lines.push(`Premium: KES ${q.premium}`);
+        lines.push(`PHCF: KES ${q.phcf}`);
+        lines.push(`Training Levy: KES ${q.traininglevy}`);
+        lines.push(`Stamp Duty: KES ${q.sd}`);
+        lines.push(`Net Premium: KES ${q.netprem}`);
+        lines.push('');
+
+        lines.push('You can also attach a screenshot or PDF of the quote details before sending.');
+
+        return lines;
+    }
+
     shareVia(channel: ShareChannel): void {
         if (!this.quote && !this.quoteResult) {
             return;
         }
 
-        const lines: string[] = [];
-        const quote = this.quote;
-
-        if (quote) {
-            lines.push('Please find below the marine quote details.');
-            lines.push('');
-            lines.push(`Reference: ${quote.refno}`);
-            lines.push(`Customer: ${quote.firstName || ''} ${quote.lastName || ''}`.trim());
-            lines.push(`Email: ${quote.email || ''}`);
-            lines.push(`Phone: ${quote.phoneNo || ''}`);
-            lines.push('');
-            lines.push(`Sum Assured: KES ${quote.sumassured}`);
-            lines.push(`Net Premium: KES ${quote.netprem}`);
-            lines.push('');
-        }
-
-        lines.push('You can also attach a screenshot or PDF of the quote details before sending.');
-
-        const encodedBody = encodeURIComponent(lines.join('\n'));
+        const encodedBody = encodeURIComponent(this.buildStructuredShareLines().join('\n'));
 
         if (channel === 'whatsapp') {
             const url = `https://wa.me/?text=${encodedBody}`;

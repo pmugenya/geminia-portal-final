@@ -593,22 +593,33 @@
                                             <div class="text-sm text-secondary mb-1">Total Amount</div>
                                             <div class="text-3xl font-bold text-primary-600">KES {{ quoteDetails.netPrem | number:'1.2-2' }}</div>
                                         </div>
-                                        <mat-icon class="icon-size-12 text-primary-200 dark:text-primary-900/30">payments</mat-icon>
+                                        <div class="flex flex-col">
+                                            <span class="text-xs font-medium text-secondary uppercase tracking-wide mb-1">Number of Travellers</span>
+                                            <span class="text-base font-semibold">{{ quoteDetails.travellersCnt }}</span>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <button
-                                    mat-flat-button
-                                    color="primary"
-                                    (click)="buyNow()"
-                                    class="w-full text-lg py-6 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all">
-                                    <mat-icon class="mr-2">shopping_cart</mat-icon>
-                                    Proceed to Payment
-                                </button>
-
-                                <div class="mt-4 flex items-center justify-center gap-2 text-xs text-secondary">
-                                    <mat-icon class="icon-size-4">lock</mat-icon>
-                                    <span>Secure payment processing</span>
+                                <!-- Contact Information -->
+                                <div class="p-6 bg-card rounded-xl shadow-md border-2 border-gray-100">
+                                    <h4 class="text-lg font-semibold mb-4 flex items-center">
+                                        <mat-icon class="icon-size-5 mr-2 text-primary-600">contact_phone</mat-icon>
+                                        Contact Information
+                                    </h4>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div class="flex flex-col">
+                                            <span class="text-xs font-medium text-secondary uppercase tracking-wide mb-1">Email</span>
+                                            <span class="text-base font-semibold break-all">{{ quoteDetails.email }}</span>
+                                        </div>
+                                        <div class="flex flex-col">
+                                            <span class="text-xs font-medium text-secondary uppercase tracking-wide mb-1">Phone</span>
+                                            <span class="text-base font-semibold">{{ quoteDetails.mobile }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="mt-4 flex items-center justify-center gap-2 text-xs text-secondary">
+                                        <mat-icon class="icon-size-4">lock</mat-icon>
+                                        <span>Secure payment processing</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>

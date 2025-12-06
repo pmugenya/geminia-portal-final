@@ -115,6 +115,7 @@ export class ViewMarineQuote implements OnInit {
     applicationData: ApplicationShippingData | null = null;
     isLoading = false;
     error: string | null = null;
+    certificateInlineError: string | null = null;
 
     private pollingSubscription!: Subscription;
 
@@ -364,8 +365,13 @@ export class ViewMarineQuote implements OnInit {
                 }
             },
             error: (err) => {
-                this.showError('Certificate Processing in progress. Try again later');
+                this.certificateInlineError = 'The certificate is currently being processed. Please try again shortly.';
                 this.progress = -1;
+
+                // Auto-hide inline message after 4 seconds
+                setTimeout(() => {
+                    this.certificateInlineError = null;
+                }, 4000);
             }
         });
 

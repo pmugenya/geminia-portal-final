@@ -340,6 +340,24 @@
             </div>
         </div>
 
+        <!-- Quick Actions for Agents -->
+        <div class="mt-8 w-full">
+            <div class="bg-card rounded-2xl shadow p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                <div class="mb-4 sm:mb-0">
+                    <h3 class="text-lg font-semibold">Quick Actions</h3>
+                    <p class="text-sm text-secondary">Start a new quote quickly from your dashboard.</p>
+                </div>
+                <button
+                    mat-flat-button
+                    color="primary"
+                    class="inline-flex items-center px-5 py-2 rounded-full text-sm font-semibold bg-primary text-white hover:bg-secondary transition-colors"
+                    (click)="openProductQuoteDialog()">
+                    <mat-icon class="icon-size-5 mr-2" [svgIcon]="'heroicons_outline:calculator'"></mat-icon>
+                    Quick Quote
+                </button>
+            </div>
+        </div>
+
         <div class="mt-8 grid w-full grid-cols-1 gap-8 xl:grid-cols-1">
             <!-- Recent Policies -->
             <div
