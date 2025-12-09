@@ -291,6 +291,7 @@ export interface TravellersData {
     passportNo: string;
     passportFileName: string;
     dob: Date;
+    dataFound: boolean
 }
 
 export interface TravelQuoteData {
@@ -315,4 +316,33 @@ export interface TravelQuoteData {
     discount: number;
     surcharge: number;
     prsCode: number;
+}
+
+
+export interface TravelPolicyData {
+    policyId: number;
+    premium: number;
+    phcf: number;
+    tl: number;
+    sd: number;
+    winterSportPrem: number;
+    netPrem: number;
+    refNo: string;
+    policyNo: string;
+    status: string;
+    paidPrem: number;
+    dateCreated: string;           // LocalDate → ISO string (yyyy-MM-dd)
+    originCountry: string;
+    destinationCountry: string;
+    coverFrom: string;             // LocalDate → string
+    coverTo: string;               // LocalDate → string
+    clientName: string;
+    planName: string;
+    duration: number;
+    discount: number;
+    surchargeAmount: number;
+    olderSurchargeAmount: number;
+    quoteRef: string;
+    erpPolicyId: number;
+    travellers: TravellersData[];
 }

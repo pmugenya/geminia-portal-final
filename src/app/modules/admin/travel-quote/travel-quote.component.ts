@@ -46,7 +46,7 @@ import { noWhitespaceValidator } from '../../../core/validators/white-space-vali
 import { kenyanPhoneNumberValidator } from '../../../core/validators/kenyan-phone-validator';
 import { duplicateTravelerValidator } from '../../../core/validators/duplicator-traveller-validator';
 import {
-    catchError,
+    catchError, debounceTime,
     finalize,
     interval,
     map,
@@ -284,6 +284,55 @@ export class TravelQuoteComponent implements OnInit, OnDestroy
             this.calculateDays();
         });
 
+        this.quoteDetails.travellers.forEach((t, i) => {
+            this.getPassportControl(i).valueChanges
+                .pipe(debounceTime(500))
+                .subscribe(passportNo => {
+                    if (passportNo) {
+                        this.checkPassport(passportNo, i);
+                    }
+                });
+        });
+
+    }
+
+    checkPassport(passportNo: string, index: number) {
+        this.travelService.checkPassport(passportNo)
+            .subscribe({
+                next: (res) => {
+                    if (res && res.found) {
+                        this.quoteDetails.travellers[index].dataFound = true;
+                        this.quoteDetails.travellers[index].passportFileName ="testFilename.pdf";
+                    } else {
+                        this.quoteDetails.travellers[index].dataFound = false;
+                    }
+                },
+                error: () => {
+                    this.quoteDetails.travellers[index].dataFound = false;
+                }
+            });
+    }
+
+    check(passportNo: string, index: number) {
+        if (!passportNo) return;
+
+        this.travelService.checkPassport(passportNo).subscribe({
+            next: (res) => {
+                console.log('Passport found?', res.found);
+
+                // Example: update traveler object in table
+                this.quoteDetails.travellers[index].dataFound = res.found;
+
+                // optionally set file name if found
+                if (res.found) {
+                    this.quoteDetails.travellers[index].passportFileName = 'Already on record';
+                }
+            },
+            error: (err) => {
+                console.error('Error checking passport', err);
+                this.quoteDetails.travellers[index].dataFound = false;
+            }
+        });
     }
 
     calculateDays() {
@@ -770,7 +819,7 @@ export class TravelQuoteComponent implements OnInit, OnDestroy
                         this.paymentSuccess = true;
                         this._snackBar.open('Payment successful!', 'Close', { duration: 4000 });
                         this.paymentPollingSub?.unsubscribe();
-                        this.router.navigate(['/viewmarinequote', this.applicationId]);
+                        this.router.navigate(['/viewtravelquote', this.applicationId]);
                     }
 
                     else if (statusRes.resultCode !== 0) {

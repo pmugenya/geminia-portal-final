@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatSnackBar, MatSnackBarRef, SimpleSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIcon } from '@angular/material/icon';
 import { DatePipe, DecimalPipe, NgClass, NgIf } from '@angular/common';
@@ -116,12 +116,14 @@ export class ViewMarineQuote implements OnInit {
     isLoading = false;
     error: string | null = null;
     certificateInlineError: string | null = null;
-
+    private validationToastRef: MatSnackBarRef<SimpleSnackBar> | null = null;
     private pollingSubscription!: Subscription;
 
     // Individual properties for easy template binding
     id: number;
     refno: string;
+    certNo: string;
+    certErrorLog: string;
     erprefno: string;
     caAccountCode: string;
     ucrNumber: string;
@@ -168,6 +170,9 @@ export class ViewMarineQuote implements OnInit {
     progress = -1;
     batchNo: number;
     firstname: string;
+    email: string;
+    mobile: string;
+    pin: string;
     middlename?: string;
     lastname: string;
     kentradeStatus?: string;
@@ -181,6 +186,7 @@ export class ViewMarineQuote implements OnInit {
     countyName?: string;
     countyId?: number;
     transshippingAt?: string;
+    isProcessing: boolean;
     transshippingId?: number;
     loadingAtId?: number;
     dischargeId?: number;
@@ -228,6 +234,8 @@ export class ViewMarineQuote implements OnInit {
         this.refno = data.refno;
         this.paid = data.paid;
         this.id = data.id;
+        this.certNo =data.certNo;
+        this.certErrorLog = data.certErrorLog;
         this.originCountryName = data.originCountryName;
         this.originPortName = data.originPortName;
         this.destCountryName = data.destCountryName;
@@ -243,7 +251,7 @@ export class ViewMarineQuote implements OnInit {
         this.rotationNumber = data.rotationNumber;
         this.voyageNumber = data.voyageNumber;
         this.ucrNumber = data.ucrNumber;
-        this.productName = data.productName;
+        this.productName = 'Marine';
         this.erprefno = data.erprefno;
         this.sumassured = data.sumassured;
         this.premium = data.premium;
@@ -256,6 +264,12 @@ export class ViewMarineQuote implements OnInit {
         this.agencyName = data.agencyName;
         this.approvedStatus = data.approvedStatus;
         this.batchNo = data.batchNo;
+        this.email = data.email;
+        this.mobile = data.mobile;
+        this.pin = data.pin;
+        this.firstname = data.firstname;
+        this.middlename = data.middlename;
+        this.lastname = data.lastname;
     }
 
     /**
@@ -333,6 +347,40 @@ export class ViewMarineQuote implements OnInit {
         this.idfNumber = data.idfNumber;
         this.shippingItemsData = data.shippingItemsData;
     }
+
+    generateCert() {
+        this.isProcessing = true;
+
+        this.quoteService.generateCertificate(this.id).subscribe({
+            next: (res) => {
+                console.log('Certificate Response:', res);
+
+                this.validationToastRef = this.showToast(
+                    ' Certificate Generated successfully. Cert No '+res.certNo
+                );
+                this.isProcessing = false;
+            },
+            error: (err) => {
+                console.error('Error generating certificate:', err);
+                this.validationToastRef = this.showToast(
+                    ' Certificate Generation Failed .'+err?.error.message
+                );
+                this.isProcessing = false;
+            }
+        });
+    }
+
+    private showToast(message: string, duration: number = 4000): MatSnackBarRef<SimpleSnackBar> {
+        const snackRef = this.snackBar.open(message, undefined, {
+            horizontalPosition: 'right',
+            verticalPosition: 'top',
+            duration,
+            panelClass: ['marine-quote-snackbar']
+        });
+
+        return snackRef;
+    }
+
 
 
     printCertificate(){

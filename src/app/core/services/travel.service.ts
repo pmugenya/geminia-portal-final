@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { environment } from '../../../environments/environment';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Country, TravelDuration, TravelQuoteData, TravelRatesData } from '../user/user.types';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import { Country, TravelDuration, TravelPolicyData, TravelQuoteData, TravelRatesData } from '../user/user.types';
 import { Observable } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
@@ -17,6 +17,16 @@ export class TravelService {
 
     getRatesByDuration(durationId: number): Observable<TravelRatesData[]> {
         return this.http.get<TravelRatesData[]>(`${this.baseUrl}/travel/rates/${durationId}`);
+    }
+
+    checkPassport(passportNo: string): Observable<{ found: boolean }> {
+        const params = new HttpParams().set('passportNo', passportNo);
+
+        return this.http.get<{ found: boolean }>(`${this.baseUrl}/travelquote/passportcheck`, { params });
+    }
+
+    getPolicy(policyId: string): Observable<TravelPolicyData> {
+        return this.http.get<TravelPolicyData>(`${this.baseUrl}/travelquote/policy/${policyId}`);
     }
 
     submitPolicy(

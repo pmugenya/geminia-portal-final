@@ -889,6 +889,7 @@ export class MarineQuickQuoteComponent implements OnInit, OnDestroy
         this.showToast(message, 'OK', () => {
             // Let parent component decide how to show login; keep quote open
             this.showLoginForQuote.emit();
+            this.router.navigate(['/editquote', this.quoteResult.id]);
         });
     }
 

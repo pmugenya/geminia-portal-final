@@ -3,7 +3,7 @@ import { CommonModule, CurrencyPipe, DatePipe, NgClass } from '@angular/common';
 import { MatIcon } from '@angular/material/icon';
 import { QuoteService } from '../../../core/services/quote.service';
 import { ActivatedRoute, Router } from '@angular/router';
-import { QuotesData } from '../../../core/user/user.types';
+import { PendingQuote, QuotesData } from '../../../core/user/user.types';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { UserService } from '../../../core/user/user.service';
 import { FuseAlertComponent, FuseAlertService } from '../../../../@fuse/components/alert';
@@ -183,6 +183,7 @@ export class ViewQuote implements OnInit,OnDestroy {
         this.isLoading = true;
         this.quoteService.getQuoteById(quoteId).subscribe({
             next: (data) => {
+                console.log(data);
                 this.quote = data;
                 this.isLoading = false; // 🔹 Stop loading
             },
@@ -362,6 +363,10 @@ export class ViewQuote implements OnInit,OnDestroy {
 
     buyNow(): void {
         this.router.navigate(['/editquote', this.quoteId]);
+    }
+
+    editQuote(): void {
+        this.router.navigate(['/editmarinequote', this.quoteId]);
     }
 
 }

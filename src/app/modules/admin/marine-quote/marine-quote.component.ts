@@ -200,6 +200,7 @@ export class MarineQuoteComponent implements OnInit, OnDestroy
     paymentRefNo: string ='';
     applicationSubmitted: boolean = false;
     isSubmitting: boolean = false;
+    isSubmitting2: boolean = false;
     isProcessPayment: boolean = false;
     isProcessingStk = false;
     paymentSuccess?: boolean;
@@ -2102,6 +2103,101 @@ export class MarineQuoteComponent implements OnInit, OnDestroy
                 this.paymentRefNo = refNo;
                 this.isSubmitting = false;
                 this.applicationSubmitted = true;
+            },
+            error: (applicationError) => {
+                this.isSubmitting = false;
+                const errorMessage = applicationError?.error?.errors[0]?.developerMessage ||
+                    'Failed to create shipping application. Please try again.';
+
+                this._snackBar.open(errorMessage, 'Close', {
+                    duration: 8000,
+                    panelClass: ['error-snackbar']
+                });
+            }
+        });
+    }
+
+    onSubmitPayLater(): void {
+        const termsControl = this.quotationForm.get('termsAndPolicyConsent');
+        if (termsControl && !termsControl.value) {
+            termsControl.markAsTouched();
+            this.validationToastRef = this.showToast(
+                `To submit your application, please agree to the Terms of Use and Data Privacy Policy.`,
+            );
+            return;
+        }
+        if (this.shipmentForm.invalid) {
+            // Mark all fields as touched to show validation errors
+            this.shipmentForm.markAllAsTouched();
+
+            const invalidFields = Object.keys(this.shipmentForm.controls)
+                .filter(key => this.shipmentForm.get(key)?.invalid)
+                .map(key => ({
+                    field: key,
+                    errors: this.shipmentForm.get(key)?.errors
+                }));
+
+            console.log('invalid fields...',invalidFields);
+
+            this.validationToastRef = this.showToast(
+                `A few fields need your attention. Please review the highlights.`,
+            );
+            return;
+        }
+
+        this.isSubmitting = true;
+        const kycFormValue = this.shipmentForm.getRawValue(); // Use getRawValue to include disabled fields
+
+
+        // First, create the shipping application
+        const formData = new FormData();
+        const kycDocs = this.shipmentForm.value;
+        formData.append('kraPinUpload', kycDocs.kraPinCertificate);
+        formData.append('nationalIdUpload', kycDocs.nationalId);
+        formData.append('invoiceUpload', kycDocs.invoice);
+        formData.append('idfUpload', kycDocs.idfDocument);
+
+        const updatedMetadata = {
+            quoteId: this.quoteResult.id,
+            suminsured: kycFormValue.sumInsured,
+            kraPin: kycFormValue.kraPin,
+            firstName: kycFormValue.firstName,
+            lastName: kycFormValue.lastName,
+            phoneNumber: kycFormValue.phoneNumber,
+            emailAddress: kycFormValue.emailAddress,
+            idNumber: kycFormValue.idNumber,
+            postalAddress: kycFormValue.streetAddress,
+            postalCode: kycFormValue.postalCode,
+            ucrnumber: kycFormValue.ucrNumber,
+            idfnumber: kycFormValue.gcrNumber,
+            selectCategory: kycFormValue.selectCategory,
+            salesCategory: kycFormValue.salesCategory,
+            modeOfShipment: kycFormValue.modeOfShipment,
+            tradeType: kycFormValue.tradeType,
+            vesselname: kycFormValue.vesselName,
+            loadingPort: kycFormValue.loadingPort,
+            portOfDischarge: kycFormValue.portOfDischarge,
+            finalDestinationCounty: kycFormValue.finalDestination,
+            dateOfDispatch: this.datePipe.transform(kycFormValue.dateOfDispatch, 'dd MMM yyyy'),
+            estimatedArrivalDate: this.datePipe.transform(kycFormValue.estimatedArrival, 'dd MMM yyyy'),
+            description: kycFormValue.goodsDescription,
+            // shippingItems: kycFormValue.shippingItems,
+            dateFormat: 'dd MMM yyyy',
+            locale: 'en_US',
+        };
+        formData.append('metadata', JSON.stringify(updatedMetadata));
+        console.log('Creating shipping application...');
+
+        // Create the shipping application first
+        this.quotationService.createApplication(formData).pipe(
+            takeUntil(this.destroy$)
+        ).subscribe({
+            next: (applicationResponse) => {
+                console.log('Shipping application created successfully:', applicationResponse);
+                this.validationToastRef = this.showToast(
+                    ' Application Submitted Successfully.'
+                );
+                this.router.navigate(['/dashboard']);
             },
             error: (applicationError) => {
                 this.isSubmitting = false;

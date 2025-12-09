@@ -1028,28 +1028,45 @@
                                     </div>
 
                                     <!-- Submit Application Button (Before Submission) -->
-                                    <div *ngIf="!applicationSubmitted">
-                                        <button
-                                            mat-raised-button
-                                            color="primary"
-                                            class="w-full py-3 text-lg font-semibold rounded-full flex items-center justify-center"
-                                            [disabled]="isSubmitting"
-                                            (click)="onSubmit()"
-                                            style="background-color: #21275c; color: #ffffff;">
-                                            <ng-container *ngIf="!isSubmitting; else submittingState">
-                                                <span>
-                                                    Submit Application
-                                                </span>
-                                            </ng-container>
-                                            <ng-template #submittingState>
-                                                <mat-spinner diameter="24" class="payment-spinner"></mat-spinner>
-                                            </ng-template>
-                                        </button>
+                                    <!-- Submit Application Buttons (Before Submission) -->
+                                    <div *ngIf="!applicationSubmitted" class="mt-4">
 
-                                        <p class="mt-3 text-sm text-center font-semibold" style="color: #04b2e1;">
-                                            You'll be able to make payment after submitting your application
-                                        </p>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <!-- Pay Now -->
+                                            <button
+                                                mat-raised-button
+                                                color="primary"
+                                                class="w-full py-3 text-lg font-semibold rounded-full flex items-center justify-center shadow-md hover:shadow-lg transition"
+                                                [disabled]="isSubmitting"
+                                                (click)="onSubmit()"
+                                                style="background-color: #21275c; color: #ffffff;">
+                                                <ng-container *ngIf="!isSubmitting; else submittingStateNow">
+                                                    Save & Pay Now
+                                                </ng-container>
+                                                <ng-template #submittingStateNow>
+                                                    <mat-spinner diameter="24" class="payment-spinner"></mat-spinner>
+                                                </ng-template>
+                                            </button>
+
+                                            <!-- Pay Later -->
+                                            <button
+                                                mat-raised-button
+                                                color="primary"
+                                                class="w-full py-3 text-lg font-semibold rounded-full flex items-center justify-center shadow-md hover:shadow-lg transition"
+                                                [disabled]="isSubmitting"
+                                                (click)="onSubmitPayLater()"
+                                                style="background-color: #4b5563; color: #ffffff;"> <!-- Slightly different tone for distinction -->
+                                                <ng-container *ngIf="!isSubmitting; else submittingStateLater">
+                                                    Save & Pay Later
+                                                </ng-container>
+                                                <ng-template #submittingStateLater>
+                                                    <mat-spinner diameter="24" class="payment-spinner"></mat-spinner>
+                                                </ng-template>
+                                            </button>
+                                        </div>
+
                                     </div>
+
                                 </div>
                             </div>
                         </div>
