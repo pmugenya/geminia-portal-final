@@ -17,12 +17,22 @@ export class QuoteService {
         return this.http.post(`${this.baseUrl}/quote`, formData);
     }
 
+    updateNewQuote(
+        formData:FormData
+    ): Observable<any> {
+        return this.http.post(`${this.baseUrl}/quote/update`, formData);
+    }
+
     getRecentActivities(): Observable<RecentActivity[]> {
         return this.http.get<RecentActivity[]>(`${this.baseUrl}/recentactivity`);
     }
 
     getAgencyCoverage(): Observable<YTDAnalysis> {
         return this.http.get<YTDAnalysis>(`${this.baseUrl}/dashboard/agencycoverage`);
+    }
+
+    deleteQuote(request: any): Observable<any> {
+        return this.http.post<any>(`${this.baseUrl}/quote/delete`, request);
     }
 
     getQuotAnalysis(): Observable<QuotesAnalysis> {
@@ -59,6 +69,10 @@ export class QuoteService {
             observe: 'events',      // observe events for progress
             reportProgress: true   // enables progress tracking
         });
+    }
+
+    generateCertificate(id: number): Observable<any> {
+        return this.http.get(`${this.baseUrl}/shippingapplication/generateCert?id=${id}`);
     }
 
 

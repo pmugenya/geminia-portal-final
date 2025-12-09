@@ -43,7 +43,7 @@ import { MatRadioButton, MatRadioGroup } from '@angular/material/radio';
 import { ThousandsSeparatorValueAccessor } from '../../../core/directives/thousands-separator-value-accessor';
 import { QuoteService } from '../../../core/services/quote.service';
 import { FuseAlertComponent, FuseAlertService } from '../../../../@fuse/components/alert';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatSnackBar, MatSnackBarRef, SimpleSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
 import { FuseAlertType } from '@fuse/components/alert';
 import { MatCheckbox } from '@angular/material/checkbox';
@@ -54,6 +54,7 @@ import {
     MatDatepickerToggle,
 } from '@angular/material/datepicker';
 import { DateAdapter, MAT_DATE_FORMATS, MAT_DATE_LOCALE, MatNativeDateModule } from '@angular/material/core';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MY_DATE_FORMATS } from '../../../core/directives/date-formats';
 import { MomentDateAdapter } from '@angular/material-moment-adapter';
@@ -134,6 +135,13 @@ export class MarineQuoteComponent implements OnInit, OnDestroy
     duplicateFileErrors: { [key: string]: string } = {};
     today = new Date();
 
+    // Document preview modal state (Step 3 uploads)
+    showDocumentPreviewModal = false;
+    previewDocumentUrl: string | null = null;
+    previewSafeUrl: SafeResourceUrl | null = null;
+    previewDocumentName = '';
+    previewDocumentType = '';
+
     userDocs?: UserDocumentData;
     private destroy$ = new Subject<void>();
     countryFilterCtrl: FormControl = new FormControl();
@@ -192,12 +200,18 @@ export class MarineQuoteComponent implements OnInit, OnDestroy
     paymentRefNo: string ='';
     applicationSubmitted: boolean = false;
     isSubmitting: boolean = false;
+    isSubmitting2: boolean = false;
     isProcessPayment: boolean = false;
     isProcessingStk = false;
     paymentSuccess?: boolean;
 
     private paymentPollingSub?: Subscription;
     private _unsubscribeAll: Subject<any> = new Subject<any>();
+    private validationToastRef: MatSnackBarRef<SimpleSnackBar> | null = null;
+
+    // Inline modals for Terms of Use & Data Privacy
+    showTermsModal = false;
+    showDataPrivacyModal = false;
 
     constructor(private fb: FormBuilder,
                 private userService: UserService,
@@ -206,7 +220,8 @@ export class MarineQuoteComponent implements OnInit, OnDestroy
                 private datePipe: DatePipe,
                 private router: Router,
                 private _snackBar: MatSnackBar,
-                private dialog: MatDialog) { }
+                private dialog: MatDialog,
+                private sanitizer: DomSanitizer) { }
 
     ngOnInit(): void {
         this._fuseAlertService.dismiss('quoteDownloadError');
@@ -285,53 +300,134 @@ export class MarineQuoteComponent implements OnInit, OnDestroy
         });
     }
 
-    shareViaGmail(): void {
-        const subject = encodeURIComponent('Marine Quote Details');
+    normalizeName(controlName: 'firstName' | 'lastName'): void {
+        if (!this.quotationForm) {
+            return;
+        }
+
+        const control = this.quotationForm.get(controlName);
+        if (!control) {
+            return;
+        }
+
+        let value: string = (control.value || '').toString();
+        if (!value) {
+            return;
+        }
+
+        // Trim leading/trailing spaces and collapse multiple spaces
+        value = value.trim().replace(/\s+/g, ' ');
+
+        // Capitalize first letter, keep the rest as-is but trimmed
+        if (value.length > 0) {
+            value = value.charAt(0).toUpperCase() + value.slice(1);
+        }
+
+        control.setValue(value, { emitEvent: true });
+    }
+
+    onStep1PhoneNumberInput(event: any): void {
+        if (!this.quotationForm) {
+            return;
+        }
+
+        let value: string = (event.target.value || '').toString().trim();
+        // Keep digits only
+        value = value.replace(/[^0-9]/g, '');
+
+        if (value.length > 0 && !value.startsWith('0')) {
+            value = '0' + value;
+        }
+
+        if (value.length > 10) {
+            value = value.substring(0, 10);
+        }
+
+        this.quotationForm.patchValue({ phoneNumber: value });
+    }
+
+    private buildStructuredShareLines(): string[] {
         const lines: string[] = [];
 
+        lines.push('Please find below the marine quote details.');
+        lines.push('');
+
+        // Customer section
+        const firstName = this.quotationForm?.get('firstName')?.value || '';
+        const lastName = this.quotationForm?.get('lastName')?.value || '';
+        const email = this.quotationForm?.get('email')?.value || '';
+        const phone = this.quotationForm?.get('phoneNumber')?.value || '';
+
+        lines.push('Customer');
+        lines.push(`Name: ${`${firstName} ${lastName}`.trim()}`);
+        lines.push(`Email: ${email}`);
+        lines.push(`Phone: ${phone}`);
+        lines.push('');
+
+        // Shipping & Cargo section
+        const cargoType = this.quotationForm?.get('marineCargoType')?.value || '';
+        const modeOfShipment = this.quotationForm?.get('modeOfShipment')?.value;
+        const packagingType = this.quotationForm?.get('marinePackagingType')?.value;
+        const originId = this.quotationForm?.get('origin')?.value;
+        const destination = this.quotationForm?.get('destination')?.value || '';
+
+        const modeLabel = modeOfShipment === '1' || modeOfShipment === 1 ? 'Sea' : modeOfShipment === '2' || modeOfShipment === 2 ? 'Air' : '';
+        const packagingLabel = packagingType === '1' || packagingType === 1
+            ? 'Containerized'
+            : packagingType === '2' || packagingType === 2
+                ? 'Non-Containerized'
+                : '';
+
+        let originCountryName = '';
+        if (originId && this.countries && this.countries.length) {
+            const found = this.countries.find(c => c.id === originId);
+            originCountryName = found?.countryname || '';
+        }
+
+        lines.push('Shipping & Cargo Details');
+        lines.push(`Cargo Type: ${cargoType}`);
+        lines.push(`Shipping Mode: ${modeLabel}`);
+        lines.push(`Packaging Type: ${packagingLabel}`);
+        lines.push(`Origin Country: ${originCountryName}`);
+        lines.push(`Destination: ${destination}`);
+        lines.push('');
+
+        // Premium details
+        const sumInsured = this.quotationForm?.get('sumInsured')?.value || '';
+
+        lines.push('Premium Details');
+        lines.push(`Sum Assured: KES ${sumInsured}`);
+
         if (this.quoteResult) {
-            lines.push('Please find below the marine quote details.');
-            lines.push('');
-            lines.push(`Net Premium: KES ${this.quoteResult.netprem}`);
             lines.push(`Premium: KES ${this.quoteResult.premium}`);
             lines.push(`PHCF: KES ${this.quoteResult.phcf}`);
             lines.push(`Training Levy: KES ${this.quoteResult.tl}`);
             lines.push(`Stamp Duty: KES ${this.quoteResult.sd}`);
-            lines.push('');
+            lines.push(`Net Premium: KES ${this.quoteResult.netprem}`);
         }
 
-        lines.push('You can also attach a screenshot or PDF of the quote details to this email before sending.');
+        lines.push('');
+        lines.push('You may also attach a screenshot or PDF of the quote details before sending.');
 
-        const body = encodeURIComponent(lines.join('\n'));
+        return lines;
+    }
+
+    shareViaGmail(): void {
+        const subject = encodeURIComponent('Marine Quote Details');
+        const body = encodeURIComponent(this.buildStructuredShareLines().join('\n'));
         const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&su=${subject}&body=${body}`;
         window.open(gmailUrl, '_blank');
     }
 
-    private buildShareLinesFromResult(): string[] {
-        const lines: string[] = [];
-        if (this.quoteResult) {
-            lines.push('Please find below the marine quote details.');
-            lines.push('');
-            lines.push(`Net Premium: KES ${this.quoteResult.netprem}`);
-            lines.push(`Premium: KES ${this.quoteResult.premium}`);
-            lines.push(`PHCF: KES ${this.quoteResult.phcf}`);
-            lines.push(`Training Levy: KES ${this.quoteResult.tl}`);
-            lines.push(`Stamp Duty: KES ${this.quoteResult.sd}`);
-            lines.push('');
-        }
-        lines.push('You can also attach a screenshot or PDF of the quote details before sending.');
-        return lines;
-    }
-
     shareViaWhatsApp(): void {
-        const text = encodeURIComponent(this.buildShareLinesFromResult().join('\n'));
+        const text = encodeURIComponent(this.buildStructuredShareLines().join('\n'));
         const url = `https://wa.me/?text=${text}`;
         window.open(url, '_blank');
     }
 
     shareViaOutlook(): void {
         const subject = encodeURIComponent('Marine Quote Details');
-        const body = encodeURIComponent(this.buildShareLinesFromResult().join('\n'));
+        const body = encodeURIComponent(this.buildStructuredShareLines().join('\n'));
         const mailtoUrl = `mailto:?subject=${subject}&body=${body}`;
         window.location.href = mailtoUrl;
     }
@@ -410,6 +506,41 @@ export class MarineQuoteComponent implements OnInit, OnDestroy
     }
 
 
+    openTermsModal(): void {
+        console.log('openTermsModal clicked');
+        this.showTermsModal = true;
+    }
+
+    openPrivacyModal(): void {
+        console.log('openPrivacyModal clicked');
+        this.showDataPrivacyModal = true;
+    }
+
+    closeTermsModal(): void {
+        this.showTermsModal = false;
+    }
+
+    closeDataPrivacyModal(): void {
+        this.showDataPrivacyModal = false;
+    }
+
+    getCurrentDate(): string {
+        return new Date().toLocaleDateString();
+    }
+
+
+    private showToast(message: string, duration: number = 4000): MatSnackBarRef<SimpleSnackBar> {
+        const snackRef = this._snackBar.open(message, undefined, {
+            horizontalPosition: 'right',
+            verticalPosition: 'top',
+            duration,
+            panelClass: ['marine-quote-snackbar']
+        });
+
+        return snackRef;
+    }
+
+
     private initForms(): void {
         // Step 1: Basic Details
         this.quotationForm = this.fb.group({
@@ -436,12 +567,12 @@ export class MarineQuoteComponent implements OnInit, OnDestroy
         });
 
         this.shipmentForm = this.fb.group({
+
             // Document Uploads
             idfDocument: [null, Validators.required],
             invoice: [null, Validators.required],
             kraPinCertificate: [null, Validators.required],
             nationalId: [null, Validators.required],
-            agreeToTerms: [false, Validators.requiredTrue],
 
             // Personal Details & KYC
             firstName: ['', [Validators.required, CustomValidators.firstName]],
@@ -476,6 +607,26 @@ export class MarineQuoteComponent implements OnInit, OnDestroy
             // Payment
             paymentMethod: ['mpesa', Validators.required]
         });
+
+        // Automatically hide validation toast once all Shipment Details fields become valid
+        this.quotationForm.statusChanges
+            .pipe(takeUntil(this.destroy$))
+            .subscribe(status => {
+                if (status === 'VALID' && this.validationToastRef) {
+                    this.validationToastRef.dismiss();
+                    this.validationToastRef = null;
+                }
+            });
+
+        // Automatically hide validation toast once all Step 3 (shipmentForm) fields become valid
+        this.shipmentForm.statusChanges
+            .pipe(takeUntil(this.destroy$))
+            .subscribe(status => {
+                if (status === 'VALID' && this.validationToastRef) {
+                    this.validationToastRef.dismiss();
+                    this.validationToastRef = null;
+                }
+            });
     }
 
     // Convenience getters for form controls
@@ -1070,13 +1221,6 @@ export class MarineQuoteComponent implements OnInit, OnDestroy
         }
     }
 
-    openTermsModal(event?: Event): void {
-        if (event) {
-            event.preventDefault();
-            event.stopPropagation();
-        }
-    }
-
     public onDropdownOpen(dropdownType:'countries' |  'categories' | 'loadingPorts' | 'dischargePorts'): void {
         switch (dropdownType) {
             case 'dischargePorts':
@@ -1154,16 +1298,6 @@ export class MarineQuoteComponent implements OnInit, OnDestroy
         });
     }
 
-    closeTermsModal(): void {
-    }
-
-    openPrivacyModal(event?: Event): void {
-        if (event) {
-            event.preventDefault();
-            event.stopPropagation();
-        }
-    }
-
     onFileSelected(event: Event, controlName: string): void {
         const input = event.target as HTMLInputElement;
         const file = input.files?.[0];
@@ -1235,6 +1369,43 @@ export class MarineQuoteComponent implements OnInit, OnDestroy
         if (this.duplicateFileErrors && this.duplicateFileErrors[fieldName]) {
             delete this.duplicateFileErrors[fieldName];
         }
+    }
+
+
+    openDocumentPreview(controlName: string, event?: Event): void {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+
+        const file: File | null = this.shipmentForm.get(controlName)?.value;
+        if (!file) {
+            return;
+        }
+
+        // Clean up any previous object URL
+        if (this.previewDocumentUrl) {
+            URL.revokeObjectURL(this.previewDocumentUrl);
+        }
+
+        const objectUrl = URL.createObjectURL(file);
+        this.previewDocumentUrl = objectUrl;
+        this.previewSafeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(objectUrl);
+        this.previewDocumentName = file.name;
+        this.previewDocumentType = file.type;
+        this.showDocumentPreviewModal = true;
+    }
+
+
+    closeDocumentPreview(): void {
+        if (this.previewDocumentUrl) {
+            URL.revokeObjectURL(this.previewDocumentUrl);
+            this.previewDocumentUrl = null;
+        }
+        this.previewSafeUrl = null;
+        this.showDocumentPreviewModal = false;
+        this.previewDocumentName = '';
+        this.previewDocumentType = '';
     }
 
     openTermsOfUse(event: Event): void {
@@ -1653,14 +1824,9 @@ export class MarineQuoteComponent implements OnInit, OnDestroy
 
         if (!this.quotationForm.valid) {
             this.scrollToFirstError();
-            const invalidFields = this.getInvalidControls(this.quotationForm);
-
-            this.submissionError =
-                `Please fill in the following required fields:\n` +
-                invalidFields.join(', ');
-
-
-            // Join them into a readable string
+            this.validationToastRef = this.showToast(
+                `A few fields need your attention. Please review the highlights.`,
+            );
             this.isSaving = false;
             return;
         }
@@ -1856,11 +2022,9 @@ export class MarineQuoteComponent implements OnInit, OnDestroy
         const termsControl = this.quotationForm.get('termsAndPolicyConsent');
         if (termsControl && !termsControl.value) {
             termsControl.markAsTouched();
-            this.stepper.selectedIndex = 0;
-            this._snackBar.open('Please agree to the Terms of Use and Privacy Policy before submitting your application', 'Close', {
-                duration: 5000,
-                panelClass: ['error-snackbar']
-            });
+            this.validationToastRef = this.showToast(
+                `To submit your application, please agree to the Terms of Use and Data Privacy Policy.`,
+            );
             return;
         }
         if (this.shipmentForm.invalid) {
@@ -1876,11 +2040,9 @@ export class MarineQuoteComponent implements OnInit, OnDestroy
 
             console.log('invalid fields...',invalidFields);
 
-
-            this._snackBar.open('Please fill in all required fields correctly', 'Close', {
-                duration: 5000,
-                panelClass: ['error-snackbar']
-            });
+            this.validationToastRef = this.showToast(
+                `A few fields need your attention. Please review the highlights.`,
+            );
             return;
         }
 
@@ -1941,6 +2103,101 @@ export class MarineQuoteComponent implements OnInit, OnDestroy
                 this.paymentRefNo = refNo;
                 this.isSubmitting = false;
                 this.applicationSubmitted = true;
+            },
+            error: (applicationError) => {
+                this.isSubmitting = false;
+                const errorMessage = applicationError?.error?.errors[0]?.developerMessage ||
+                    'Failed to create shipping application. Please try again.';
+
+                this._snackBar.open(errorMessage, 'Close', {
+                    duration: 8000,
+                    panelClass: ['error-snackbar']
+                });
+            }
+        });
+    }
+
+    onSubmitPayLater(): void {
+        const termsControl = this.quotationForm.get('termsAndPolicyConsent');
+        if (termsControl && !termsControl.value) {
+            termsControl.markAsTouched();
+            this.validationToastRef = this.showToast(
+                `To submit your application, please agree to the Terms of Use and Data Privacy Policy.`,
+            );
+            return;
+        }
+        if (this.shipmentForm.invalid) {
+            // Mark all fields as touched to show validation errors
+            this.shipmentForm.markAllAsTouched();
+
+            const invalidFields = Object.keys(this.shipmentForm.controls)
+                .filter(key => this.shipmentForm.get(key)?.invalid)
+                .map(key => ({
+                    field: key,
+                    errors: this.shipmentForm.get(key)?.errors
+                }));
+
+            console.log('invalid fields...',invalidFields);
+
+            this.validationToastRef = this.showToast(
+                `A few fields need your attention. Please review the highlights.`,
+            );
+            return;
+        }
+
+        this.isSubmitting = true;
+        const kycFormValue = this.shipmentForm.getRawValue(); // Use getRawValue to include disabled fields
+
+
+        // First, create the shipping application
+        const formData = new FormData();
+        const kycDocs = this.shipmentForm.value;
+        formData.append('kraPinUpload', kycDocs.kraPinCertificate);
+        formData.append('nationalIdUpload', kycDocs.nationalId);
+        formData.append('invoiceUpload', kycDocs.invoice);
+        formData.append('idfUpload', kycDocs.idfDocument);
+
+        const updatedMetadata = {
+            quoteId: this.quoteResult.id,
+            suminsured: kycFormValue.sumInsured,
+            kraPin: kycFormValue.kraPin,
+            firstName: kycFormValue.firstName,
+            lastName: kycFormValue.lastName,
+            phoneNumber: kycFormValue.phoneNumber,
+            emailAddress: kycFormValue.emailAddress,
+            idNumber: kycFormValue.idNumber,
+            postalAddress: kycFormValue.streetAddress,
+            postalCode: kycFormValue.postalCode,
+            ucrnumber: kycFormValue.ucrNumber,
+            idfnumber: kycFormValue.gcrNumber,
+            selectCategory: kycFormValue.selectCategory,
+            salesCategory: kycFormValue.salesCategory,
+            modeOfShipment: kycFormValue.modeOfShipment,
+            tradeType: kycFormValue.tradeType,
+            vesselname: kycFormValue.vesselName,
+            loadingPort: kycFormValue.loadingPort,
+            portOfDischarge: kycFormValue.portOfDischarge,
+            finalDestinationCounty: kycFormValue.finalDestination,
+            dateOfDispatch: this.datePipe.transform(kycFormValue.dateOfDispatch, 'dd MMM yyyy'),
+            estimatedArrivalDate: this.datePipe.transform(kycFormValue.estimatedArrival, 'dd MMM yyyy'),
+            description: kycFormValue.goodsDescription,
+            // shippingItems: kycFormValue.shippingItems,
+            dateFormat: 'dd MMM yyyy',
+            locale: 'en_US',
+        };
+        formData.append('metadata', JSON.stringify(updatedMetadata));
+        console.log('Creating shipping application...');
+
+        // Create the shipping application first
+        this.quotationService.createApplication(formData).pipe(
+            takeUntil(this.destroy$)
+        ).subscribe({
+            next: (applicationResponse) => {
+                console.log('Shipping application created successfully:', applicationResponse);
+                this.validationToastRef = this.showToast(
+                    ' Application Submitted Successfully.'
+                );
+                this.router.navigate(['/dashboard']);
             },
             error: (applicationError) => {
                 this.isSubmitting = false;

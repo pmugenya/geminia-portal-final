@@ -82,7 +82,9 @@ export const appRoutes: Route[] = [
             {path: 'marinequote', loadChildren: () => import('app/modules/admin/marine-quote/marine-quote.routes')},
             {path: 'viewmarinequote/:quoteId', loadChildren: () => import('app/modules/admin/view-marine-quote/view-marine-quote.routes')},
             {path: 'viewquote/:quoteId', loadChildren: () => import('app/modules/admin/view-quote/view-quote.routes')},
+            {path: 'viewtravelquote/:policyId', loadChildren: () => import('app/modules/admin/view-travel-quote/view-travel-quote.routes')},
             {path: 'editquote/:quoteId', loadChildren: () => import('app/modules/admin/edit-quote/edit-quote.routes')},
+            {path: 'editmarinequote/:quoteId', loadChildren: () => import('app/modules/admin/edit-marine-quote/edit-marine-quote.routes')},
         ]
     }
 ];

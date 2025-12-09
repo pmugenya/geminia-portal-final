@@ -107,6 +107,12 @@ app-client-insurance-dashboard {
         color: #ffffff !important;
     }
 
+    .quick-quote-button:hover,
+    .new-quote-button:hover {
+        background-color: #21275c !important;
+        border-color: #21275c !important;
+    }
+
     .quick-quote-button:focus-visible,
     .new-quote-button:focus-visible,
     .new-claim-button:focus-visible {
@@ -153,5 +159,64 @@ app-client-insurance-dashboard {
     // Quick stats numbers (Active Quotes, Active Policies, Premium, Next Payment)
     .dashboard-card .text-2xl.font-bold {
         color: #21275c;
+    }
+}
+
+// -----------------------------------------------------------------------------
+// Global toast styling reused from Marine Quick Quote (white card + blue check)
+// -----------------------------------------------------------------------------
+
+.mat-mdc-snack-bar-container.marine-quote-snackbar {
+    .mdc-snackbar__surface {
+        background-color: #ffffff;
+        border-radius: 1.5rem;
+        box-shadow: 0 18px 45px rgba(15, 23, 42, 0.22);
+        padding: 1.25rem 1.75rem 1.25rem 1.75rem;
+        min-width: 360px;
+        max-width: 480px;
+        display: flex;
+        align-items: center;
+    }
+
+    // Left blue check-circle icon
+    .mdc-snackbar__surface::before {
+        content: '✔';
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        margin-right: 1rem;
+        border-radius: 9999px;
+        background-color: #04b2e1;
+        color: #ffffff;
+        font-size: 1rem;
+        font-weight: 700;
+        flex-shrink: 0;
+    }
+
+    .mdc-snackbar__label {
+        color: #0f172a;
+        font-size: 0.95rem;
+        line-height: 1.5;
+        white-space: pre-line;
+        font-weight: 400;
+        text-align: left;
+    }
+
+    // First line heading bold + blue
+    .mdc-snackbar__label::first-line {
+        font-weight: 700;
+        color: #0b3c80;
+    }
+
+    .mat-mdc-snack-bar-action {
+        color: #ffffff;
+        font-weight: 700;
+        margin-left: 1.5rem;
+        background-color: #04b2e1;
+        border-radius: 9999px;
+        padding: 0.4rem 1.4rem;
+        text-transform: none;
     }
 }

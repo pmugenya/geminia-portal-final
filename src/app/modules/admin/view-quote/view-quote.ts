@@ -3,7 +3,7 @@ import { CommonModule, CurrencyPipe, DatePipe, NgClass } from '@angular/common';
 import { MatIcon } from '@angular/material/icon';
 import { QuoteService } from '../../../core/services/quote.service';
 import { ActivatedRoute, Router } from '@angular/router';
-import { QuotesData } from '../../../core/user/user.types';
+import { PendingQuote, QuotesData } from '../../../core/user/user.types';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { UserService } from '../../../core/user/user.service';
 import { FuseAlertComponent, FuseAlertService } from '../../../../@fuse/components/alert';
@@ -183,6 +183,7 @@ export class ViewQuote implements OnInit,OnDestroy {
         this.isLoading = true;
         this.quoteService.getQuoteById(quoteId).subscribe({
             next: (data) => {
+                console.log(data);
                 this.quote = data;
                 this.isLoading = false; // 🔹 Stop loading
             },
@@ -235,51 +236,70 @@ export class ViewQuote implements OnInit,OnDestroy {
         });
     }
 
+    private buildStructuredShareLines(): string[] {
+        const lines: string[] = [];
+
+        if (!this.quote) {
+            lines.push('Marine quote details are not available.');
+            return lines;
+        }
+
+        const q = this.quote;
+
+        lines.push('Please find below the marine quote details.');
+        lines.push('');
+
+        // Reference
+        lines.push(`Reference: ${q.refno}`);
+        lines.push('');
+
+        // Customer section
+        lines.push('Customer');
+        lines.push(`Name: ${`${q.firstName || ''} ${q.lastName || ''}`.trim()}`);
+        lines.push(`Email: ${q.email || ''}`);
+        lines.push(`Phone: ${q.phoneNo || ''}`);
+        lines.push('');
+
+        // Shipping & Cargo section
+        lines.push('Shipping & Cargo Details');
+        lines.push(`Product: ${q.prodName || ''}`);
+        lines.push(`Category: ${q.category || ''}`);
+        lines.push(`Cargo Type: ${q.cargotype || ''}`);
+        lines.push(`Shipping Mode: ${q.shippingmode || ''}`);
+        lines.push(`Packaging Type: ${q.packagingtype || ''}`);
+        lines.push(`Origin Country: ${q.originCountry || ''}`);
+        lines.push(`Destination: ${q.destination || q.countyName || ''}`);
+        lines.push(`Vessel Name: ${q.vesselName || ''}`);
+        lines.push(`Description: ${q.description || ''}`);
+        lines.push(`Dispatch Date: ${this.formatDate(q.dateDispatch)}`);
+        lines.push(`Arrival Date: ${this.formatDate(q.dateArrival)}`);
+        lines.push('');
+
+        // Premium details
+        lines.push('Premium Details');
+        lines.push(`Sum Assured: KES ${q.sumassured}`);
+        lines.push(`Premium: KES ${q.premium}`);
+        lines.push(`PHCF: KES ${q.phcf}`);
+        lines.push(`Training Levy: KES ${q.traininglevy}`);
+        lines.push(`Stamp Duty: KES ${q.sd}`);
+        lines.push(`Net Premium: KES ${q.netprem}`);
+        lines.push('');
+
+        lines.push('You can also attach a screenshot or PDF of the quote details before sending.');
+
+        return lines;
+    }
+
     shareViaGmail(): void {
         const ref = this.quote?.refno || this.quoteId || '';
         const subject = encodeURIComponent(`Marine Quote Details - ${ref}`);
-
-        const lines: string[] = [];
-        if (this.quote) {
-            lines.push('Please find below the marine quote details.');
-            lines.push('');
-            lines.push(`Reference: ${this.quote.refno}`);
-            lines.push(`Customer: ${this.quote.firstName || ''} ${this.quote.lastName || ''}`.trim());
-            lines.push(`Email: ${this.quote.email || ''}`);
-            lines.push(`Phone: ${this.quote.phoneNo || ''}`);
-            lines.push('');
-            lines.push(`Sum Assured: KES ${this.quote.sumassured}`);
-            lines.push(`Net Premium: KES ${this.quote.netprem}`);
-            lines.push('');
-            lines.push('You can also attach a screenshot or PDF of the quote details to this email before sending.');
-        }
-
-        const body = encodeURIComponent(lines.join('\n'));
+        const body = encodeURIComponent(this.buildStructuredShareLines().join('\n'));
         const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&su=${subject}&body=${body}`;
         window.open(gmailUrl, '_blank');
     }
 
-    private buildShareLines(): string[] {
-        const lines: string[] = [];
-        if (this.quote) {
-            lines.push('Please find below the marine quote details.');
-            lines.push('');
-            lines.push(`Reference: ${this.quote.refno}`);
-            lines.push(`Customer: ${this.quote.firstName || ''} ${this.quote.lastName || ''}`.trim());
-            lines.push(`Email: ${this.quote.email || ''}`);
-            lines.push(`Phone: ${this.quote.phoneNo || ''}`);
-            lines.push('');
-            lines.push(`Sum Assured: KES ${this.quote.sumassured}`);
-            lines.push(`Net Premium: KES ${this.quote.netprem}`);
-            lines.push('');
-        }
-        lines.push('You can also attach a screenshot or PDF of the quote details before sending.');
-        return lines;
-    }
-
     shareViaWhatsApp(): void {
-        const lines = this.buildShareLines();
-        const text = encodeURIComponent(lines.join('\n'));
+        const text = encodeURIComponent(this.buildStructuredShareLines().join('\n'));
         const url = `https://wa.me/?text=${text}`;
         window.open(url, '_blank');
     }
@@ -287,7 +307,7 @@ export class ViewQuote implements OnInit,OnDestroy {
     shareViaOutlook(): void {
         const ref = this.quote?.refno || this.quoteId || '';
         const subject = encodeURIComponent(`Marine Quote Details - ${ref}`);
-        const body = encodeURIComponent(this.buildShareLines().join('\n'));
+        const body = encodeURIComponent(this.buildStructuredShareLines().join('\n'));
         const mailtoUrl = `mailto:?subject=${subject}&body=${body}`;
         window.location.href = mailtoUrl;
     }
@@ -343,6 +363,10 @@ export class ViewQuote implements OnInit,OnDestroy {
 
     buyNow(): void {
         this.router.navigate(['/editquote', this.quoteId]);
+    }
+
+    editQuote(): void {
+        this.router.navigate(['/editmarinequote', this.quoteId]);
     }
 
 }

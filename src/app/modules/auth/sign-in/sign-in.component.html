@@ -133,7 +133,7 @@
             @if (showAlert) {
             <fuse-alert class="mt-8" [appearance]="'outline'" [showIcon]="false" [type]="alert.type"
                 [@shake]="alert.type === 'error'">
-                {{ alert.message }}
+                <span class="whitespace-pre-line">{{ alert.message }}</span>
             </fuse-alert>
             }
 
@@ -224,7 +224,7 @@
   [disabled]="signInForm.disabled"
   (click)="handleSignIn()"
   class="w-full h-12 rounded-full bg-primary-500 text-white flex items-center justify-center
-         hover:bg-primary-600 transition-colors fuse-mat-button-large mt-6 !min-h-0 !p-0"
+         hover:bg-secondary transition-colors fuse-mat-button-large mt-6 !min-h-0 !p-0"
 >
   <span *ngIf="!signInForm.disabled">Sign in</span>
 

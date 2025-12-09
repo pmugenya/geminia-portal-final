@@ -96,6 +96,8 @@ const config = {
             },
             colors: {
                 gray: colors.slate,
+                primary: '#04b2e1',
+                secondary: '#21275c',
             },
             flex: {
                 0: '0 0 auto',

@@ -22,6 +22,7 @@ import { AuthService } from 'app/core/auth/auth.service';
 import { finalize } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { MarineQuickQuoteComponent } from '../../admin/quick-quote/marine-quick-quote.component';
+import { MatSnackBar, MatSnackBarRef, SimpleSnackBar } from '@angular/material/snack-bar';
 
 @Component({
     selector: 'auth-sign-in',
@@ -71,7 +72,8 @@ export class AuthSignInComponent implements OnInit,OnDestroy {
         private _activatedRoute: ActivatedRoute,
         private _authService: AuthService,
         private fb: FormBuilder,
-        private _router: Router
+        private _router: Router,
+        private _snackBar: MatSnackBar
     ) {}
 
     // -----------------------------------------------------------------------------------------------------
@@ -129,9 +131,10 @@ export class AuthSignInComponent implements OnInit,OnDestroy {
                     this.loginState = 'otp';
                     this.startOtpCountdown();
                 } else {
+                    // Always use inline alert for any login failure (no toast)
                     this.alert = {
                         type: 'error',
-                        message: res.message || 'Login failed: Invalid response.'
+                        message: 'Login failed.\nIncorrect email or password. Please try again.',
                     };
                     this.showAlert = true;
                 }
@@ -141,16 +144,25 @@ export class AuthSignInComponent implements OnInit,OnDestroy {
                 // Re-enable the form
                 this.signInForm.enable();
 
-                // Set the alert
+                // Always use inline alert for any login failure (no toast)
                 this.alert = {
                     type: 'error',
-                    message: error?.error?.message || 'Invalid username or password. Please try again.',
+                    message: 'Login failed.\nIncorrect email or password. Please try again.',
                 };
-
-                // Show the alert
                 this.showAlert = true;
             }
         });
+    }
+
+    private showToast(message: string, duration: number = 4000): MatSnackBarRef<SimpleSnackBar> {
+        const snackRef = this._snackBar.open(message, undefined, {
+            horizontalPosition: 'right',
+            verticalPosition: 'top',
+            duration,
+            panelClass: ['marine-quote-snackbar']
+        });
+
+        return snackRef;
     }
 
     ngOnDestroy(): void {
@@ -235,44 +247,59 @@ export class AuthSignInComponent implements OnInit,OnDestroy {
     }
 
     verifyOtp(): void {
-        if (!this._authService.tempToken) { this.backToCredentials(); return; }
+        // Ensure we still have a temp token; otherwise send user back to credentials
+        if (!this._authService.tempToken) {
+            this.backToCredentials();
+            return;
+        }
+
+        // Disable form and hide previous alerts
         this.signInForm.disable();
         this.showAlert = false;
-        const { otp } = this.signInForm.value;
 
-        // Validate OTP format (6-8 digits)
-        if (!/^\d{6,8}$/.test(otp)) {
-            this.alert = { type: 'error', message: 'Please enter a valid 6-8 digit OTP code.' };
+        const otp: string = this.signInForm.get('otp')?.value || '';
+
+        // Validate OTP format (exactly 8 digits)
+        if (!/^\d{8}$/.test(otp)) {
+            this.alert = {
+                type: 'error',
+                message: 'Your OTP should be 8 digits. Please try again.',
+            };
             this.showAlert = true;
             this.signInForm.enable();
             return;
         }
 
-        this._authService.verifyOtp({ tempToken: this._authService.tempToken, otp }).pipe(
-            finalize(() => this.signInForm.enable())
-        ).subscribe({
+        this._authService.verifyOtp({ tempToken: this._authService.tempToken, otp }).subscribe({
             next: () => {
                 const userDataString = sessionStorage.getItem(this.STORAGE_KEYS.USER_DATA);
                 let redirectURL = this._activatedRoute.snapshot.queryParamMap.get('redirectURL');
 
                 if (!redirectURL && userDataString) {
                     const userData = JSON.parse(userDataString);
-                    // No saved URL, choose based on client type
+                    // No saved URL, choose based on user type
                     if (userData.userType === 'C') {
+                        // Retail client dashboard
                         redirectURL = '/dashboard';
-                    } else if (userData.userType === 'A') {
+                    } else if (userData.userType === 'A' || userData.userType === 'I') {
+                        // Agents and intermediaries share the agent dashboard
                         redirectURL = '/agentdashboard';
                     } else {
-                        // fallback
+                        // Fallback
                         redirectURL = '/dashboard';
                     }
                 }
 
-                // Navigate to the redirect URL
-                this._router.navigateByUrl(redirectURL);
+                this.signInForm.enable();
+                this._authService.clearTempToken();
+                this._router.navigateByUrl(redirectURL || '/dashboard');
             },
             error: (err) => {
-                this.alert = { type: 'error', message: err.message || 'Invalid OTP code.' };
+                this.signInForm.enable();
+                this.alert = {
+                    type: 'error',
+                    message: err?.error?.message || 'Invalid OTP code.',
+                };
                 this.showAlert = true;
             },
         });

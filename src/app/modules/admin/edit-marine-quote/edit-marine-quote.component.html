@@ -1,0 +1,326 @@
+<div class="flex flex-col flex-auto w-full p-6 md:p-10">
+    <div *ngIf="isLoading" class="flex flex-col items-center justify-center h-[60vh] w-full">
+        <mat-spinner diameter="60" color="primary"></mat-spinner>
+        <p class="mt-4 text-gray-600 font-medium">Loading quote details...</p>
+    </div>
+    <div class="bg-card rounded-xl shadow w-full" *ngIf="!isLoading && quote">
+        <!-- Header -->
+        <div class="p-6 border-b flex items-center justify-between">
+            <h2 class="text-xl font-semibold">Edit Marine Quote Details</h2>
+
+            <button
+                type="button"
+                (click)="goToDashboard()"
+                class="inline-flex items-center gap-2 px-4 py-1 rounded-full border text-sm font-medium bg-white header-close-btn">
+                <span class="text-base font-normal" aria-hidden="true">&times;</span>
+                <span>Close</span>
+            </button>
+        </div>
+
+        <!-- Stepper -->
+        <div class="p-6">
+            <form [formGroup]="shipmentForm" class="space-y-6 w-full max-w-7xl mx-auto">
+
+                <!-- Step Title -->
+                <div class="mb-6">
+                    <h2 class="text-2xl sm:text-3xl font-bold text-gray-900 text-center sm:text-left">
+                        {{ !applicationSubmitted ? 'Provide Marine Details to Pay' : 'Complete Your Payment' }}
+                    </h2>
+                    <p class="text-gray-600 mt-2" *ngIf="!applicationSubmitted">
+                        Fill in the required information and submit your application
+                    </p>
+                </div>
+
+                <!-- Main Content Grid -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6" *ngIf="!isLoadingMarineData">
+
+                    <!-- Left Column - Form Fields (Hidden after submission) -->
+                    <div class="lg:col-span-7" [class.readonly-section]="applicationSubmitted">
+
+                        <!-- Personal Information -->
+                        <div class="mb-4 p-4 border-2 rounded-lg bg-white" style="border-color: #04b2e1;">
+                            <h2 class="text-sm font-semibold text-gray-900 mb-3">Personal Information</h2>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">ID Number *</label>
+                                    <input class="w-full px-3 py-2 border rounded-md special-focus-field"
+                                           [ngClass]="!shipmentForm.get('idNumber')?.value ? 'border-red-500' : 'border-gray-300'"
+                                           formControlName="idNumber"
+                                           placeholder="Enter ID number"
+                                           maxlength="10">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">KRA PIN *</label>
+                                    <input class="w-full px-3 py-2 border rounded-md uppercase special-focus-field"
+                                           [ngClass]="!shipmentForm.get('kraPin')?.value ? 'border-red-500' : 'border-gray-300'"
+                                           formControlName="kraPin"
+                                           placeholder="Enter KRA PIN"
+                                           maxlength="11">
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">First Name *</label>
+                                    <input class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100"
+                                           formControlName="firstName" readonly>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Last Name *</label>
+                                    <input class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100"
+                                           formControlName="lastName" readonly>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Email Address *</label>
+                                    <input class="w-full px-3 py-2 border rounded-md"
+                                           [ngClass]="!shipmentForm.get('emailAddress')?.value ? 'border-red-500' : 'border-gray-300'"
+                                           formControlName="emailAddress"
+                                           type="email">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number *</label>
+                                    <input class="w-full px-3 py-2 border rounded-md bg-gray-100"
+                                           [ngClass]="!shipmentForm.get('phoneNumber')?.value ? 'border-red-500' : 'border-gray-300'"
+                                           formControlName="phoneNumber"
+                                           maxlength="10"
+                                    >
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Postal Address *</label>
+                                    <input class="w-full px-3 py-2 border rounded-md"
+                                           [ngClass]="!shipmentForm.get('streetAddress')?.value ? 'border-red-500' : 'border-gray-300'"
+                                           formControlName="streetAddress"
+                                           type="text">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Postal Code *</label>
+                                    <select
+                                        class="w-full px-3 py-2 border rounded-md special-focus-field"
+                                        [ngClass]="!shipmentForm.get('postalCode')?.value ? 'border-red-500' : 'border-gray-300'"
+                                        formControlName="postalCode">
+                                        <option value="">Select postal code</option>
+                                        <option *ngFor="let pc of postalCodes"
+                                                [value]="pc.id">
+                                            {{ pc.postalCode }} - {{ pc.postalTown }}
+                                        </option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Shipment Details -->
+                        <div class="mb-4 p-4 border-2 rounded-lg bg-white" style="border-color: #04b2e1;">
+                            <h2 class="text-sm font-semibold text-gray-900 mb-3">Shipment Details</h2>
+
+                            <!-- Add all your shipment detail fields here (mode, trade type, vessel, etc.) -->
+                            <!-- Keeping the structure you already have -->
+
+                            <div class="flex flex-wrap items-end gap-4 mb-3">
+                                <div class="flex-1 min-w-[200px]">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Mode of Shipment *</label>
+                                    <select
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md"
+                                        formControlName="modeOfShipment">
+                                        <option value="">Select mode</option>
+                                        <option value="1">Sea</option>
+                                        <option value="2">Air</option>
+                                    </select>
+                                </div>
+
+                                <div class="flex-1 min-w-[200px]">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Trade Type</label>
+                                    <input
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100"
+                                        formControlName="tradeType"
+                                        value="Marine Cargo Import"
+                                        readonly>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="block text-base font-medium text-gray-700 mb-2">Marine Packaging Type</label>
+                                <mat-radio-group formControlName="commodityType" color="primary">
+                                    <mat-radio-button value="1" class="mr-4">Containerized</mat-radio-button>
+                                    <mat-radio-button value="2">Non-Containerized</mat-radio-button>
+                                </mat-radio-group>
+                            </div>
+
+                            <!-- Sum Insured (Full Width) -->
+                            <div class="mb-3">
+                                <label class="block text-base font-medium text-gray-700 mb-1">Sum Insured (KES) *</label>
+                                <input [class]="'w-full px-3 py-2 border rounded-md bg-gray-100 ' +
+                       (!shipmentForm.get('sumInsured')?.value ?
+                       'border-red-500' : 'border-gray-300')"
+                                       type="text"
+                                       formControlName="sumInsured"
+                                       appThousands
+                                       placeholder="Enter sum insured amount"
+                                       inputmode="numeric"
+                                >
+                            </div>
+
+                            <!-- Select Category | Cargo Type -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                                <div>
+                                    <label class="block text-base font-medium text-gray-700 mb-1">Select Category *</label>
+                                    <mat-form-field appearance="outline" class="w-full category-select mat-small"
+                                                    [ngClass]="{'mat-form-field-invalid': (shipmentForm.get('selectCategory')?.invalid && shipmentForm.get('selectCategory')?.touched) || !shipmentForm.get('selectCategory')?.value}">
+                                        <mat-select formControlName="selectCategory" (selectionChange)="onCategorySelected2($event.value)" #categorySelect2>
+                                            <mat-option>
+                                                <ngx-mat-select-search [formControl]="categoryFilterCtrl2" placeholderLabel="Search categories..."></ngx-mat-select-search>
+                                            </mat-option>
+                                            <mat-option *ngFor="let category of filteredMarineCategories" [value]="category.catname">
+                                                {{ category.catname }}
+                                            </mat-option>
+                                        </mat-select>
+                                    </mat-form-field>
+                                </div>
+                                <div>
+                                    <label class="block text-base font-medium text-gray-700 mb-1">Cargo Type *</label>
+                                    <mat-form-field appearance="outline" class="w-full cargo-type-select mat-small"
+                                                    [ngClass]="{'mat-form-field-invalid': (shipmentForm.get('salesCategory')?.invalid && shipmentForm.get('salesCategory')?.touched) || !shipmentForm.get('salesCategory')?.value}">
+                                        <mat-select formControlName="salesCategory" #cargoTypeSelect  (selectionChange)="onCategoryTypeSelected2($event.value)"
+                                                    [disabled]="isLoadingCargoTypes">
+                                            <mat-option>
+                                                <ngx-mat-select-search [formControl]="cargoTypeFilterCtrl2" placeholderLabel="Search cargo types..."></ngx-mat-select-search>
+                                            </mat-option>
+                                            <mat-option *ngFor="let type of filteredMarineCargoTypess" [value]="type.ctname">
+                                                {{ type.ctname }}
+                                            </mat-option>
+                                        </mat-select>
+                                    </mat-form-field>
+                                </div>
+                            </div>
+
+
+                            <!-- Country of Origin | Loading Port -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                                <div>
+                                    <label class="block text-base font-medium text-gray-700 mb-1">Country of Origin *</label>
+                                    <mat-form-field appearance="outline" class="w-full shipping-select" style="min-height: 50px;"
+                                                    [ngClass]="{'mat-form-field-invalid': (shipmentForm.get('countryOfOrigin')?.invalid && shipmentForm.get('countryOfOrigin')?.touched) || !shipmentForm.get('countryOfOrigin')?.value}">
+
+                                        <mat-select formControlName="countryOfOrigin" #countrySelect [compareWith]="compareCountries"
+                                                    (openedChange)="onSelectOpen2($event)" (scroll)="onScrollLast($event)">
+
+                                            <mat-option>
+                                                <ngx-mat-select-search [formControl]="countryFilterCtrl2" placeholderLabel="Search countries..."></ngx-mat-select-search>
+                                            </mat-option>
+
+                                            <mat-option *ngFor="let country of origincountries" [value]="country">
+                                                {{ country.countryname }}
+                                            </mat-option>
+
+                                            <mat-option *ngIf="loading">
+                                                <mat-spinner diameter="20"></mat-spinner> Loading...
+                                            </mat-option>
+                                        </mat-select>
+                                    </mat-form-field>
+
+                                </div>
+                                <div>
+                                    <label class="block text-base font-medium text-gray-700 mb-1">Country of Destination</label>
+                                    <input type="text" formControlName="finalDestination" class="w-full rounded-md border-gray-300 bg-gray-100 px-3 py-2 text-gray-900 h-14" readonly/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column - Payment Summary (Always Visible) -->
+                    <div class="lg:col-span-5">
+                        <div class="bg-white rounded-lg shadow-lg border-2 p-6 sticky top-4 overflow-visible"
+                             [ngClass]="applicationSubmitted ? 'bg-green-50/30' : 'bg-orange-50/30'"
+                             style="border-color: #04b2e1;">
+
+                            <!-- Success Message (After Submission) -->
+                            <div *ngIf="applicationSubmitted" class="mb-6 p-4 bg-green-100 border border-green-400 rounded-lg">
+                                <div class="flex items-center mb-2">
+                                    <mat-icon class="text-green-600 mr-2">check_circle</mat-icon>
+                                    <h3 class="text-lg font-bold text-green-800">Quote Updated Successfully!</h3>
+                                </div>
+                                <p class="text-sm text-green-700">Quote reference number: <strong>{{ quote.refno }}</strong></p>
+                            </div>
+
+                            <h2 class="text-xl font-semibold text-gray-900 mb-4 text-center">
+                                {{ applicationSubmitted ? 'Payment Details' : 'Payment Summary' }}
+                            </h2>
+
+                            <!-- Cargo Protection -->
+                            <div class="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm font-medium">Cargo Protection</span>
+                                    <mat-icon class="text-blue-600 text-sm">info</mat-icon>
+                                </div>
+                                <div class="mt-1">
+                                    <span class="text-base font-semibold">{{ getCargoProtectionName() }}</span>
+                                </div>
+                            </div>
+
+                            <!-- Payment Breakdown -->
+                            <div class="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200" *ngIf="quoteResult">
+                                <div class="space-y-2">
+                                    <div class="flex justify-between text-sm">
+                                        <span class="text-gray-600">Sum Insured:</span>
+                                        <span class="font-semibold">KES {{ formatAmount(shipmentForm.get('sumInsured')?.value || 0) }}</span>
+                                    </div>
+                                    <div class="flex justify-between text-sm">
+                                        <span class="text-gray-600">Basic Premium:</span>
+                                        <span class="font-semibold">KES {{ formatAmount(quoteResult.premium) }}</span>
+                                    </div>
+                                    <div class="flex justify-between text-sm">
+                                        <span class="text-gray-600">PHCF (0.25%):</span>
+                                        <span class="font-semibold">KES {{ formatAmount(quoteResult.phcf) }}</span>
+                                    </div>
+                                    <div class="flex justify-between text-sm">
+                                        <span class="text-gray-600">Training Levy (0.2%):</span>
+                                        <span class="font-semibold">KES {{ formatAmount(quoteResult.tl) }}</span>
+                                    </div>
+                                    <div class="flex justify-between text-sm">
+                                        <span class="text-gray-600">Stamp Duty:</span>
+                                        <span class="font-semibold">KES {{ formatAmount(quoteResult.sd) }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Total Amount -->
+                            <div class="mb-6 p-4 rounded-lg" *ngIf="quoteResult" style="background-color: #21275c;">
+                                <div class="flex justify-between items-center text-white">
+                                    <span class="text-lg font-bold">Total Payable:</span>
+                                    <span class="text-2xl font-bold">KES {{ quoteResult.netprem | number:'1.2-2' }}</span>
+                                </div>
+                            </div>
+
+                            <!-- Payment Instructions (After Submission) -->
+
+
+                            <!-- Submit Application Button (Before Submission) -->
+                                <button
+                                    mat-raised-button
+                                    color="primary"
+                                    class="w-full py-3 text-lg font-semibold rounded-full"
+                                    [disabled]="isSubmitting"
+                                    (click)="onSubmit()"
+                                    style="background-color: #21275c; color: #ffffff;">
+                                    <mat-spinner *ngIf="isSubmitting" diameter="24" class="mr-2"></mat-spinner>
+                                    <span *ngIf="!isSubmitting">
+                                        Update Quote
+                                    </span>
+                                    <span *ngIf="isSubmitting">
+                                        Updating Quote...
+                                    </span>
+                                </button>
+
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

@@ -21,6 +21,8 @@ import { MatDialog } from '@angular/material/dialog';
 import { QuoteProductDialogsComponent } from '../quote-product-dialog/quote-product-dialog.component';
 import { FuseAlertComponent, FuseAlertService } from '../../../../@fuse/components/alert';
 import { ApexOptions } from 'apexcharts';
+import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
+import { MatSnackBar, MatSnackBarRef, SimpleSnackBar } from '@angular/material/snack-bar';
 
 
 // Claim interface for client
@@ -195,11 +197,26 @@ export class ClientInsuranceDashboardComponent implements OnInit,AfterViewInit {
                   private router: Router,
                   private dialog: MatDialog,
                   private fuseAlertService: FuseAlertService,
+                  private _snackBar: MatSnackBar,
                   private quoteService: QuoteService) {
 
     }
 
     ngOnInit(): void {
+        // Ensure only retail clients can access this dashboard
+        const storedUserRaw = sessionStorage.getItem('geminia_user_data');
+        if (storedUserRaw) {
+            try {
+                const storedUser = JSON.parse(storedUserRaw) as { userType?: string };
+                if (storedUser.userType && storedUser.userType !== 'C') {
+                    this.router.navigateByUrl('/agentdashboard');
+                    return;
+                }
+            } catch {
+                // If parsing fails, fall through and let auth guard handle if needed
+            }
+        }
+
         this.fuseAlertService.dismiss('quoteDownloadError');
         this.loadDashboardData();
         this.loadRecentActivities();
@@ -420,11 +437,18 @@ export class ClientInsuranceDashboardComponent implements OnInit,AfterViewInit {
      * View policy details
      */
     viewPolicy(policy: PolicyRecord): void {
-        this.router.navigate(['/viewmarinequote', policy.id]);
+        if(policy.productName==='Travel'){
+            this.router.navigate(['/viewtravelquote', policy.id]);
+        }else
+            this.router.navigate(['/viewmarinequote', policy.id]);
     }
 
     viewQuote(policy: PendingQuote): void {
         this.router.navigate(['/viewquote', policy.quoteId]);
+    }
+
+    editQuote(policy: PendingQuote): void {
+        this.router.navigate(['/editmarinequote', policy.quoteId]);
     }
 
     openProductQuoteDialog(): void {
@@ -454,6 +478,45 @@ export class ClientInsuranceDashboardComponent implements OnInit,AfterViewInit {
     renewPolicy(policy: PendingQuote): void {
         console.log('Renewing policy:', policy.refno);
         // Implement renewal process
+    }
+
+    deleteQuote(quote: PendingQuote): void {
+        if (!quote.quoteId) {
+            this.fuseAlertService.show('quoteDownloadError');
+            return;
+        }
+
+        const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+            width: '350px',
+            data: {
+                title: 'Delete Quote',
+                message: `Are you sure you want to delete quote ${quote.refno}?`
+            }
+        });
+        dialogRef.afterClosed().subscribe(result => {
+            if (result) {
+                const payload = {
+                    refno: quote.refno,
+                    quoteId: quote.quoteId,
+                    type: quote.prodName
+                };
+                console.log(payload);
+
+                this.quoteService.deleteQuote(payload).subscribe({
+                    next: (res) => {
+                        const message = "Quote Deleted Successfully";
+
+                        this.showToast(message, 'OK', () => {
+
+                        });
+                        this.loadDashboardData(); // reload table
+                    },
+                    error: (err) => {
+                        console.error('Delete error', err);
+                    }
+                });
+            }
+        });
     }
 
     /**
@@ -498,6 +561,25 @@ export class ClientInsuranceDashboardComponent implements OnInit,AfterViewInit {
                 setTimeout(() => this.fuseAlertService.dismiss('quoteDownloadError'), 4000);
             }
         });
+    }
+
+
+    private showToast(message: string, action?: string, onAction?: () => void, duration: number = 4000): MatSnackBarRef<SimpleSnackBar> {
+        const snackRef = this._snackBar.open(message, action, {
+            horizontalPosition: 'right',
+            verticalPosition: 'top',
+            duration,
+            panelClass: ['marine-quote-snackbar']
+        });
+
+        if (onAction) {
+            snackRef.onAction().subscribe(() => {
+                snackRef.dismiss();
+                onAction();
+            });
+        }
+
+        return snackRef;
     }
 
 

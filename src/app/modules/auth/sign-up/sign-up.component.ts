@@ -24,6 +24,7 @@ import { CreateUserObject } from '../../../core/user/user.types';
 import { MatRadioModule } from '@angular/material/radio';
 import { CommonModule } from '@angular/common';
 import { MarineQuickQuoteComponent } from '../../admin/quick-quote/marine-quick-quote.component';
+import { MatSnackBar, MatSnackBarRef, SimpleSnackBar } from '@angular/material/snack-bar';
 
 
 export const passwordMatchValidator: ValidatorFn = (control: AbstractControl): ValidationErrors | null => {
@@ -82,6 +83,7 @@ export class AuthSignUpComponent implements OnInit,AfterViewInit  {
         private fb: FormBuilder,
         private _router: Router,
         private _activatedRoute: ActivatedRoute,
+        private _snackBar: MatSnackBar,
     ) {}
 
     // -----------------------------------------------------------------------------------------------------
@@ -189,15 +191,17 @@ export class AuthSignUpComponent implements OnInit,AfterViewInit  {
 
 
 
+        const selectedAccountType = formValue.accountType;
+
         this._authService.createUser(user).pipe(
             finalize(() => this.registerForm.enable())
         ).subscribe({
             next: () => {
-                this.alert = { type: 'success', message: 'Registration successful! Redirecting to sign in.'};
-                this.showAlert = true;
                 this.formType = 'login';
                 this.loading = false;
-                setTimeout(() => this.showAlert = false, 5000);
+
+                // Show a friendly success toast before navigating to sign-in
+                this.showToast('Success.\nYour account has been successfully created! You can now log in.');
                 const redirectURL =
                     this._activatedRoute.snapshot.queryParamMap.get(
                         'redirectURL'
@@ -208,8 +212,38 @@ export class AuthSignUpComponent implements OnInit,AfterViewInit  {
             },
             error: (err) => {
                 this.loading = false;
-                this.alert = { type: 'error', message: err.error?.errors?.[0]?.developerMessage || 'Registration failed.' };
-                this.showAlert = true;
+                const devMessage: string | undefined = err?.error?.errors?.[0]?.developerMessage;
+                const apiMessage: string | undefined = err?.error?.message;
+                const combinedMessage = `${devMessage || ''} ${apiMessage || ''}`;
+
+                const lower = combinedMessage.toLowerCase();
+                const isUsernameExists = lower.includes('user with username') || lower.includes('already exists');
+                const isIntermediaryNotFound =
+                    selectedAccountType === 'A' &&
+                    (lower.includes('contact us for assistance') || lower.includes('information has not been updated'));
+
+                if (isUsernameExists) {
+                    // Use inline alert for existing-username case (no toast)
+                    this.alert = {
+                        type: 'error',
+                        message: 'Sign up error.\nThis username is already taken. Please choose another.',
+                    };
+                    this.showAlert = true;
+                } else if (isIntermediaryNotFound) {
+                    // Intermediary account not found in backend master data (inline alert)
+                    this.alert = {
+                        type: 'error',
+                        message: 'We couldn\'t match your email details.\nPlease get in touch with us so we can help you get set up.',
+                    };
+                    this.showAlert = true;
+                } else {
+                    // Fallback to existing inline alert behavior
+                    this.alert = {
+                        type: 'error',
+                        message: devMessage || apiMessage || 'Registration failed.',
+                    };
+                    this.showAlert = true;
+                }
             },
         });
     }
@@ -269,5 +303,16 @@ export class AuthSignUpComponent implements OnInit,AfterViewInit  {
 
     toggleMarineQuote() {
         this.showMarineQuote = true;
+    }
+
+    private showToast(message: string, duration: number = 4000): MatSnackBarRef<SimpleSnackBar> {
+        const snackRef = this._snackBar.open(message, undefined, {
+            horizontalPosition: 'right',
+            verticalPosition: 'top',
+            duration,
+            panelClass: ['marine-quote-snackbar']
+        });
+
+        return snackRef;
     }
 }

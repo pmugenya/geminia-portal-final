@@ -7,6 +7,10 @@
   font-size: 0.85rem;
   border: none !important;
   box-shadow: none;
+
+  &:hover {
+    background-color: #21275c !important;
+  }
 }
 
 .new-quote-cta .mat-icon {

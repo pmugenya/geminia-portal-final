@@ -28,6 +28,13 @@
                 </div>
             </div>
             <div class="flex items-center space-x-3">
+                <button
+                    type="button"
+                    class="inline-flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-medium bg-white text-gray-700 hover:bg-gray-50 share-trigger-btn"
+                    (click)="editQuote()">
+                    <mat-icon class="icon-size-4">pencil-square</mat-icon>
+                    <span>Edit Quote</span>
+                </button>
                 <button mat-flat-button color="primary" class="buy-btn" (click)="buyNow()" *ngIf="quote?.status==='DRAFT'">
                     <mat-icon class="icon-size-4" [svgIcon]="'heroicons_outline:credit-card'"></mat-icon>
                     Buy Now

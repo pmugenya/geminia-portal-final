@@ -18,6 +18,7 @@ import { AuthService } from 'app/core/auth/auth.service';
 import { finalize } from 'rxjs';
 import { FuseValidators } from '../../../../@fuse/validators';
 import { CommonModule } from '@angular/common';
+import { MatSnackBar, MatSnackBarRef, SimpleSnackBar } from '@angular/material/snack-bar';
 
 @Component({
     selector: 'auth-forgot-password',
@@ -63,6 +64,7 @@ export class AuthForgotPasswordComponent implements OnInit, OnDestroy {
         private _authService: AuthService,
         private _formBuilder: UntypedFormBuilder,
         public router: Router,
+        private _snackBar: MatSnackBar,
     ) {}
 
     // -----------------------------------------------------------------------------------------------------
@@ -178,9 +180,6 @@ export class AuthForgotPasswordComponent implements OnInit, OnDestroy {
 
                     // Reset the form
                     this.forgotPasswordNgForm.resetForm();
-
-                    // Show the alert
-                    this.showAlert = true;
                 })
             )
             .subscribe(
@@ -195,20 +194,21 @@ export class AuthForgotPasswordComponent implements OnInit, OnDestroy {
                     this.tokenPasswordForm.get('tempToken')?.setValue(response.tempToken);
                     this.resetPasswordForm.get('tempToken')?.setValue(response.tempToken);
                     this.startOtpCountdown();
-                    // Set the alert
+                    // Set the alert with updated wording
                     this.alert = {
                         type: 'success',
                         message:
-                            "Password reset sent! You'll receive an email/mobile phone with otp if you are registered on our system.",
+                            'Password reset initiated. If your account is registered in our system, you will receive an OTP via email or mobile.',
                     };
+                    this.showAlert = true;
                 },
                 (response) => {
-                    // Set the alert
+                    // Use inline alert when email is not found (no toast)
                     this.alert = {
                         type: 'error',
-                        message:
-                            'Email does not found! Are you sure you are already a member?',
+                        message: "We couldn't match your email details.\nPlease get in touch with us so we can help you get set up.",
                     };
+                    this.showAlert = true;
                 }
             );
     }
@@ -224,6 +224,17 @@ export class AuthForgotPasswordComponent implements OnInit, OnDestroy {
     verifyUser(): void {
         // Return if the form is invalid
         if (this.tokenPasswordForm.invalid) {
+            return;
+        }
+
+        // Validate OTP format (exactly 8 digits) before calling backend
+        const otp: string = this.tokenPasswordForm.get('otpCode')?.value || '';
+        if (!/^\d{8}$/.test(otp)) {
+            this.alert = {
+                type: 'error',
+                message: 'Your OTP should be 8 digits. Please try again.',
+            };
+            this.showAlert = true;
             return;
         }
 
@@ -342,7 +353,7 @@ export class AuthForgotPasswordComponent implements OnInit, OnDestroy {
         if (!tempToken) {
             this.alert = {
                 type: 'error',
-                message: 'Session expired. Please restart the password reset process.',
+                message: 'Your session has expired. Please restart the password reset process.',
             };
             this.showAlert = true;
             this.backToEmail();
@@ -409,11 +420,21 @@ export class AuthForgotPasswordComponent implements OnInit, OnDestroy {
     /**
      * Stops the OTP countdown timer
      */
-    stopOtpCountdown(): void {
+    private stopOtpCountdown(): void {
         if (this.otpCountdownInterval) {
             clearInterval(this.otpCountdownInterval);
             this.otpCountdownInterval = null;
         }
     }
 
+    private showToast(message: string, duration: number = 4000): MatSnackBarRef<SimpleSnackBar> {
+        const snackRef = this._snackBar.open(message, undefined, {
+            horizontalPosition: 'right',
+            verticalPosition: 'top',
+            duration,
+            panelClass: ['marine-quote-snackbar']
+        });
+
+        return snackRef;
+    }
 }
