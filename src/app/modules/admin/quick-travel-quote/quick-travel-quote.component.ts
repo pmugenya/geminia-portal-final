@@ -62,7 +62,7 @@ import { QuoteService } from '../../../core/services/quote.service';
     selector: 'app-quick-travel',
     standalone: true,
     templateUrl: './quick-travel-quote.component.html',
-    styleUrls: ['./quick-travel-quote.component.css'],
+    styleUrls: ['./quick-travel-quote.component.scss'],
     encapsulation: ViewEncapsulation.None,
     imports: [
         FuseAlertComponent,
@@ -128,6 +128,7 @@ export class QuickTravelQuoteComponent implements OnInit, OnDestroy {
     today = new Date();
     totalDays: number = 0;
     @Output() closeQuote = new EventEmitter<void>();
+    @Output() showLoginForQuote = new EventEmitter<void>();
     filteredCountries$;
     filteredDestCountries$;
     searchCtrl = new FormControl('');
@@ -159,6 +160,7 @@ export class QuickTravelQuoteComponent implements OnInit, OnDestroy {
         this.travelerDetailsForm = this.fb.group({
             email: ['', [Validators.required, Validators.email, noWhitespaceValidator]],
             phoneNumber: ['', [Validators.required, kenyanPhoneNumberValidator, noWhitespaceValidator]],
+            name:['', [Validators.required]],
             numTravelers: [1, [Validators.required, Validators.min(1)]],
             winterSports: [false],
             // UPDATED: Added duplicateTravelerValidator to the FormArray
@@ -404,6 +406,7 @@ console.log('here..');
         this.travelService.getRatesByDuration(durationId).subscribe({
             next: (data) => {
                 this.rates = data;
+                console.log(data);
             },
             error: (err) => {
                 console.error('Error loading rates', err);
@@ -627,42 +630,7 @@ console.log('here..');
         }
     }
 
-    submitPolicy() {
-        const travelersArray = this.travelerDetailsForm.get('travelers')?.value;
 
-        // Build JSON without files
-        const travelersJson = travelersArray.map(t => ({
-            fullName: t.fullName,
-            passportNumber: t.passportNumber
-        }));
-
-        const json  = {
-            "travellers": travelersJson,
-            "quoteId": this.quotId
-        }
-        console.log(json);
-
-        const files: File[] = [];
-
-        travelersArray.forEach(t => {
-            if (t.passportFile) {
-                files.push(t.passportFile);
-            }
-        });
-
-        this.travelService.submitPolicy(json, files)
-            .subscribe({
-                next: (res) => {
-                    console.log('Success', res);
-                    const refNo = res?.transactionId;
-                    this.applicationId = res?.commandId;
-                    this.paymentRefNo = refNo;
-                    this.isSubmitting = false;
-                    this.applicationSubmitted = true;
-                },
-                error: (err) => console.error('Error', err)
-            });
-    }
 
     preventLeadingSpace(event: KeyboardEvent): void {
         const input = event.target as HTMLInputElement;

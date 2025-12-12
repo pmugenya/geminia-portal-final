@@ -3,14 +3,6 @@
         <mat-spinner diameter="60" color="primary"></mat-spinner>
         <p class="mt-4 text-gray-600 font-medium">Loading quote details...</p>
     </div>
-    <!-- Toast-style certificate error (top-right corner) -->
-    <div
-        *ngIf="certificateInlineError"
-        class="fixed top-6 right-6 z-50 max-w-xs border border-red-300 bg-red-50 text-red-700 text-xs rounded-md px-3 py-2 shadow-md"
-    >
-        {{ certificateInlineError }}
-    </div>
-
     <div class="bg-card rounded-xl shadow w-full" *ngIf="!isLoading">
         <!-- Header -->
         <div class="p-6 border-b bg-gradient-to-r from-blue-50 to-blue-100">
@@ -43,7 +35,7 @@
 
                     <button
                         (click)="generateCert()"
-                        *ngIf="certErrorLog"
+                        *ngIf="!certNo"
                         [disabled]="isProcessing"
                         class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all flex items-center gap-2"
                     >
@@ -149,12 +141,17 @@
                     <!-- Certificate Error Log -->
                     <div *ngIf="certErrorLog">
                         <label class="text-xs font-medium text-gray-600">Certificate Error Log</label>
-                        <p class="text-sm font-semibold text-red-600" *ngIf="certErrorLog; else noError">
+                        <p class="text-xs text-red-600 mt-1">
                             {{ certErrorLog }}
                         </p>
-                        <ng-template #noError>
-                            <span class="text-gray-500">No errors</span>
-                        </ng-template>
+                    </div>
+
+                    <!-- Inline friendly certificate error (login-style) -->
+                    <div
+                        *ngIf="certificateInlineError"
+                        class="md:col-span-2 mt-2 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-xs text-red-700"
+                    >
+                        <span class="whitespace-pre-line">{{ certificateInlineError }}</span>
                     </div>
 
                 </div>

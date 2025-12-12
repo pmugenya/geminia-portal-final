@@ -719,8 +719,6 @@ export class TravelQuoteComponent implements OnInit, OnDestroy
             idNumber: kycDocs.idNumber
         }
 
-        console.log(json);
-
         this.travelService.submitPolicy(json,kraFile,idFile, this.passportFiles)
             .subscribe({
                 next: (res) => {

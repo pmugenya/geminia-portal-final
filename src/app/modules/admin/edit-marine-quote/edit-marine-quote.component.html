@@ -297,25 +297,32 @@
                                 </div>
                             </div>
 
-                            <!-- Payment Instructions (After Submission) -->
+                            <!-- Action Buttons: Save & Pay Now / Save & Pay Later (side by side pills) -->
+                            <div class="mt-4 flex flex-col sm:flex-row gap-4">
+                                <button
+                                    type="button"
+                                    class="flex-1 py-3 text-base sm:text-lg font-semibold rounded-full shadow-md border border-transparent bg-gray-600 text-white hover:bg-gray-700"
+                                    [disabled]="isSaving || !quoteResult"
+                                    (click)="onSaveAndPayLater()">
+                                    <mat-spinner *ngIf="isSaving" diameter="24" class="mr-2"></mat-spinner>
+                                    <span *ngIf="!isSaving">Update Quote</span>
+                                    <span *ngIf="isSaving">Saving...</span>
+                                </button>
 
-
-                            <!-- Submit Application Button (Before Submission) -->
                                 <button
                                     mat-raised-button
                                     color="primary"
-                                    class="w-full py-3 text-lg font-semibold rounded-full"
-                                    [disabled]="isSubmitting"
-                                    (click)="onSubmit()"
+                                    class="flex-1 py-3 text-base sm:text-lg font-semibold rounded-full shadow-md"
+                                    [disabled]="isSubmitting || !quoteResult"
+                                    (click)="onSaveAndPayNow()"
                                     style="background-color: #21275c; color: #ffffff;">
                                     <mat-spinner *ngIf="isSubmitting" diameter="24" class="mr-2"></mat-spinner>
-                                    <span *ngIf="!isSubmitting">
-                                        Update Quote
-                                    </span>
-                                    <span *ngIf="isSubmitting">
-                                        Updating Quote...
-                                    </span>
+                                    <span *ngIf="!isSubmitting">Buy Now</span>
+                                    <span *ngIf="isSubmitting">Processing...</span>
                                 </button>
+
+
+                            </div>
 
                         </div>
                     </div>

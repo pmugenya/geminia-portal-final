@@ -1,0 +1,80 @@
+/* Your existing rules */
+.export-shipment-modal .mat-form-field-appearance-outline .mat-form-field-flex {
+  height: 34px;
+  align-items: center;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+.export-shipment-modal .mat-form-field-infix {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+.export-shipment-modal input[matinput] {
+  padding: 0 0.75rem !important;
+  font-size: 1rem;
+  line-height: 1 !important;
+}
+
+.export-shipment-modal .mat-form-field-wrapper {
+  padding-bottom: 0 !important;
+}
+
+/* Force visibility of Country of Origin and Destination Country */
+.export-shipment-modal input[formcontrolname="originCountry"],
+.export-shipment-modal select[formcontrolname="originCountry"],
+.export-shipment-modal input[formcontrolname="destinationCountry"],
+.export-shipment-modal select[formcontrolname="destinationCountry"] {
+  display: block !important;
+  border-width: 1px !important;
+  border-style: solid !important;
+  border-color: #d1d5db !important;
+  background-color: #f9fafb !important;
+  color: #111827 !important;
+}
+
+/* Ensure Shipment Date and Sum Insured inputs share the exact same height */
+.export-shipment-modal input[formcontrolname="shipmentDate"],
+.export-shipment-modal input[formcontrolname="sumInsured"] {
+  min-height: 40px;
+}
+
+/* ------------------------------------------------------- */
+/* FIX SHIPMENT DATE HEIGHT — ADD THESE RULES BELOW        */
+/* ------------------------------------------------------- */
+
+/* Reduce outline height to match text inputs */
+.export-shipment-modal .mat-form-field-appearance-outline,
+.export-shipment-modal .mat-form-field-outline-start,
+.export-shipment-modal .mat-form-field-outline-end {
+  height: 30px !important;
+}
+
+/* Prevent Angular Material from auto-expanding height */
+.export-shipment-modal .mat-form-field-flex {
+  min-height: 30px !important;
+  height: 30px !important;
+}
+
+/* Reduce infix inner height (default is >40px) */
+.export-shipment-modal .mat-form-field-infix {
+  min-height: 0 !important;
+  height: 20px !important;
+  display: flex;
+  align-items: center;
+}
+
+/* Ensure the date input itself sits properly without forcing a tiny height */
+.export-shipment-modal .mat-input-element {
+  height: auto !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* Align the calendar icon vertically */
+.export-shipment-modal .mat-datepicker-toggle {
+  height: 20px !important;
+  display: flex !important;
+  align-items: center !important;
+}

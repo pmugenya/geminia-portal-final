@@ -23,6 +23,7 @@ import { finalize } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { MarineQuickQuoteComponent } from '../../admin/quick-quote/marine-quick-quote.component';
 import { MatSnackBar, MatSnackBarRef, SimpleSnackBar } from '@angular/material/snack-bar';
+import { QuickTravelQuoteComponent } from '../../admin/quick-travel-quote/quick-travel-quote.component';
 
 @Component({
     selector: 'auth-sign-in',
@@ -41,7 +42,8 @@ import { MatSnackBar, MatSnackBarRef, SimpleSnackBar } from '@angular/material/s
         MatIconModule,
         MatCheckboxModule,
         MatProgressSpinnerModule,
-        MarineQuickQuoteComponent
+        MarineQuickQuoteComponent,
+        QuickTravelQuoteComponent
     ],
 })
 export class AuthSignInComponent implements OnInit,OnDestroy {

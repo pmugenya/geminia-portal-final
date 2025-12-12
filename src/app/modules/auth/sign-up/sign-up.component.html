@@ -156,8 +156,7 @@
                 <div *ngIf="registerForm && registerForm.get('accountType')?.value === 'A'">
                     <div class="space-y-4">
                         <div>
-                            <label class="mb-3 block text-base font-medium text-gray-900">Intermediary - IRA
-                                Number *</label>
+                            <label class="mb-3 block text-base font-medium text-gray-900">KRA PIN *</label>
                             <input
                                 type="text"
                                 [class]="'w-full rounded-lg px-4 py-3.5 text-sm border bg-white text-gray-900 placeholder-gray-400 transition-colors focus:outline-none focus:ring-2 focus:border-transparent ' +
@@ -165,7 +164,7 @@
                                   ? 'border-red-500 focus:ring-red-500'
                                   : 'border-gray-300 focus:ring-sky-500')"
                                 formControlName="iraNumber"
-                                placeholder="IRA Number" />
+                                placeholder="KRA PIN" />
                         </div>
                     </div>
                 </div>

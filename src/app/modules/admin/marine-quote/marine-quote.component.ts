@@ -60,6 +60,7 @@ import { MY_DATE_FORMATS } from '../../../core/directives/date-formats';
 import { MomentDateAdapter } from '@angular/material-moment-adapter';
 import { Router } from '@angular/router';
 import { ShareQuoteDialogComponent, ShareChannel } from '../../../shared/share-quote-dialog/share-quote-dialog.component';
+import { ShipmentRequestModalComponent } from '../shipment-request-modal/shipment-request-modal.component';
 
 @Component({
     selector: 'example',
@@ -204,6 +205,12 @@ export class MarineQuoteComponent implements OnInit, OnDestroy
     isProcessPayment: boolean = false;
     isProcessingStk = false;
     paymentSuccess?: boolean;
+    paymentMethod: 'stk' | 'paybill' = 'stk';
+
+// Paybill validation states
+    validatingPayment = false;
+    mpesaCodeError: string | null = null;
+    mpesaCodeValid = false;
 
     private paymentPollingSub?: Subscription;
     private _unsubscribeAll: Subject<any> = new Subject<any>();
@@ -602,7 +609,8 @@ export class MarineQuoteComponent implements OnInit, OnDestroy
             estimatedArrival: ['', Validators.required],
             sumInsured: ['', [Validators.required, Validators.min(1)]],
             goodsDescription: ['', Validators.required],
-            mpesaNumber: ['', [ CustomValidators.mpesaNumber]],
+            mpesaNumber: ['', [ Validators.pattern(/^0[17]\d{8}$/)]],
+            mpesaCode: ['', [Validators.pattern(/^[A-Z0-9]{10}$/)]],
 
             // Payment
             paymentMethod: ['mpesa', Validators.required]
@@ -751,9 +759,33 @@ export class MarineQuoteComponent implements OnInit, OnDestroy
             .pipe(takeUntil(this.destroy$))
             .subscribe((mode) => {
                 if (mode) {
-                    this.countryFilterCtrl2.setValue('');
+                    // Preserve the selected country before resetting
+                    const selectedCountry = this.shipmentForm.get('countryOfOrigin')?.value;
+                    // Keep the selected country in the list if it exists and is valid
+                    if (selectedCountry && selectedCountry.id) {
+                        this.origincountries = [selectedCountry];
+                    } else {
+                        this.origincountries = [];
+                    }
+                    // Reset search and reload countries (this will trigger valueChanges which will preserve the country)
+                    this.offsetLast = 0;
+                    this.hasMoreLast = true;
+                    this.countryFilterCtrl2.setValue('', { emitEvent: false });
+                    this.currentSearchTerm2 = '';
                     this.loadShippingCountries(true);
-                    this.countryFilterCtrl.setValue('');
+
+                    // Also handle first step country
+                    const selectedCountryId = this.quotationForm.get('origin')?.value;
+                    const selectedCountry1 = this.countries.find(c => c.id === selectedCountryId);
+                    if (selectedCountry1) {
+                        this.countries = [selectedCountry1];
+                    } else {
+                        this.countries = [];
+                    }
+                    this.offset = 0;
+                    this.hasMore = true;
+                    this.countryFilterCtrl.setValue('', { emitEvent: false });
+                    this.currentSearchTerm = '';
                     this.loadCountries(true);
                 }
             });
@@ -771,7 +803,10 @@ export class MarineQuoteComponent implements OnInit, OnDestroy
             .pipe(debounceTime(400), distinctUntilChanged(), takeUntil(this.destroy$))
             .subscribe(term => {
                 this.offset = 0;
-                this.countries = [];
+                // Preserve the currently selected country
+                const selectedCountryId = this.quotationForm.get('origin')?.value;
+                const selectedCountry = this.countries.find(c => c.id === selectedCountryId);
+                this.countries = selectedCountry ? [selectedCountry] : [];
                 this.currentSearchTerm = term || '';
                 this.hasMore = true;
                 this.loadCountries(true);
@@ -781,7 +816,9 @@ export class MarineQuoteComponent implements OnInit, OnDestroy
             .pipe(debounceTime(400), distinctUntilChanged(), takeUntil(this.destroy$))
             .subscribe(term => {
                 this.offsetLast = 0;
-                this.origincountries = [];
+                // Preserve the currently selected country
+                const selectedCountry = this.shipmentForm.get('countryOfOrigin')?.value;
+                this.origincountries = (selectedCountry && selectedCountry.id) ? [selectedCountry] : [];
                 this.currentSearchTerm2 = term || '';
                 this.hasMoreLast = true;
                 this.loadShippingCountries(true);
@@ -793,7 +830,10 @@ export class MarineQuoteComponent implements OnInit, OnDestroy
             .pipe(debounceTime(400), distinctUntilChanged(), takeUntil(this.destroy$))
             .subscribe((searchTerm) => {
                 this.portOffset = 0;
-                this.loadingPorts = [];
+                // Preserve the selected port
+                const selectedPortId = this.shipmentForm.get('loadingPort')?.value;
+                const selectedPort = this.loadingPorts.find(p => p.id === selectedPortId);
+                this.loadingPorts = selectedPort ? [selectedPort] : [];
                 this.portCurrentSearchTerm = searchTerm || '';
                 this.portHasMore = true;
                 this.fetchLoadingPorts(true);
@@ -802,7 +842,14 @@ export class MarineQuoteComponent implements OnInit, OnDestroy
         this.dischargePortSearchCtrl.valueChanges
             .pipe(takeUntil(this.destroy$), debounceTime(300))
             .subscribe((searchTerm) => {
+                // Preserve the selected discharge port
+                const selectedPortId = this.shipmentForm.get('portOfDischarge')?.value;
+                const selectedPort = this.dischargePorts.find(p => (p.id || p.portId || p.portid) === selectedPortId);
                 this.dischargePortPage = 0;
+                // Keep selected port in list
+                if (selectedPort) {
+                    this.dischargePorts = [selectedPort];
+                }
                 this.fetchPorts( searchTerm || '');
             });
 
@@ -838,10 +885,15 @@ export class MarineQuoteComponent implements OnInit, OnDestroy
             )
             .subscribe((countryId) => {
                 if (countryId) {
+                    // Reset and fetch loading ports
                     this.portOffset = 0;
+                    this.loadingPorts = [];
+                    this.portHasMore = true;
                     this.fetchLoadingPorts(true);
+
+                    // Reset and fetch discharge ports
                     this.dischargePortPage = 0;
-                    this.fetchPorts('discharge');
+                    this.fetchPorts('');
                 } else {
                     // Clear ports when no country is selected
                     this.loadingPorts = [];
@@ -1282,9 +1334,21 @@ export class MarineQuoteComponent implements OnInit, OnDestroy
             next: (response) => {
                 const newPorts = response?.pageItems || response?.data || [];
                 if (this.dischargePortPage === 0) {
-                    this.dischargePorts = newPorts;
+                    // When resetting (page 0), preserve the selected port
+                    const selectedPortId = this.shipmentForm.get('portOfDischarge')?.value;
+                    const selectedPort = this.dischargePorts.find(p => (p.id || p.portId || p.portid) === selectedPortId);
+                    if (selectedPort) {
+                        // Remove selected port from newPorts if it exists to avoid duplicates
+                        const filteredNewPorts = newPorts.filter(p => (p.id || p.portId || p.portid) !== selectedPortId);
+                        this.dischargePorts = [selectedPort, ...filteredNewPorts];
+                    } else {
+                        this.dischargePorts = newPorts;
+                    }
                 } else {
-                    this.dischargePorts = [...this.dischargePorts, ...newPorts];
+                    // When appending, avoid duplicates
+                    const existingIds = new Set(this.dischargePorts.map(p => p.id || p.portId || p.portid));
+                    const uniqueNewPorts = newPorts.filter(p => !existingIds.has(p.id || p.portId || p.portid));
+                    this.dischargePorts = [...this.dischargePorts, ...uniqueNewPorts];
                 }
                 this.filteredDischargePorts.next(this.dischargePorts.slice());
                 this.isLoadingDischargePorts = false;
@@ -1531,14 +1595,33 @@ export class MarineQuoteComponent implements OnInit, OnDestroy
     private fetchLoadingPorts(reset = false): void {
         const modeValue = this.shipmentForm.get('modeOfShipment')?.value;
         const modeId = modeValue === '1' ? 1 : modeValue === '2' ? 2 : 1;
-        const countryLoadingVal = this.shipmentForm.get('countryOfOrigin')?.value.id;
+        const countryLoadingVal = this.shipmentForm.get('countryOfOrigin')?.value?.id;
+        if (!countryLoadingVal) {
+            return; // Don't fetch if no country is selected
+        }
         this.portLoading = true;
         this.userService.getPorts(countryLoadingVal,''+modeId,this.portOffset, this.limit, this.portCurrentSearchTerm)
             .pipe(takeUntil(this.destroy$))
             .subscribe({
                 next: (res) => {
                     const newItems = res?.pageItems  || [];
-                    this.loadingPorts = reset ? newItems : [...this.loadingPorts, ...newItems];
+                    if (reset) {
+                        // When resetting, preserve the selected port and add new items
+                        const selectedPortId = this.shipmentForm.get('loadingPort')?.value;
+                        const selectedPort = this.loadingPorts.find(p => p.id === selectedPortId);
+                        if (selectedPort) {
+                            // Remove selected port from newItems if it exists to avoid duplicates
+                            const filteredNewItems = newItems.filter(p => p.id !== selectedPort.id);
+                            this.loadingPorts = [selectedPort, ...filteredNewItems];
+                        } else {
+                            this.loadingPorts = newItems;
+                        }
+                    } else {
+                        // When appending, just add new items (avoiding duplicates)
+                        const existingIds = new Set(this.loadingPorts.map(p => p.id));
+                        const uniqueNewItems = newItems.filter(p => !existingIds.has(p.id));
+                        this.loadingPorts = [...this.loadingPorts, ...uniqueNewItems];
+                    }
                     if (newItems.length < this.limit) this.portHasMore = false;
                     this.portOffset += this.limit;
                     this.portLoading = false;
@@ -1576,16 +1659,34 @@ export class MarineQuoteComponent implements OnInit, OnDestroy
 
     private setupFormSubscriptions(): void {
         // Update the modeOfShipment subscription to reset countries
-        this.quotationForm.get('modeOfShipment')?.valueChanges.subscribe((mode: number) => {
-            if (mode) {
+        this.quotationForm.get('modeOfShipment')?.valueChanges
+            .pipe(takeUntil(this.destroy$))
+            .subscribe((mode: number) => {
+                if (mode) {
+                    // Reset countries and load first page
+                    this.countryFilterCtrl.setValue('');
+                    this.loadCountries(true);
+                }
+            });
 
-                // Reset countries and load first page
-                this.countryFilterCtrl.setValue('');
-                this.loadCountries(true);
-
-                // Load first page of countries
-            }
-        });
+        // When Trade Type is Export (value '2'), open the Export Shipment Details form
+        this.quotationForm.get('tradeType')?.valueChanges
+            .pipe(takeUntil(this.destroy$))
+            .subscribe((type) => {
+                if (type === '2') {
+                    this.dialog.open(ShipmentRequestModalComponent, {
+                        width: '700px',
+                        data: {
+                            isExport: true,
+                            showExportModal: true,
+                        }
+                    }).afterClosed().subscribe(result => {
+                        if (result) {
+                            // Placeholder: handle returned export shipment details if needed
+                        }
+                    });
+                }
+            });
     }
 
     private setupSearchFilters(): void {
@@ -1595,7 +1696,10 @@ export class MarineQuoteComponent implements OnInit, OnDestroy
             .pipe(debounceTime(400), distinctUntilChanged(), takeUntil(this.destroy$))
             .subscribe(term => {
                 this.offset = 0;
-                this.countries = [];
+                // Preserve the currently selected country
+                const selectedCountryId = this.quotationForm.get('origin')?.value;
+                const selectedCountry = this.countries.find(c => c.id === selectedCountryId);
+                this.countries = selectedCountry ? [selectedCountry] : [];
                 this.currentSearchTerm = term || '';
                 this.hasMore = true;
                 this.loadCountries(true);
@@ -1605,7 +1709,9 @@ export class MarineQuoteComponent implements OnInit, OnDestroy
             .pipe(debounceTime(400), distinctUntilChanged(), takeUntil(this.destroy$))
             .subscribe(term => {
                 this.offsetLast = 0;
-                this.origincountries = [];
+                // Preserve the currently selected country
+                const selectedCountry = this.shipmentForm.get('countryOfOrigin')?.value;
+                this.origincountries = (selectedCountry && selectedCountry.id) ? [selectedCountry] : [];
                 this.currentSearchTerm2 = term || '';
                 this.hasMoreLast = true;
                 this.loadShippingCountries(true);
@@ -1723,7 +1829,22 @@ export class MarineQuoteComponent implements OnInit, OnDestroy
             .subscribe({
                 next: (res) => {
                     const newItems = res?.pageItems  || [];
-                    this.origincountries = reset ? newItems : [...this.origincountries, ...newItems];
+                    if (reset) {
+                        // When resetting, preserve the selected country and add new items
+                        const selectedCountry = this.shipmentForm.get('countryOfOrigin')?.value;
+                        if (selectedCountry && selectedCountry.id) {
+                            // Remove selected country from newItems if it exists to avoid duplicates
+                            const filteredNewItems = newItems.filter(c => c.id !== selectedCountry.id);
+                            this.origincountries = [selectedCountry, ...filteredNewItems];
+                        } else {
+                            this.origincountries = newItems;
+                        }
+                    } else {
+                        // When appending, just add new items (avoiding duplicates)
+                        const existingIds = new Set(this.origincountries.map(c => c.id));
+                        const uniqueNewItems = newItems.filter(c => !existingIds.has(c.id));
+                        this.origincountries = [...this.origincountries, ...uniqueNewItems];
+                    }
                     if (newItems.length < this.limit) this.hasMoreLast = false;
                     this.offsetLast += this.limit;
                     this.loading = false;
@@ -1749,7 +1870,23 @@ export class MarineQuoteComponent implements OnInit, OnDestroy
             .subscribe({
                 next: (res) => {
                     const newItems = res?.pageItems  || [];
-                    this.countries = reset ? newItems : [...this.countries, ...newItems];
+                    if (reset) {
+                        // When resetting, preserve the selected country and add new items
+                        const selectedCountryId = this.quotationForm.get('origin')?.value;
+                        const selectedCountry = this.countries.find(c => c.id === selectedCountryId);
+                        if (selectedCountry) {
+                            // Remove selected country from newItems if it exists to avoid duplicates
+                            const filteredNewItems = newItems.filter(c => c.id !== selectedCountry.id);
+                            this.countries = [selectedCountry, ...filteredNewItems];
+                        } else {
+                            this.countries = newItems;
+                        }
+                    } else {
+                        // When appending, just add new items (avoiding duplicates)
+                        const existingIds = new Set(this.countries.map(c => c.id));
+                        const uniqueNewItems = newItems.filter(c => !existingIds.has(c.id));
+                        this.countries = [...this.countries, ...uniqueNewItems];
+                    }
                     if (newItems.length < this.limit) this.hasMore = false;
                     this.offset += this.limit;
                     this.loading = false;
@@ -2338,5 +2475,41 @@ export class MarineQuoteComponent implements OnInit, OnDestroy
         });
 
 
+    }
+
+    onMpesaCodeInput(event: Event): void {
+        const input = event.target as HTMLInputElement;
+        // Convert to uppercase and remove spaces
+        input.value = input.value.toUpperCase().replace(/\s/g, '');
+        // Remove any non-alphanumeric characters
+        input.value = input.value.replace(/[^A-Z0-9]/g, '');
+        // Limit to 10 characters
+        if (input.value.length > 10) {
+            input.value = input.value.slice(0, 10);
+        }
+        this.shipmentForm.get('mpesaCode')?.setValue(input.value);
+
+        // Reset validation states when user is typing
+        this.mpesaCodeError = null;
+        this.mpesaCodeValid = false;
+    }
+
+    validateMpesaPayment(): void {
+        if (this.validatingPayment) return;
+
+        const mpesaCode = this.shipmentForm.get('mpesaCode')?.value;
+        if (!mpesaCode || mpesaCode.length !== 10) {
+            this.mpesaCodeError = 'Please enter a valid 10-character M-PESA transaction code';
+            return;
+        }
+
+        // Basic format validation for M-PESA codes (typically start with letters)
+        if (!/^[A-Z]{2,3}[A-Z0-9]{7,8}$/.test(mpesaCode)) {
+            this.mpesaCodeError = 'Invalid M-PESA code format. Please check and try again.';
+            return;
+        }
+
+        this.validatingPayment = true;
+        this.mpesaCodeError = null;
     }
 }

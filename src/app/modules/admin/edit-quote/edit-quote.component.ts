@@ -18,6 +18,7 @@ import {
 import { MatStep, MatStepLabel, MatStepper } from '@angular/material/stepper';
 import { MatOption, MatSelect } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { MatSelectSearchComponent } from 'ngx-mat-select-search';
 import { MatInputModule } from '@angular/material/input';
 import { MatRadioButton, MatRadioGroup } from '@angular/material/radio';
@@ -112,6 +113,10 @@ export class EditMarineQuoteComponent implements OnInit, OnDestroy
     isProcessPayment: boolean = false;
     isProcessingStk = false;
     paymentSuccess?: boolean;
+    paymentMethod: 'stk' | 'paybill' = 'stk';
+    validatingPayment = false;
+    mpesaCodeError: string | null = null;
+    mpesaCodeValid = false;
     isMakePaymentNow = false;
     isLoadingCounties = false;
     isLoading = false;
@@ -164,6 +169,13 @@ export class EditMarineQuoteComponent implements OnInit, OnDestroy
     duplicateFileErrors: { [key: string]: string } = {};
     userDocs?: UserDocumentData;
 
+    // Document preview modal state (Step 3 uploads)
+    showDocumentPreviewModal = false;
+    previewDocumentUrl: string | null = null;
+    previewSafeUrl: SafeResourceUrl | null = null;
+    previewDocumentName = '';
+    previewDocumentType = '';
+
     filteredDischargePorts: ReplaySubject<any[]> = new ReplaySubject<any[]>(1);
     filteredCounties: ReplaySubject<any[]> = new ReplaySubject<any[]>(1);
     filteredCargoTypes: ReplaySubject<any[]> = new ReplaySubject<any[]>(1);
@@ -175,7 +187,8 @@ export class EditMarineQuoteComponent implements OnInit, OnDestroy
                 private datePipe: DatePipe,
                 private route: ActivatedRoute,
                 private router: Router,
-                private _snackBar: MatSnackBar) { }
+                private _snackBar: MatSnackBar,
+                private sanitizer: DomSanitizer) { }
 
 
     ngOnDestroy(): void {
@@ -250,7 +263,13 @@ export class EditMarineQuoteComponent implements OnInit, OnDestroy
             .pipe(takeUntil(this.destroy$))
             .subscribe((mode) => {
                 if (mode) {
+                    // Preserve the selected country before resetting
+                    const selectedCountry = this.shipmentForm.get('countryOfOrigin')?.value;
                     this.countryFilterCtrl2.setValue('');
+                    // Keep the selected country in the list if it exists
+                    if (selectedCountry) {
+                        this.origincountries = [selectedCountry];
+                    }
                     this.loadShippingCountries(true);
                 }
             });
@@ -259,7 +278,9 @@ export class EditMarineQuoteComponent implements OnInit, OnDestroy
             .pipe(debounceTime(400), distinctUntilChanged(), takeUntil(this.destroy$))
             .subscribe(term => {
                 this.offsetLast = 0;
-                this.origincountries = [];
+                // Preserve the currently selected country
+                const selectedCountry = this.shipmentForm.get('countryOfOrigin')?.value;
+                this.origincountries = selectedCountry ? [selectedCountry] : [];
                 this.currentSearchTerm2 = term || '';
                 this.hasMoreLast = true;
                 this.loadShippingCountries(true);
@@ -272,7 +293,10 @@ export class EditMarineQuoteComponent implements OnInit, OnDestroy
             .subscribe((searchTerm) => {
                 console.log('searchTerm...',searchTerm);
                 this.portOffset = 0;
-                this.loadingPorts = [];
+                // Preserve the selected port
+                const selectedPortId = this.shipmentForm.get('loadingPort')?.value;
+                const selectedPort = this.loadingPorts.find(p => p.id === selectedPortId);
+                this.loadingPorts = selectedPort ? [selectedPort] : [];
                 this.portCurrentSearchTerm = searchTerm || '';
                 this.portHasMore = true;
                 this.fetchLoadingPorts(true);
@@ -281,7 +305,14 @@ export class EditMarineQuoteComponent implements OnInit, OnDestroy
         this.dischargePortSearchCtrl.valueChanges
             .pipe(takeUntil(this.destroy$), debounceTime(300))
             .subscribe((searchTerm) => {
+                // Preserve the selected discharge port
+                const selectedPortId = this.shipmentForm.get('portOfDischarge')?.value;
+                const selectedPort = this.dischargePorts.find(p => (p.id || p.portId || p.portid) === selectedPortId);
                 this.dischargePortPage = 0;
+                // Keep selected port in list
+                if (selectedPort) {
+                    this.dischargePorts = [selectedPort];
+                }
                 this.fetchPorts( searchTerm || '');
             });
 
@@ -344,6 +375,11 @@ export class EditMarineQuoteComponent implements OnInit, OnDestroy
         });
     }
 
+    onSubmitPayLater(): void {
+        // For now, reuse the same submission flow but allow the user to complete payment later
+        this.onSubmit();
+    }
+
     private filterCounties(): void {
         if (!this.counties) {
             this.filteredCounties.next([]);
@@ -351,8 +387,17 @@ export class EditMarineQuoteComponent implements OnInit, OnDestroy
         }
 
         let search = this.countySearchCtrl.value;
+        const selectedCountyId = this.shipmentForm.get('finalDestination')?.value;
+        const selectedCounty = this.counties.find(c => c.id === selectedCountyId);
+
         if (!search) {
-            this.filteredCounties.next(this.counties.slice());
+            // If no search, show all counties (with selected at top if it exists)
+            if (selectedCounty) {
+                const otherCounties = this.counties.filter(c => c.id !== selectedCountyId);
+                this.filteredCounties.next([selectedCounty, ...otherCounties]);
+            } else {
+                this.filteredCounties.next(this.counties.slice());
+            }
             return;
         }
 
@@ -363,6 +408,11 @@ export class EditMarineQuoteComponent implements OnInit, OnDestroy
             return name.includes(search);
         });
 
+        // Ensure selected county appears in filtered results even if it doesn't match search
+        if (selectedCounty && !filtered.find(c => c.id === selectedCountyId)) {
+            filtered.unshift(selectedCounty);
+        }
+
         this.filteredCounties.next(filtered);
     }
 
@@ -371,15 +421,31 @@ export class EditMarineQuoteComponent implements OnInit, OnDestroy
             return;
         }
         let search = this.cargoTypeFilterCtrl.value;
+        const selectedCargoValue = this.shipmentForm.get('salesCategory')?.value;
+        const selectedCargo = this.filteredMarineCargoTypess.find(c => c.ctname === selectedCargoValue);
+
         if (!search) {
-            this.filteredMarineCargoTypes = this.marineCargoTypes.slice();
+            // If no search, show all cargo types (with selected at top if it exists)
+            if (selectedCargo) {
+                const otherCargos = this.marineCargoTypes.filter(c => c.id !== selectedCargo.id);
+                this.filteredMarineCargoTypes = [selectedCargo, ...otherCargos];
+            } else {
+                this.filteredMarineCargoTypes = this.marineCargoTypes.slice();
+            }
             return;
         } else {
             search = search.toLowerCase();
         }
-        this.filteredMarineCargoTypes = this.marineCargoTypes.filter(cargoType =>
+        const filtered = this.marineCargoTypes.filter(cargoType =>
             cargoType.ctname.toLowerCase().indexOf(search) > -1
         );
+
+        // Ensure selected cargo appears in filtered results even if it doesn't match search
+        if (selectedCargo && !filtered.find(c => c.id === selectedCargo.id)) {
+            filtered.unshift(selectedCargo);
+        }
+
+        this.filteredMarineCargoTypes = filtered;
     }
 
     private fetchMarineProducts(): void {
@@ -414,6 +480,10 @@ export class EditMarineQuoteComponent implements OnInit, OnDestroy
         this.quotationService.getQuoteById(this.quoteId).subscribe({
             next: (res) => {
                 console.log(res);
+                if( res?.shippingId) {
+                    this.applicationId = res?.shippingId;
+                    this.applicationSubmitted = true;
+                }
                 this.isLoading = false;
                 this.quote = res;
                 this.quoteResult =this.quoteResult = {
@@ -435,7 +505,47 @@ export class EditMarineQuoteComponent implements OnInit, OnDestroy
                         this.fetchProspectDocuments(res.prospectId);
                     }
                 }
-                this.shipmentForm.get('modeOfShipment')?.setValue(''+res.shippingmodeId);
+                // Fetch and set the country FIRST before setting mode (to avoid race condition)
+                const setCountryAndMode = (country: Country) => {
+                    // Add country to the list first
+                    this.origincountries = [
+                        country,
+                        ...this.origincountries.filter(c => c.id !== country.id)
+                    ];
+                    // Set the country value
+                    this.shipmentForm.get('countryOfOrigin')?.setValue(country, { emitEvent: false });
+                    // Now set the mode which will trigger country loading, but preserve our selected country
+                    this.shipmentForm.get('modeOfShipment')?.setValue(''+res.shippingmodeId);
+
+                    // Manually trigger port loading since we set country with emitEvent: false
+                    this.portOffset = 0;
+                    this.loadingPorts = [];
+                    this.portHasMore = true;
+                    this.fetchLoadingPorts(true);
+
+                    // Also load discharge ports
+                    this.dischargePortPage = 0;
+                    this.fetchPorts('');
+                };
+
+                // Always fetch the country by ID to ensure it's loaded
+                this.userService.getCountryById(Number(res.originCountry), String(res.shippingmodeId)).subscribe({
+                    next: (country) => {
+                        setCountryAndMode(country);
+                    },
+                    error: (err) => {
+                        console.error('Error fetching country:', err);
+                        // Fallback: try to find in existing list and set mode anyway
+                        let selectedCountry = this.origincountries.find(c => c.id === Number(res.originCountry));
+                        if (selectedCountry) {
+                            setCountryAndMode(selectedCountry);
+                        } else {
+                            // Just set the mode if country fetch fails
+                            this.shipmentForm.get('modeOfShipment')?.setValue(''+res.shippingmodeId);
+                        }
+                    }
+                });
+
                 const selectedCategory = this.marineCategories.find(c => c.id === res.catId);
                 this.shipmentForm.get('selectCategory')?.setValue(selectedCategory.catname);
 
@@ -455,29 +565,6 @@ export class EditMarineQuoteComponent implements OnInit, OnDestroy
                         this.shipmentForm.get('sumInsured')?.setValue(res.sumassured);
                     });
                 this.shipmentForm.get('agreeToTerms')?.setValue(true, { emitEvent: false });
-                // this.onDropdownOpen('categories');
-
-
-                let selectedCountry = this.origincountries.find(c => c.id === Number(res.originCountry));
-                const setCountryAndProceed = (country: Country) => {
-                    this.origincountries = [
-                        country,
-                        ...this.origincountries.filter(c => c.id !== country.id)
-                    ];
-                    this.shipmentForm.get('countryOfOrigin')?.setValue(country);
-                };
-
-                if (selectedCountry) {
-                    setCountryAndProceed(selectedCountry);
-                } else {
-                    this.userService.getCountryById( Number(res.originCountry), String(res.shippingmodeId)).subscribe({
-                        next: (country) => {
-                            setCountryAndProceed(country);
-                        },
-                        error: (err) => {
-                        }
-                    });
-                }
             },
             error: (err) => {
                 this.isLoading = false;
@@ -493,15 +580,31 @@ export class EditMarineQuoteComponent implements OnInit, OnDestroy
             return;
         }
         let search = this.categoryFilterCtrl2.value;
+        const selectedCategoryValue = this.shipmentForm.get('selectCategory')?.value;
+        const selectedCategory = this.marineCategories.find(c => c.catname === selectedCategoryValue);
+
         if (!search) {
-            this.filteredMarineCategories = this.marineCategories.slice();
+            // If no search, show all categories (with selected at top if it exists)
+            if (selectedCategory) {
+                const otherCategories = this.marineCategories.filter(c => c.id !== selectedCategory.id);
+                this.filteredMarineCategories = [selectedCategory, ...otherCategories];
+            } else {
+                this.filteredMarineCategories = this.marineCategories.slice();
+            }
             return;
         } else {
             search = search.toLowerCase();
         }
-        this.filteredMarineCategories = this.marineCategories.filter(category =>
+        const filtered = this.marineCategories.filter(category =>
             category.catname.toLowerCase().indexOf(search) > -1
         );
+
+        // Ensure selected category appears in filtered results even if it doesn't match search
+        if (selectedCategory && !filtered.find(c => c.id === selectedCategory.id)) {
+            filtered.unshift(selectedCategory);
+        }
+
+        this.filteredMarineCategories = filtered;
     }
 
     private initForms(): void {
@@ -563,9 +666,11 @@ export class EditMarineQuoteComponent implements OnInit, OnDestroy
             console.warn('❌ Invalid form fields:', invalidFields);
 
 
-            this._snackBar.open('Please fill in all required fields correctly', 'Close', {
-                duration: 5000,
-                panelClass: ['error-snackbar']
+            this._snackBar.open('A few fields need your attention. Please review the highlights.', 'Close', {
+                duration: 4000,
+                horizontalPosition: 'right',
+                verticalPosition: 'top',
+                panelClass: ['marine-quote-snackbar']
             });
             return;
         }
@@ -794,9 +899,21 @@ export class EditMarineQuoteComponent implements OnInit, OnDestroy
             next: (response) => {
                 const newPorts = response?.pageItems || response?.data || [];
                 if (this.dischargePortPage === 0) {
-                    this.dischargePorts = newPorts;
+                    // When resetting (page 0), preserve the selected port
+                    const selectedPortId = this.shipmentForm.get('portOfDischarge')?.value;
+                    const selectedPort = this.dischargePorts.find(p => (p.id || p.portId || p.portid) === selectedPortId);
+                    if (selectedPort) {
+                        // Remove selected port from newPorts if it exists to avoid duplicates
+                        const filteredNewPorts = newPorts.filter(p => (p.id || p.portId || p.portid) !== selectedPortId);
+                        this.dischargePorts = [selectedPort, ...filteredNewPorts];
+                    } else {
+                        this.dischargePorts = newPorts;
+                    }
                 } else {
-                    this.dischargePorts = [...this.dischargePorts, ...newPorts];
+                    // When appending, avoid duplicates
+                    const existingIds = new Set(this.dischargePorts.map(p => p.id || p.portId || p.portid));
+                    const uniqueNewPorts = newPorts.filter(p => !existingIds.has(p.id || p.portId || p.portid));
+                    this.dischargePorts = [...this.dischargePorts, ...uniqueNewPorts];
                 }
                 this.filteredDischargePorts.next(this.dischargePorts.slice());
                 this.isLoadingDischargePorts = false;
@@ -869,14 +986,33 @@ export class EditMarineQuoteComponent implements OnInit, OnDestroy
     private fetchLoadingPorts(reset = false): void {
         const modeValue = this.shipmentForm.get('modeOfShipment')?.value;
         const modeId = modeValue === '1' ? 1 : modeValue === '2' ? 2 : 1;
-        const countryLoadingVal = this.shipmentForm.get('countryOfOrigin')?.value.id;
+        const countryLoadingVal = this.shipmentForm.get('countryOfOrigin')?.value?.id;
+        if (!countryLoadingVal) {
+            return; // Don't fetch if no country is selected
+        }
         this.portLoading = true;
         this.userService.getPorts(countryLoadingVal,''+modeId,this.portOffset, this.limit, this.portCurrentSearchTerm)
             .pipe(takeUntil(this.destroy$))
             .subscribe({
                 next: (res) => {
                     const newItems = res?.pageItems  || [];
-                    this.loadingPorts = reset ? newItems : [...this.loadingPorts, ...newItems];
+                    if (reset) {
+                        // When resetting, preserve the selected port and add new items
+                        const selectedPortId = this.shipmentForm.get('loadingPort')?.value;
+                        const selectedPort = this.loadingPorts.find(p => p.id === selectedPortId);
+                        if (selectedPort) {
+                            // Remove selected port from newItems if it exists to avoid duplicates
+                            const filteredNewItems = newItems.filter(p => p.id !== selectedPort.id);
+                            this.loadingPorts = [selectedPort, ...filteredNewItems];
+                        } else {
+                            this.loadingPorts = newItems;
+                        }
+                    } else {
+                        // When appending, just add new items (avoiding duplicates)
+                        const existingIds = new Set(this.loadingPorts.map(p => p.id));
+                        const uniqueNewItems = newItems.filter(p => !existingIds.has(p.id));
+                        this.loadingPorts = [...this.loadingPorts, ...uniqueNewItems];
+                    }
                     if (newItems.length < this.limit) this.portHasMore = false;
                     this.portOffset += this.limit;
                     this.portLoading = false;
@@ -940,7 +1076,22 @@ export class EditMarineQuoteComponent implements OnInit, OnDestroy
             .subscribe({
                 next: (res) => {
                     const newItems = res?.pageItems  || [];
-                    this.origincountries = reset ? newItems : [...this.origincountries, ...newItems];
+                    if (reset) {
+                        // When resetting, preserve the selected country and add new items
+                        const selectedCountry = this.shipmentForm.get('countryOfOrigin')?.value;
+                        if (selectedCountry) {
+                            // Remove selected country from newItems if it exists to avoid duplicates
+                            const filteredNewItems = newItems.filter(c => c.id !== selectedCountry.id);
+                            this.origincountries = [selectedCountry, ...filteredNewItems];
+                        } else {
+                            this.origincountries = newItems;
+                        }
+                    } else {
+                        // When appending, just add new items (avoiding duplicates)
+                        const existingIds = new Set(this.origincountries.map(c => c.id));
+                        const uniqueNewItems = newItems.filter(c => !existingIds.has(c.id));
+                        this.origincountries = [...this.origincountries, ...uniqueNewItems];
+                    }
                     if (newItems.length < this.limit) this.hasMoreLast = false;
                     this.offsetLast += this.limit;
                     this.loading = false;
@@ -1182,6 +1333,40 @@ export class EditMarineQuoteComponent implements OnInit, OnDestroy
         }
     }
 
+    openDocumentPreview(controlName: string, event?: Event): void {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+
+        const file: File | null = this.shipmentForm.get(controlName)?.value;
+        if (!file) {
+            return;
+        }
+
+        if (this.previewDocumentUrl) {
+            URL.revokeObjectURL(this.previewDocumentUrl);
+        }
+
+        const objectUrl = URL.createObjectURL(file);
+        this.previewDocumentUrl = objectUrl;
+        this.previewSafeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(objectUrl);
+        this.previewDocumentName = file.name;
+        this.previewDocumentType = file.type;
+        this.showDocumentPreviewModal = true;
+    }
+
+    closeDocumentPreview(): void {
+        if (this.previewDocumentUrl) {
+            URL.revokeObjectURL(this.previewDocumentUrl);
+            this.previewDocumentUrl = null;
+        }
+        this.previewSafeUrl = null;
+        this.showDocumentPreviewModal = false;
+        this.previewDocumentName = '';
+        this.previewDocumentType = '';
+    }
+
     onScrollPorts(event: Event) {
         const panel = event.target as HTMLElement;
         const threshold = 200;
@@ -1308,6 +1493,42 @@ export class EditMarineQuoteComponent implements OnInit, OnDestroy
         }
 
         return sanitized;
+    }
+
+    onMpesaCodeInput(event: Event): void {
+        const input = event.target as HTMLInputElement;
+        // Convert to uppercase and remove spaces
+        input.value = input.value.toUpperCase().replace(/\s/g, '');
+        // Remove any non-alphanumeric characters
+        input.value = input.value.replace(/[^A-Z0-9]/g, '');
+        // Limit to 10 characters
+        if (input.value.length > 10) {
+            input.value = input.value.slice(0, 10);
+        }
+        this.shipmentForm.get('mpesaCode')?.setValue(input.value);
+
+        // Reset validation states when user is typing
+        this.mpesaCodeError = null;
+        this.mpesaCodeValid = false;
+    }
+
+    validateMpesaPayment(): void {
+        if (this.validatingPayment) return;
+
+        const mpesaCode = this.shipmentForm.get('mpesaCode')?.value;
+        if (!mpesaCode || mpesaCode.length !== 10) {
+            this.mpesaCodeError = 'Please enter a valid 10-character M-PESA transaction code';
+            return;
+        }
+
+        // Basic format validation for M-PESA codes (typically start with letters)
+        if (!/^[A-Z]{2,3}[A-Z0-9]{7,8}$/.test(mpesaCode)) {
+            this.mpesaCodeError = 'Invalid M-PESA code format. Please check and try again.';
+            return;
+        }
+
+        this.validatingPayment = true;
+        this.mpesaCodeError = null;
     }
 
 }

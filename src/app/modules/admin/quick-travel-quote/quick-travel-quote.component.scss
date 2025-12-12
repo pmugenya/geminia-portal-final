@@ -1,0 +1,101 @@
+// Country search panel styling
+.country-search-panel {
+    .search-option {
+        height: auto !important;
+        padding: 0 !important;
+        pointer-events: none;
+
+        input {
+            pointer-events: auto;
+            width: 100% !important;
+            box-sizing: border-box !important;
+        }
+    }
+
+    .mat-mdc-option {
+        padding-left: 16px !important;
+        padding-right: 16px !important;
+    }
+}
+
+// Plan card styling
+   .plan-card {
+       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+       position: relative;
+
+       &:hover {
+           transform: translateY(-4px);
+       }
+
+       &::before {
+           content: '';
+           position: absolute;
+           top: 0;
+           left: 0;
+           right: 0;
+           bottom: 0;
+           border-radius: inherit;
+           transition: opacity 0.3s ease;
+           opacity: 0;
+       }
+
+       &:hover::before {
+           opacity: 1;
+       }
+   }
+
+// Stepper customization
+   .fuse-mat-stepper {
+       .mat-horizontal-stepper-header {
+           pointer-events: none;
+       }
+
+       .mat-step-header {
+           &.cdk-keyboard-focused,
+           &.cdk-program-focused,
+           &:hover {
+               background-color: transparent;
+           }
+       }
+   }
+
+// Form field customizations
+   .fuse-mat-no-subscript {
+       .mat-mdc-form-field-subscript-wrapper {
+           display: none;
+       }
+   }
+
+.fuse-mat-dense {
+    .mat-mdc-form-field-infix {
+        padding-top: 12px;
+        padding-bottom: 12px;
+    }
+}
+
+// Icon sizes
+   .icon-size-4 {
+       width: 1rem !important;
+       height: 1rem !important;
+       font-size: 1rem !important;
+   }
+
+.icon-size-5 {
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+    font-size: 1.25rem !important;
+}
+
+.icon-size-12 {
+    width: 3rem !important;
+    height: 3rem !important;
+    font-size: 3rem !important;
+}
+
+// Loading spinner in button
+   button {
+       mat-spinner {
+           display: inline-block;
+           vertical-align: middle;
+       }
+   }

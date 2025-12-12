@@ -2,7 +2,7 @@ import { Component, Inject } from '@angular/core';
 import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatFormField } from '@angular/material/form-field';
-import { NgClass } from '@angular/common';
+import { DatePipe, NgClass, NgIf } from '@angular/common';
 import { MatDatepicker, MatDatepickerInput, MatDatepickerToggle } from '@angular/material/datepicker';
 import { CustomValidators } from '../../../core/validators/custom.validators';
 import { maxWords, minWords, noWhitespaceValidator } from '../../../core/validators/min-words';
@@ -13,10 +13,13 @@ import { ThousandsSeparatorValueAccessor } from '../../../core/directives/thousa
     selector: 'app-shipment-request-modal',
     standalone: true,
     templateUrl: './shipment-request-modal.component.html',
+    styleUrls: ['./shipment-request-modal.component.scss'],
     imports: [
         ReactiveFormsModule,
         MatFormField,
+        NgIf,
         NgClass,
+        DatePipe,
         MatDatepickerInput,
         MatDatepickerToggle,
         MatDatepicker,
@@ -34,6 +37,8 @@ export class ShipmentRequestModalComponent {
     exportRequestForm!: FormGroup;
     highRiskRequestForm!: FormGroup;
     minDate = new Date();
+    today: Date = new Date();
+    showDataPrivacyModal = false;
 
     constructor(
         private dialogRef: MatDialogRef<ShipmentRequestModalComponent>,
@@ -43,8 +48,13 @@ export class ShipmentRequestModalComponent {
         console.log(data);
         this.isExport = data.isExport;
         this.showExportModal = data.showExportModal;
+
+        // Build base forms
         this.exportRequestForm = this.createExportRequestForm();
         this.highRiskRequestForm = this.createHighRiskRequestForm();
+
+        // Populate export destination list (exclude Kenya as origin by default)
+        this.exportDestinationCountries = this.allCountriesList.filter(c => c !== 'Kenya');
     }
 
     close() {
@@ -192,6 +202,11 @@ export class ShipmentRequestModalComponent {
             event.preventDefault();
             event.stopPropagation();
         }
+        this.showDataPrivacyModal = true;
+    }
+
+    closePrivacyModal(): void {
+        this.showDataPrivacyModal = false;
     }
 
 }

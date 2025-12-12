@@ -235,7 +235,9 @@ export class ViewMarineQuote implements OnInit {
         this.paid = data.paid;
         this.id = data.id;
         this.certNo =data.certNo;
-        this.certErrorLog = data.certErrorLog;
+        if(data.certErrorLog){
+            this.certErrorLog ='We encountered an issue while trying to generate your certificate. Please click on Generate Cert to retry';
+        }
         this.originCountryName = data.originCountryName;
         this.originPortName = data.originPortName;
         this.destCountryName = data.destCountryName;
@@ -358,13 +360,31 @@ export class ViewMarineQuote implements OnInit {
                 this.validationToastRef = this.showToast(
                     ' Certificate Generated successfully. Cert No '+res.certNo
                 );
+                this.quoteService.retrieveOneTransaction(Number(this.quoteId)).subscribe({
+                    next: (data) => {
+                        this.setTransactionData(data);
+                        // Update certNo if available
+                        if (data.erprefno) {
+                            this.certNo = data.erprefno;
+                        }
+                    },
+                    error: (err) => {
+                        console.error('Error retrieving transaction data:', err);
+                    }
+                });
                 this.isProcessing = false;
             },
             error: (err) => {
                 console.error('Error generating certificate:', err);
-                this.validationToastRef = this.showToast(
-                    ' Certificate Generation Failed .'+err?.error.message
-                );
+                this.certificateInlineError =
+                    'We encountered an issue while trying to generate your certificate. Please click on "Generate Cert" to retry.';
+
+                // Auto-hide inline message after 4 seconds
+                setTimeout(() => {
+                    this.certificateInlineError = null;
+                    this.cdr.markForCheck();
+                }, 4000);
+
                 this.isProcessing = false;
             }
         });

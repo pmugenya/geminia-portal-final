@@ -1,20 +1,20 @@
-<div class="flex flex-col flex-auto w-full p-6 md:p-10">
+<div class="flex flex-col flex-auto w-full p-4 sm:p-6 md:p-10">
     <div class="bg-card rounded-xl shadow w-full">
         <!-- Header -->
-        <div class="p-6 border-b flex items-center justify-between">
-            <h2 class="text-xl font-semibold">Marine Quote Details</h2>
+        <div class="p-4 sm:p-6 border-b flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <h2 class="text-lg sm:text-xl font-semibold">Marine Quote Details</h2>
 
             <button
                 type="button"
                 (click)="goToDashboard()"
-                class="inline-flex items-center gap-2 px-4 py-1 rounded-full border text-sm font-medium bg-white header-close-btn">
+                class="inline-flex items-center justify-center gap-2 px-4 py-1 rounded-full border text-sm font-medium bg-white header-close-btn">
                 <span class="text-base font-normal" aria-hidden="true">&times;</span>
                 <span>Close</span>
             </button>
         </div>
 
         <!-- Stepper -->
-        <div class="p-6">
+        <div class="p-4 sm:p-6">
             <mat-horizontal-stepper [linear]="true" #stepper class="w-full" (selectionChange)="onStepChange($event)">
                 <!-- Step 1 -->
                 <mat-step [stepControl]="quotationForm">
@@ -34,11 +34,11 @@
                         <div *ngIf="user.userType==='A'" class="mb-6 rounded-lg border border-gray-200 bg-white p-4">
 
                             <!-- Search by KRA PIN -->
-                            <div class="mb-4 flex items-center gap-2">
+                            <div class="mb-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                                 <input
                                     type="text"
                                     placeholder="Search by KRA PIN..."
-                                    class="w-64 rounded-md border border-gray-300 px-3 py-2"
+                                    class="w-full sm:w-64 rounded-md border border-gray-300 px-3 py-2"
                                     formControlName="searchPin"
                                 />
                                 <button
@@ -195,57 +195,57 @@
 
 
                         <div class="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
-                                <!-- Updated Country of Origin with Searchable Dropdown -->
-                                <div>
-                                    <label class="mb-2 block text-base font-medium text-gray-700">Country of Origin <span class="text-red-500">*</span></label>
-                                    <mat-form-field appearance="outline" class="w-full country-select">
-                                        <mat-select formControlName="origin" #countrySelect2
-                                                    (openedChange)="onSelectOpen($event)"
-                                                    (selectionChange)="onOriginChange($event)"
-                                                    (scroll)="onScroll($event)"
-                                                    [disabled]="loading">
-                                            <div class="search-container flex items-center px-2" (click)="$event.stopPropagation()">
-                                                <mat-icon class="text-gray-400">search</mat-icon>
-                                                <input
-                                                    matInput
-                                                    type="text"
-                                                    placeholder="Search..."
-                                                    [formControl]="countryFilterCtrl"
-                                                    (keydown)="$event.stopPropagation()"
-                                                />
-                                            </div>
+                            <!-- Updated Country of Origin with Searchable Dropdown -->
+                            <div>
+                                <label class="mb-2 block text-base font-medium text-gray-700">Country of Origin <span class="text-red-500">*</span></label>
+                                <mat-form-field appearance="outline" class="w-full country-select mat-small">
+                                    <mat-select formControlName="origin" #countrySelect2
+                                                (openedChange)="onSelectOpen($event)"
+                                                (selectionChange)="onOriginChange($event)"
+                                                (scroll)="onScroll($event)"
+                                                [disabled]="loading">
+                                        <div class="search-container flex items-center px-2" (click)="$event.stopPropagation()">
+                                            <mat-icon class="text-gray-400">search</mat-icon>
+                                            <input
+                                                matInput
+                                                type="text"
+                                                placeholder="Search..."
+                                                [formControl]="countryFilterCtrl"
+                                                (keydown)="$event.stopPropagation()"
+                                            />
+                                        </div>
 
-                                            <mat-option *ngFor="let country of countries" [value]="country.id">
-                                                {{ country.countryname }}
-                                            </mat-option>
+                                        <mat-option *ngFor="let country of countries" [value]="country.id">
+                                            {{ country.countryname }}
+                                        </mat-option>
 
-                                            <mat-option *ngIf="loading">
-                                                <mat-progress-spinner diameter="20" mode="indeterminate"></mat-progress-spinner>
-                                            </mat-option>
-                                        </mat-select>
-                                    </mat-form-field>
+                                        <mat-option *ngIf="loading">
+                                            <mat-progress-spinner diameter="20" mode="indeterminate"></mat-progress-spinner>
+                                        </mat-option>
+                                    </mat-select>
+                                </mat-form-field>
 
 
-                                </div>
-
-                                <div>
-                                    <label class="mb-2 block text-base font-medium text-gray-700">Destination</label>
-                                    <input type="text" formControlName="destination" class="w-full rounded-md border-gray-300 bg-gray-100 px-3 py-2 text-gray-900 h-14" readonly/>
-                                </div>
                             </div>
 
-                            <div class="mb-6">
-                                <label class="mb-2 block text-base font-medium text-gray-700">Sum Insured (KES) <span class="text-red-500">*</span></label>
-                                <input
-                                    type="text"
-                                    formControlName="sumInsured"
-                                    appThousands
-                                    placeholder="00.00"
-                                    inputmode="numeric"
-                                    class="w-full rounded-md border bg-white px-3 py-2 text-base h-12 sum-insured-input"
-                                    [ngClass]="(quotationForm.get('sumInsured')?.invalid && quotationForm.get('sumInsured')?.touched) || !quotationForm.get('sumInsured')?.value ? 'border-red-500' : 'border-gray-300'"
-                                />
+                            <div>
+                                <label class="mb-2 block text-base font-medium text-gray-700">Destination</label>
+                                <input type="text" formControlName="destination" class="w-full rounded-md border-gray-300 bg-gray-100 px-3 py-2 text-gray-900 h-14" readonly/>
                             </div>
+                        </div>
+
+                        <div class="mb-6">
+                            <label class="mb-2 block text-base font-medium text-gray-700">Sum Insured (KES) <span class="text-red-500">*</span></label>
+                            <input
+                                type="text"
+                                formControlName="sumInsured"
+                                appThousands
+                                placeholder="00.00"
+                                inputmode="numeric"
+                                class="w-full rounded-md border bg-white px-3 py-2 text-base h-12 sum-insured-input"
+                                [ngClass]="(quotationForm.get('sumInsured')?.invalid && quotationForm.get('sumInsured')?.touched) || !quotationForm.get('sumInsured')?.value ? 'border-red-500' : 'border-gray-300'"
+                            />
+                        </div>
 
                         <!-- Terms and Policy Consent -->
                         <div class="mt-6 space-y-2"
@@ -289,7 +289,6 @@
                 </mat-step>
 
                 <!-- Step 2 -->
-                <!-- Step 2 -->
                 <mat-step [stepControl]="coverageFormGroup">
                     <ng-template matStepLabel>Marine Quote Details</ng-template>
                     <div *ngIf="isLoading" class="flex flex-col items-center justify-center h-[60vh] w-full">
@@ -309,135 +308,126 @@
 
                         <!-- Step Title -->
 
-                        <div class="flex items-center justify-between border-b pb-4 mb-6" *ngIf="!isLoading && quote">
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b pb-4 mb-6 gap-3" *ngIf="!isLoading && quote">
                             <div>
-                                <h2 class="text-2xl font-semibold leading-8 tracking-tight">
+                                <h2 class="text-xl sm:text-2xl font-semibold leading-8 tracking-tight">
                                     Quote Details
                                 </h2>
                                 <div class="text-secondary text-sm font-medium tracking-tight">
                                     Reference: <span class="reference-pill">{{ quote?.refno }}</span>
                                 </div>
                             </div>
-                            <div class="flex items-center space-x-3">
+                            <div class="flex flex-wrap items-center gap-2 sm:gap-3">
                                 <button
                                     mat-flat-button
                                     color="primary"
-                                    class="download-btn"
+                                    class="download-btn flex-1 sm:flex-none"
                                     (click)="downloadQuote()">
-                                    <mat-icon svgIcon="heroicons_outline:arrow-down-tray" class="mr-2"></mat-icon>
-                                    Download Quote
+                                    <mat-icon svgIcon="heroicons_outline:arrow-down-tray" class="mr-1 sm:mr-2"></mat-icon>
+                                    <span class="hidden sm:inline">Download Quote</span>
+                                    <span class="sm:hidden">Download</span>
                                 </button>
                                 <button
                                     type="button"
-                                    class="inline-flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-medium bg-white text-gray-700 hover:bg-gray-50 share-trigger-btn"
+                                    class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 rounded-full border text-sm font-medium bg-white text-gray-700 hover:bg-gray-50 share-trigger-btn"
                                     (click)="openShareDialog()">
                                     <mat-icon class="icon-size-4">share</mat-icon>
-                                    <span>Share Quote</span>
+                                    <span>Share</span>
                                 </button>
                             </div>
                         </div>
 
                         <!-- Basic Info Section -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            <div class="bg-card rounded-xl shadow p-5">
-                                <h3 class="text-sm font-medium text-secondary mb-2">Customer</h3>
-                                <div class="text-lg font-semibold">{{ quote?.firstName }} {{ quote?.lastName }}</div>
-                                <div class="text-sm text-secondary">{{ quote?.email }}</div>
-                                <div class="text-sm text-secondary">{{ quote?.phoneNo }}</div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                            <div class="bg-card rounded-xl shadow p-4 sm:p-5">
+                                <h3 class="text-xs sm:text-sm font-medium text-secondary mb-2">Customer</h3>
+                                <div class="text-base sm:text-lg font-semibold">{{ quote?.firstName }} {{ quote?.lastName }}</div>
+                                <div class="text-xs sm:text-sm text-secondary break-all">{{ quote?.email }}</div>
+                                <div class="text-xs sm:text-sm text-secondary">{{ quote?.phoneNo }}</div>
                             </div>
 
-                            <div class="bg-card rounded-xl shadow p-5">
-                                <h3 class="text-sm font-medium text-secondary mb-2">Category & Product</h3>
-                                <div class="text-lg font-semibold">{{ quote?.category }}</div>
-                                <div class="text-sm text-secondary">{{ quote?.prodName }}</div>
+                            <div class="bg-card rounded-xl shadow p-4 sm:p-5">
+                                <h3 class="text-xs sm:text-sm font-medium text-secondary mb-2">Category & Product</h3>
+                                <div class="text-base sm:text-lg font-semibold">{{ quote?.category }}</div>
+                                <div class="text-xs sm:text-sm text-secondary">{{ quote?.prodName }}</div>
                             </div>
 
-                            <div class="bg-card rounded-xl shadow p-5">
-                                <h3 class="text-sm font-medium text-secondary mb-2">Status</h3>
+                            <div class="bg-card rounded-xl shadow p-4 sm:p-5">
+                                <h3 class="text-xs sm:text-sm font-medium text-secondary mb-2">Status</h3>
                                 <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium"
                                       [ngClass]="getStatusColor(quote?.status)">{{ quote?.status }}</span>
-                                <div class="text-sm text-secondary mt-2">
+                                <div class="text-xs sm:text-sm text-secondary mt-2">
                                     Expires on: <span class="font-medium">{{ quote?.expiryDate | date }}</span>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Shipping & Cargo Details -->
-                        <div class="bg-card rounded-xl shadow p-6 mt-8">
-                            <h3 class="text-lg font-semibold mb-4">Shipping & Cargo Details</h3>
-                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                <!-- Swapped: show Cargo Type first -->
+                        <div class="bg-card rounded-xl shadow p-4 sm:p-6 mt-6 sm:mt-8">
+                            <h3 class="text-base sm:text-lg font-semibold mb-4">Shipping & Cargo Details</h3>
+                            <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                                 <div>
-                                    <label class="text-sm text-secondary">Cargo Type</label>
-                                    <div class="font-medium">{{ quote?.cargotype }}</div>
+                                    <label class="text-xs sm:text-sm text-secondary">Cargo Type</label>
+                                    <div class="font-medium text-sm sm:text-base">{{ quote?.cargotype }}</div>
                                 </div>
-                                <!-- Swapped: show Shipping Mode next -->
                                 <div>
-                                    <label class="text-sm text-secondary">Shipping Mode</label>
-                                    <div class="font-medium">{{ quote?.shippingmode }}</div>
+                                    <label class="text-xs sm:text-sm text-secondary">Shipping Mode</label>
+                                    <div class="font-medium text-sm sm:text-base">{{ quote?.shippingmode }}</div>
                                 </div>
-                                <!-- Vessel hidden; use this slot for Packaging Type -->
                                 <div>
-                                    <label class="text-sm text-secondary">Packaging Type</label>
-                                    <div class="font-medium">{{ quote?.packagingtype }}</div>
+                                    <label class="text-xs sm:text-sm text-secondary">Packaging Type</label>
+                                    <div class="font-medium text-sm sm:text-base">{{ quote?.packagingtype }}</div>
                                 </div>
-                                <!-- Origin Country moved down -->
                                 <div>
-                                    <label class="text-sm text-secondary">Origin Country</label>
-                                    <div class="font-medium">{{ quote?.originId }}</div>
+                                    <label class="text-xs sm:text-sm text-secondary">Origin Country</label>
+                                    <div class="font-medium text-sm sm:text-base">{{ quote?.originId }}</div>
                                 </div>
-                                <!-- Destination moved down -->
                                 <div>
-                                    <label class="text-sm text-secondary">Destination</label>
-                                    <div class="font-medium">{{ quote?.destination }}</div>
+                                    <label class="text-xs sm:text-sm text-secondary">Destination</label>
+                                    <div class="font-medium text-sm sm:text-base">{{ quote?.destination }}</div>
                                 </div>
-                                <!-- Original Packaging/Vessel slot now hidden -->
                                 <div *ngIf="false">
-                                    <label class="text-sm text-secondary">Vessel Name</label>
-                                    <div class="font-medium">{{ quote?.vesselName }}</div>
+                                    <label class="text-xs sm:text-sm text-secondary">Vessel Name</label>
+                                    <div class="font-medium text-sm sm:text-base">{{ quote?.vesselName }}</div>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Financial Summary -->
-                        <div class="bg-card rounded-xl shadow p-6 mt-8">
-                            <h3 class="text-lg font-semibold mb-4">Premium Details</h3>
-                            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                        <div class="bg-card rounded-xl shadow p-4 sm:p-6 mt-6 sm:mt-8">
+                            <h3 class="text-base sm:text-lg font-semibold mb-4">Premium Details</h3>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
                                 <div>
-                                    <label class="text-sm text-secondary">Sum Assured</label>
-                                    <div class="font-medium">{{ quote?.sumassured | currency:'KES ' }}</div>
+                                    <label class="text-xs sm:text-sm text-secondary">Sum Assured</label>
+                                    <div class="font-medium text-sm sm:text-base">{{ quote?.sumassured | currency:'KES ' }}</div>
                                 </div>
                                 <div>
-                                    <label class="text-sm text-secondary">Premium</label>
-                                    <div class="font-medium">{{ quote?.premium | currency:'KES ' }}</div>
+                                    <label class="text-xs sm:text-sm text-secondary">Premium</label>
+                                    <div class="font-medium text-sm sm:text-base">{{ quote?.premium | currency:'KES ' }}</div>
                                 </div>
                                 <div>
-                                    <label class="text-sm text-secondary">PHCF</label>
-                                    <div class="font-medium">{{ quote?.phcf | currency:'KES ' }}</div>
+                                    <label class="text-xs sm:text-sm text-secondary">PHCF</label>
+                                    <div class="font-medium text-sm sm:text-base">{{ quote?.phcf | currency:'KES ' }}</div>
                                 </div>
                                 <div>
-                                    <label class="text-sm text-secondary">Training Levy</label>
-                                    <div class="font-medium">{{ quote?.traininglevy | currency:'KES ' }}</div>
+                                    <label class="text-xs sm:text-sm text-secondary">Training Levy</label>
+                                    <div class="font-medium text-sm sm:text-base">{{ quote?.traininglevy | currency:'KES ' }}</div>
                                 </div>
                                 <div>
-                                    <label class="text-sm text-secondary">Stamp Duty</label>
-                                    <div class="font-medium">{{ quote?.sd | currency:'KES ' }}</div>
+                                    <label class="text-xs sm:text-sm text-secondary">Stamp Duty</label>
+                                    <div class="font-medium text-sm sm:text-base">{{ quote?.sd | currency:'KES ' }}</div>
                                 </div>
-                                <div>
-                                    <div class="flex items-center text-sm text-secondary">
-                                        <span>Net Premium</span>
-                                        <span class="net-premium-amount">{{ quote?.netprem | currency:'KES ' }}</span>
-                                    </div>
+                                <div class="col-span-2 sm:col-span-1">
+                                    <label class="text-xs sm:text-sm text-secondary">Net Premium</label>
+                                    <div class="font-bold text-base sm:text-lg text-blue-600">{{ quote?.netprem | currency:'KES ' }}</div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Supporting Documents -->
-
                         <!-- Description Section -->
-                        <div class="bg-card rounded-xl shadow p-6 mt-8" *ngIf="false">
-                            <h3 class="text-lg font-semibold mb-3">Description</h3>
-                            <p class="text-secondary text-sm leading-relaxed">
+                        <div class="bg-card rounded-xl shadow p-4 sm:p-6 mt-6 sm:mt-8" *ngIf="false">
+                            <h3 class="text-base sm:text-lg font-semibold mb-3">Description</h3>
+                            <p class="text-secondary text-xs sm:text-sm leading-relaxed">
                                 {{ quote?.description || 'No description provided for this quote.' }}
                             </p>
                         </div>
@@ -466,7 +456,6 @@
 
 
                 <!-- Step 3 -->
-                <!-- Step 3 - Updated with better payment flow -->
                 <mat-step>
                     <ng-template matStepLabel>Marine Details & Payment</ng-template>
 
@@ -474,26 +463,26 @@
 
                         <!-- Step Title -->
                         <div class="mb-6">
-                            <h2 class="text-2xl sm:text-3xl font-bold text-gray-900 text-center sm:text-left">
+                            <h2 class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 text-center sm:text-left">
                                 {{ !applicationSubmitted ? 'Provide Marine Details to Submit' : 'Complete Your Payment' }}
                             </h2>
-                            <p class="text-gray-600 mt-2" *ngIf="!applicationSubmitted">
+                            <p class="text-gray-600 mt-2 text-sm sm:text-base" *ngIf="!applicationSubmitted">
                                 Fill in the required information and submit your application
                             </p>
                         </div>
 
                         <!-- Main Content Grid -->
-                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
 
                             <!-- Left Column - Form Fields (Hidden after submission) -->
                             <div class="lg:col-span-7" [class.readonly-section]="applicationSubmitted">
 
                                 <!-- Document Uploads Section -->
-                                <div class="mb-4 p-4 border-2 rounded-lg bg-white" style="border-color: #04b2e1;">
+                                <div class="mb-4 p-3 sm:p-4 border-2 rounded-lg bg-white" style="border-color: #04b2e1;">
                                     <h2 class="text-sm font-semibold text-gray-900 mb-3">Document Uploads</h2>
 
                                     <!-- IDF Document & Invoice -->
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                                         <!-- IDF Document -->
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700 mb-1">
@@ -502,9 +491,9 @@
                                             <div class="border-2 border-dashed rounded-md p-3 text-center cursor-pointer transition-colors"
                                                  [ngClass]="duplicateFileErrors['idfDocument'] ? 'border-red-500 bg-red-50' : (!shipmentForm.get('idfDocument')?.value ? 'border-red-500' : 'border-gray-300 hover:border-blue-400 hover:bg-blue-50')"
                                                  (click)="idfDocument.click()">
-                                                <button type="button" mat-button color="primary">Choose file</button>
+                                                <button type="button" mat-button color="primary" class="text-sm">Choose file</button>
                                                 <input hidden #idfDocument type="file" accept=".pdf,.jpg,.jpeg,.png" (change)="onFileSelected($event, 'idfDocument')">
-                                                <p class="text-xs text-gray-500 mt-1">{{ shipmentForm.get('idfDocument').value?.name || 'No file chosen' }}</p>
+                                                <p class="text-xs text-gray-500 mt-1 truncate">{{ shipmentForm.get('idfDocument').value?.name || 'No file chosen' }}</p>
                                                 <button
                                                     *ngIf="shipmentForm.get('idfDocument')?.value"
                                                     type="button"
@@ -527,9 +516,9 @@
                                             <div class="border-2 border-dashed rounded-md p-3 text-center cursor-pointer transition-colors"
                                                  [ngClass]="duplicateFileErrors['invoice'] ? 'border-red-500 bg-red-50' : (!shipmentForm.get('invoice')?.value ? 'border-red-500' : 'border-gray-300 hover:border-blue-400 hover:bg-blue-50')"
                                                  (click)="invoice.click()">
-                                                <button type="button" mat-button color="primary">Choose file</button>
+                                                <button type="button" mat-button color="primary" class="text-sm">Choose file</button>
                                                 <input hidden #invoice type="file" accept=".pdf,.jpg,.jpeg,.png" (change)="onFileSelected($event, 'invoice')">
-                                                <p class="text-xs text-gray-500 mt-1">{{ shipmentForm.get('invoice').value?.name || 'No file chosen' }}</p>
+                                                <p class="text-xs text-gray-500 mt-1 truncate">{{ shipmentForm.get('invoice').value?.name || 'No file chosen' }}</p>
                                                 <button
                                                     *ngIf="shipmentForm.get('invoice')?.value"
                                                     type="button"
@@ -546,7 +535,7 @@
                                     </div>
 
                                     <!-- Conditional Documents (KRA & National ID) -->
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3" *ngIf="userDocs">
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3" *ngIf="userDocs">
                                         <!-- KRA PIN Certificate -->
                                         <div *ngIf="!userDocs.kraDocumentExists">
                                             <label class="block text-sm font-medium text-gray-700 mb-1">
@@ -555,9 +544,9 @@
                                             <div class="border-2 border-dashed rounded-md p-3 text-center cursor-pointer transition-colors"
                                                  [ngClass]="duplicateFileErrors['kraPinCertificate'] ? 'border-red-500 bg-red-50' : (!shipmentForm.get('kraPinCertificate')?.value ? 'border-red-500' : 'border-gray-300 hover:border-blue-400')"
                                                  (click)="kraPinCertificate.click()">
-                                                <button type="button" mat-button color="primary">Choose file</button>
+                                                <button type="button" mat-button color="primary" class="text-sm">Choose file</button>
                                                 <input hidden #kraPinCertificate type="file" accept=".pdf,.jpg,.jpeg,.png" (change)="onFileSelected($event, 'kraPinCertificate')">
-                                                <p class="text-xs text-gray-500 mt-1">{{ shipmentForm.get('kraPinCertificate').value?.name || 'No file chosen' }}</p>
+                                                <p class="text-xs text-gray-500 mt-1 truncate">{{ shipmentForm.get('kraPinCertificate').value?.name || 'No file chosen' }}</p>
                                                 <button
                                                     *ngIf="shipmentForm.get('kraPinCertificate')?.value"
                                                     type="button"
@@ -579,9 +568,9 @@
                                             <div class="border-2 border-dashed rounded-md p-3 text-center cursor-pointer transition-colors"
                                                  [ngClass]="duplicateFileErrors['nationalId'] ? 'border-red-500 bg-red-50' : (!shipmentForm.get('nationalId')?.value ? 'border-red-500' : 'border-gray-300 hover:border-blue-400')"
                                                  (click)="nationalId.click()">
-                                                <button type="button" mat-button color="primary">Choose file</button>
+                                                <button type="button" mat-button color="primary" class="text-sm">Choose file</button>
                                                 <input hidden #nationalId type="file" accept=".pdf,.jpg,.jpeg,.png" (change)="onFileSelected($event, 'nationalId')">
-                                                <p class="text-xs text-gray-500 mt-1">{{ shipmentForm.get('nationalId').value?.name || 'No file chosen' }}</p>
+                                                <p class="text-xs text-gray-500 mt-1 truncate">{{ shipmentForm.get('nationalId').value?.name || 'No file chosen' }}</p>
                                                 <button
                                                     *ngIf="shipmentForm.get('nationalId')?.value"
                                                     type="button"
@@ -599,10 +588,10 @@
                                 </div>
 
                                 <!-- Personal Information -->
-                                <div class="mb-4 p-4 border-2 rounded-lg bg-white" style="border-color: #04b2e1;">
+                                <div class="mb-4 p-3 sm:p-4 border-2 rounded-lg bg-white" style="border-color: #04b2e1;">
                                     <h2 class="text-sm font-semibold text-gray-900 mb-3">Personal Information</h2>
 
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700 mb-1">ID Number *</label>
                                             <input class="w-full px-3 py-2 border rounded-md special-focus-field"
@@ -621,7 +610,7 @@
                                         </div>
                                     </div>
 
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700 mb-1">First Name *</label>
                                             <input class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100"
@@ -634,7 +623,7 @@
                                         </div>
                                     </div>
 
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700 mb-1">Email Address *</label>
                                             <input class="w-full px-3 py-2 border rounded-md"
@@ -652,7 +641,7 @@
                                         </div>
                                     </div>
 
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700 mb-1">Postal Address *</label>
                                             <input class="w-full px-3 py-2 border rounded-md"
@@ -677,14 +666,11 @@
                                 </div>
 
                                 <!-- Shipment Details -->
-                                <div class="mb-4 p-4 border-2 rounded-lg bg-white" style="border-color: #04b2e1;">
+                                <div class="mb-4 p-3 sm:p-4 border-2 rounded-lg bg-white" style="border-color: #04b2e1;">
                                     <h2 class="text-sm font-semibold text-gray-900 mb-3">Shipment Details</h2>
 
-                                    <!-- Add all your shipment detail fields here (mode, trade type, vessel, etc.) -->
-                                    <!-- Keeping the structure you already have -->
-
-                                    <div class="flex flex-wrap items-end gap-4 mb-3">
-                                        <div class="flex-1 min-w-[200px]">
+                                    <div class="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-end gap-3 sm:gap-4 mb-3">
+                                        <div class="flex-1 min-w-0 sm:min-w-[200px]">
                                             <label class="block text-sm font-medium text-gray-700 mb-1">Mode of Shipment *</label>
                                             <select
                                                 class="w-full px-3 py-2 border border-gray-300 rounded-md"
@@ -695,7 +681,7 @@
                                             </select>
                                         </div>
 
-                                        <div class="flex-1 min-w-[200px]">
+                                        <div class="flex-1 min-w-0 sm:min-w-[200px]">
                                             <label class="block text-sm font-medium text-gray-700 mb-1">Trade Type</label>
                                             <input
                                                 class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100"
@@ -706,16 +692,16 @@
                                     </div>
 
                                     <div class="mb-4">
-                                        <label class="block text-base font-medium text-gray-700 mb-2">Marine Packaging Type</label>
-                                        <mat-radio-group formControlName="commodityType" color="primary">
-                                            <mat-radio-button value="1" class="mr-4">Containerized</mat-radio-button>
+                                        <label class="block text-sm sm:text-base font-medium text-gray-700 mb-2">Marine Packaging Type</label>
+                                        <mat-radio-group formControlName="commodityType" color="primary" class="flex flex-col sm:flex-row gap-2 sm:gap-4">
+                                            <mat-radio-button value="1">Containerized</mat-radio-button>
                                             <mat-radio-button value="2">Non-Containerized</mat-radio-button>
                                         </mat-radio-group>
                                     </div>
 
                                     <!-- Sum Insured (Full Width) -->
                                     <div class="mb-3">
-                                        <label class="block text-base font-medium text-gray-700 mb-1">Sum Insured (KES) *</label>
+                                        <label class="block text-sm sm:text-base font-medium text-gray-700 mb-1">Sum Insured (KES) *</label>
                                         <input [class]="'w-full px-3 py-2 border rounded-md bg-gray-100 ' +
                        (!shipmentForm.get('sumInsured')?.value ?
                        'border-red-500' : 'border-gray-300')"
@@ -724,13 +710,13 @@
                                                appThousands
                                                placeholder="Enter sum insured amount"
                                                inputmode="numeric"
-                                               >
+                                        >
                                     </div>
 
                                     <!-- Select Category | Cargo Type -->
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                                         <div>
-                                            <label class="block text-base font-medium text-gray-700 mb-1">Select Category *</label>
+                                            <label class="block text-sm sm:text-base font-medium text-gray-700 mb-1">Select Category *</label>
                                             <mat-form-field appearance="outline" class="w-full category-select mat-small"
                                                             [ngClass]="{'mat-form-field-invalid': (shipmentForm.get('selectCategory')?.invalid && shipmentForm.get('selectCategory')?.touched) || !shipmentForm.get('selectCategory')?.value}">
                                                 <mat-select formControlName="selectCategory" (selectionChange)="onCategorySelected2($event.value)" #categorySelect2>
@@ -744,7 +730,7 @@
                                             </mat-form-field>
                                         </div>
                                         <div>
-                                            <label class="block text-base font-medium text-gray-700 mb-1">Cargo Type *</label>
+                                            <label class="block text-sm sm:text-base font-medium text-gray-700 mb-1">Cargo Type *</label>
                                             <mat-form-field appearance="outline" class="w-full cargo-type-select mat-small"
                                                             [ngClass]="{'mat-form-field-invalid': (shipmentForm.get('salesCategory')?.invalid && shipmentForm.get('salesCategory')?.touched) || !shipmentForm.get('salesCategory')?.value}">
                                                 <mat-select formControlName="salesCategory" #cargoTypeSelect  (selectionChange)="onCategoryTypeSelected2($event.value)"
@@ -760,9 +746,9 @@
                                         </div>
                                     </div>
                                     <!-- Vessel Name | IDF Number -->
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                                         <div>
-                                            <label class="block text-base font-medium text-gray-700 mb-1">Vessel Name</label>
+                                            <label class="block text-sm sm:text-base font-medium text-gray-700 mb-1">Vessel Name</label>
                                             <input [class]="'w-full px-3 py-2 border rounded-md special-focus-field ' +
                            ((shipmentForm.get('vesselName')?.invalid && shipmentForm.get('vesselName')?.touched) ?
                            'border-red-500' : 'border-gray-300')"
@@ -771,7 +757,7 @@
                                                    (input)="onVesselNameInput($event)">
                                         </div>
                                         <div>
-                                            <label class="block text-base font-medium text-gray-700 mb-1">
+                                            <label class="block text-sm sm:text-base font-medium text-gray-700 mb-1">
                                                 IDF Number *
                                             </label>
                                             <input [class]="'w-full px-3 py-2 border rounded-md special-focus-field ' +
@@ -787,10 +773,10 @@
                                     </div>
 
                                     <!-- Date of Dispatch | Estimated Time of Arrival -->
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                                         <div>
-                                            <label class="block text-base font-medium text-gray-700 mb-1">Date of Dispatch *</label>
-                                            <mat-form-field appearance="outline" class="w-full" style="min-height: 50px;"
+                                            <label class="block text-sm sm:text-base font-medium text-gray-700 mb-1">Date of Dispatch *</label>
+                                            <mat-form-field appearance="outline" class="w-full mat-small"
                                                             [ngClass]="{'mat-form-field-invalid': (shipmentForm.get('dateOfDispatch')?.invalid && shipmentForm.get('dateOfDispatch')?.touched) || !shipmentForm.get('dateOfDispatch')?.value}">
                                                 <input matInput [matDatepicker]="dispatchPicker" formControlName="dateOfDispatch" [min]="today" readonly>
                                                 <mat-datepicker-toggle matSuffix [for]="dispatchPicker"></mat-datepicker-toggle>
@@ -798,8 +784,8 @@
                                             </mat-form-field>
                                         </div>
                                         <div>
-                                            <label class="block text-base font-medium text-gray-700 mb-1">Date of Arrival *</label>
-                                            <mat-form-field appearance="outline" class="w-full" style="min-height: 50px;"
+                                            <label class="block text-sm sm:text-base font-medium text-gray-700 mb-1">Date of Arrival *</label>
+                                            <mat-form-field appearance="outline" class="w-full mat-small"
                                                             [ngClass]="{'mat-form-field-invalid': (shipmentForm.get('estimatedArrival')?.invalid && shipmentForm.get('estimatedArrival')?.touched) || !shipmentForm.get('estimatedArrival')?.value}">
                                                 <input matInput [matDatepicker]="arrivalPicker" formControlName="estimatedArrival" [min]="shipmentForm.get('dateOfDispatch')?.value || today" readonly>
                                                 <mat-datepicker-toggle matSuffix [for]="arrivalPicker"></mat-datepicker-toggle>
@@ -812,10 +798,10 @@
                                     </div>
 
                                     <!-- Country of Origin | Loading Port -->
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700 mb-1">Country of Origin *</label>
-                                            <mat-form-field appearance="outline" class="w-full shipping-select" style="min-height: 50px;"
+                                            <mat-form-field appearance="outline" class="w-full shipping-select mat-small"
                                                             [ngClass]="{'mat-form-field-invalid': (shipmentForm.get('countryOfOrigin')?.invalid && shipmentForm.get('countryOfOrigin')?.touched) || !shipmentForm.get('countryOfOrigin')?.value}">
 
                                                 <mat-select formControlName="countryOfOrigin" #countrySelect [compareWith]="compareCountries"
@@ -838,7 +824,7 @@
                                         </div>
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700 mb-1">Loading Port *</label>
-                                            <mat-form-field appearance="outline" class="w-full shipping-select" style="min-height: 50px;"
+                                            <mat-form-field appearance="outline" class="w-full shipping-select mat-small"
                                                             [ngClass]="{'mat-form-field-invalid': (shipmentForm.get('loadingPort')?.invalid && shipmentForm.get('loadingPort')?.touched) || !shipmentForm.get('loadingPort')?.value}">
                                                 <mat-select formControlName="loadingPort"
                                                             #portSelect
@@ -859,10 +845,10 @@
                                     </div>
 
                                     <!-- Port of Discharge | Final Destination -->
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700 mb-1">Port of Discharge *</label>
-                                            <mat-form-field appearance="outline" class="w-full shipping-select" style="min-height: 50px;"
+                                            <mat-form-field appearance="outline" class="w-full shipping-select mat-small"
                                                             [ngClass]="{'mat-form-field-invalid': (shipmentForm.get('portOfDischarge')?.invalid && shipmentForm.get('portOfDischarge')?.touched) || !shipmentForm.get('portOfDischarge')?.value}">
                                                 <mat-select formControlName="portOfDischarge" (openedChange)="onDropdownOpen('dischargePorts')"
                                                             (scroll)="onDischargePortScroll()">
@@ -883,7 +869,7 @@
                                         </div>
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700 mb-1">Final Destination *</label>
-                                            <mat-form-field appearance="outline" class="w-full shipping-select" style="min-height: 50px;"
+                                            <mat-form-field appearance="outline" class="w-full shipping-select mat-small"
                                                             [ngClass]="{'mat-form-field-invalid': (shipmentForm.get('finalDestination')?.invalid && shipmentForm.get('finalDestination')?.touched) || !shipmentForm.get('finalDestination')?.value}">
                                                 <mat-select formControlName="finalDestination">
                                                     <mat-option>
@@ -898,67 +884,67 @@
                                     </div>
 
                                     <div class="mb-3">
-                                        <label class="block text-base font-medium text-gray-700 mb-1">Description of Goods *</label>
+                                        <label class="block text-sm sm:text-base font-medium text-gray-700 mb-1">Description of Goods *</label>
                                         <textarea [class]="'w-full px-3 py-2 border rounded-md goods-description-field ' +
                            (!shipmentForm.get('goodsDescription')?.value ?
                            'border-red-500' : 'border-gray-300')"
                                                   formControlName="goodsDescription"
                                                   placeholder="Enter description of goods"
-                                                  rows="4"></textarea>
+                                                  rows="3"></textarea>
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Right Column - Payment Summary (Always Visible) -->
                             <div class="lg:col-span-5">
-                                <div class="bg-white rounded-lg shadow-lg border-2 p-6 sticky top-4 overflow-visible"
+                                <div class="bg-white rounded-lg shadow-lg border-2 p-4 sm:p-6 sticky top-4 overflow-visible"
                                      [ngClass]="applicationSubmitted ? 'bg-green-50/30' : 'bg-orange-50/30'"
                                      style="border-color: #04b2e1;">
 
                                     <!-- Success Message (After Submission) -->
-                                    <div *ngIf="applicationSubmitted" class="mb-6 p-4 bg-green-100 border border-green-400 rounded-lg">
+                                    <div *ngIf="applicationSubmitted" class="mb-4 sm:mb-6 p-3 sm:p-4 bg-green-100 border border-green-400 rounded-lg">
                                         <div class="flex items-center mb-2">
                                             <mat-icon class="text-green-600 mr-2">check_circle</mat-icon>
-                                            <h3 class="text-lg font-bold text-green-800">Application Submitted Successfully!</h3>
+                                            <h3 class="text-base sm:text-lg font-bold text-green-800">Application Submitted!</h3>
                                         </div>
-                                        <p class="text-sm text-green-700">Your reference number: <strong>{{ paymentRefNo }}</strong></p>
+                                        <p class="text-xs sm:text-sm text-green-700">Reference: <strong>{{ paymentRefNo }}</strong></p>
                                     </div>
 
-                                    <h2 class="text-xl font-semibold text-gray-900 mb-4 text-center">
+                                    <h2 class="text-lg sm:text-xl font-semibold text-gray-900 mb-4 text-center">
                                         {{ applicationSubmitted ? 'Payment Details' : 'Payment Summary' }}
                                     </h2>
 
                                     <!-- Cargo Protection -->
-                                    <div class="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                                    <div class="mb-4 p-2 sm:p-3 bg-blue-50 rounded-lg border border-blue-200">
                                         <div class="flex justify-between items-center">
-                                            <span class="text-sm font-medium">Cargo Protection</span>
-                                            <mat-icon class="text-blue-600 text-sm">info</mat-icon>
+                                            <span class="text-xs sm:text-sm font-medium">Cargo Protection</span>
+                                            <mat-icon class="text-blue-600 !w-4 !h-4 !text-sm">info</mat-icon>
                                         </div>
                                         <div class="mt-1">
-                                            <span class="text-base font-semibold">{{ getCargoProtectionName() }}</span>
+                                            <span class="text-sm sm:text-base font-semibold">{{ getCargoProtectionName() }}</span>
                                         </div>
                                     </div>
 
                                     <!-- Payment Breakdown -->
-                                    <div class="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200" *ngIf="quoteResult">
+                                    <div class="mb-4 p-3 sm:p-4 bg-gray-50 rounded-lg border border-gray-200" *ngIf="quoteResult">
                                         <div class="space-y-2">
-                                            <div class="flex justify-between text-sm">
+                                            <div class="flex justify-between text-xs sm:text-sm">
                                                 <span class="text-gray-600">Sum Insured:</span>
                                                 <span class="font-semibold">KES {{ formatAmount(shipmentForm.get('sumInsured')?.value || 0) }}</span>
                                             </div>
-                                            <div class="flex justify-between text-sm">
+                                            <div class="flex justify-between text-xs sm:text-sm">
                                                 <span class="text-gray-600">Basic Premium:</span>
                                                 <span class="font-semibold">KES {{ formatAmount(quoteResult.premium) }}</span>
                                             </div>
-                                            <div class="flex justify-between text-sm">
+                                            <div class="flex justify-between text-xs sm:text-sm">
                                                 <span class="text-gray-600">PHCF (0.25%):</span>
                                                 <span class="font-semibold">KES {{ formatAmount(quoteResult.phcf) }}</span>
                                             </div>
-                                            <div class="flex justify-between text-sm">
+                                            <div class="flex justify-between text-xs sm:text-sm">
                                                 <span class="text-gray-600">Training Levy (0.2%):</span>
                                                 <span class="font-semibold">KES {{ formatAmount(quoteResult.tl) }}</span>
                                             </div>
-                                            <div class="flex justify-between text-sm">
+                                            <div class="flex justify-between text-xs sm:text-sm">
                                                 <span class="text-gray-600">Stamp Duty:</span>
                                                 <span class="font-semibold">KES {{ formatAmount(quoteResult.sd) }}</span>
                                             </div>
@@ -966,77 +952,199 @@
                                     </div>
 
                                     <!-- Total Amount -->
-                                    <div class="mb-6 p-4 rounded-lg" *ngIf="quoteResult" style="background-color: #21275c;">
+                                    <div class="mb-4 sm:mb-6 p-3 sm:p-4 rounded-lg" *ngIf="quoteResult" style="background-color: #21275c;">
                                         <div class="flex justify-between items-center text-white">
-                                            <span class="text-lg font-bold">Total Payable:</span>
-                                            <span class="text-2xl font-bold">KES {{ quoteResult.netprem | number:'1.2-2' }}</span>
+                                            <span class="text-sm sm:text-lg font-bold">Total Payable:</span>
+                                            <span class="text-lg sm:text-2xl font-bold">KES {{ quoteResult.netprem | number:'1.2-2' }}</span>
                                         </div>
                                     </div>
 
                                     <!-- Payment Instructions (After Submission) -->
                                     <div *ngIf="applicationSubmitted" class="space-y-4">
-                                        <div class="p-4 bg-white rounded-lg border-2 border-blue-300">
-                                            <h3 class="font-bold text-gray-900 mb-3 flex items-center">
-                                                <mat-icon class="text-blue-600 mr-2">payment</mat-icon>
-                                                M-PESA Payment Instructions
+                                        <div class="p-3 sm:p-4 bg-white rounded-lg border-2 border-blue-300">
+                                            <h3 class="font-bold text-gray-900 mb-3 sm:mb-4 flex items-center text-sm sm:text-base">
+                                                <mat-icon class="text-blue-600 mr-2 !w-5 !h-5">payment</mat-icon>
+                                                M-PESA Payment
                                             </h3>
 
-                                            <div class="space-y-3">
-                                                <div class="flex justify-between p-2 bg-gray-50 rounded">
-                                                    <span class="text-gray-700">Paybill Number:</span>
-                                                    <span class="font-bold text-gray-900">553201</span>
+                                            <!-- Payment Method Tabs -->
+                                            <div class="flex mb-4 bg-gray-100 rounded-lg p-1">
+                                                <button
+                                                    type="button"
+                                                    class="flex-1 py-2 px-2 sm:px-4 rounded-md text-xs sm:text-sm font-medium transition-all duration-200 flex items-center justify-center gap-1"
+                                                    [ngClass]="paymentMethod === 'stk' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'"
+                                                    (click)="paymentMethod = 'stk'">
+                                                    <mat-icon class="!w-4 !h-4 !text-base">phone_android</mat-icon>
+                                                    <span>STK Push</span>
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    class="flex-1 py-2 px-2 sm:px-4 rounded-md text-xs sm:text-sm font-medium transition-all duration-200 flex items-center justify-center gap-1"
+                                                    [ngClass]="paymentMethod === 'paybill' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'"
+                                                    (click)="paymentMethod = 'paybill'">
+                                                    <mat-icon class="!w-4 !h-4 !text-base">receipt_long</mat-icon>
+                                                    <span>Paybill</span>
+                                                </button>
+                                            </div>
+
+                                            <!-- STK Push Option -->
+                                            <div *ngIf="paymentMethod === 'stk'" class="space-y-3">
+                                                <div class="p-2 sm:p-3 bg-blue-50 rounded-lg border border-blue-100">
+                                                    <p class="text-xs sm:text-sm text-blue-800 flex items-start gap-2">
+                                                        <mat-icon class="!w-4 !h-4 !text-base flex-shrink-0 mt-0.5">info</mat-icon>
+                                                        <span>We'll send a payment prompt to your phone. Enter your M-PESA PIN to complete.</span>
+                                                    </p>
                                                 </div>
 
-                                                <div class="flex justify-between p-2 bg-gray-50 rounded">
-                                                    <span class="text-gray-700">Account Number:</span>
-                                                    <span class="font-bold text-gray-900">{{ paymentRefNo }}</span>
-                                                </div>
-
-                                                <div class="mt-4">
+                                                <div [formGroup]="shipmentForm">
                                                     <label class="block text-sm font-medium text-gray-700 mb-2" style="color: #21275c;">
                                                         Enter M-PESA Number *
                                                     </label>
                                                     <input
-                                                        class="w-full px-3 py-2 border rounded-md mpesa-input"
+                                                        class="w-full px-3 py-3 sm:py-2 border rounded-md mpesa-input text-base sm:text-sm"
                                                         [ngClass]="!shipmentForm.get('mpesaNumber')?.value ? 'border-red-500' : 'border-gray-300'"
                                                         formControlName="mpesaNumber"
                                                         placeholder="07XX XXX XXX"
                                                         maxlength="10"
+                                                        inputmode="numeric"
+                                                        type="tel"
                                                         (input)="onMpesaNumberInput($event)">
-                                                    <p class="text-xs mt-1" style="color: #21275c;">Enter the M-PESA number to receive the payment prompt</p>
+                                                    <p class="text-xs mt-1" style="color: #21275c;">Enter the M-PESA number to receive the prompt</p>
                                                 </div>
+
+                                                <!-- STK Push Button -->
+                                                <button
+                                                    mat-raised-button
+                                                    color="primary"
+                                                    class="w-full !py-3 sm:!py-2.5 text-sm sm:text-base font-semibold rounded-full flex items-center justify-center"
+                                                    [disabled]="isProcessPayment || !shipmentForm.get('mpesaNumber')?.value"
+                                                    (click)="initiatePayment()"
+                                                    style="background-color: #21275c; color: #ffffff;">
+                                                    <span *ngIf="!isProcessPayment">Send Payment Prompt</span>
+                                                    <mat-spinner *ngIf="isProcessPayment" diameter="20" class="payment-spinner"></mat-spinner>
+                                                </button>
+
+                                                <p class="text-xs text-center mt-2" style="color: #21275c;">
+                                                    You will receive an M-PESA prompt on your phone.
+                                                </p>
+                                            </div>
+
+                                            <!-- Paybill Validation Option -->
+                                            <div *ngIf="paymentMethod === 'paybill'" class="space-y-3">
+                                                <div class="p-2 sm:p-3 bg-blue-50 rounded-lg border border-blue-100">
+                                                    <p class="text-xs sm:text-sm text-blue-800 flex items-start gap-2">
+                                                        <mat-icon class="!w-4 !h-4 !text-base flex-shrink-0 mt-0.5">check_circle</mat-icon>
+                                                        <span>Already paid via M-PESA? Enter your transaction code to validate.</span>
+                                                    </p>
+                                                </div>
+
+                                                <!-- Paybill Instructions - Collapsible -->
+                                                <details class="bg-gray-50 rounded-lg border border-gray-200">
+                                                    <summary class="p-2 sm:p-3 cursor-pointer font-semibold text-gray-900 flex items-center text-xs sm:text-sm">
+                                                        <mat-icon class="text-green-600 mr-2 !w-4 !h-4">smartphone</mat-icon>
+                                                        How to Pay via Paybill
+                                                        <mat-icon class="ml-auto !w-4 !h-4 text-gray-500">expand_more</mat-icon>
+                                                    </summary>
+                                                    <ol class="text-xs text-gray-700 space-y-1.5 px-3 pb-3">
+                                                        <li class="flex items-start">
+                                                            <span class="flex-shrink-0 w-4 h-4 bg-blue-600 text-white rounded-full text-xs flex items-center justify-center mr-2 mt-0.5">1</span>
+                                                            <span>Go to M-PESA menu</span>
+                                                        </li>
+                                                        <li class="flex items-start">
+                                                            <span class="flex-shrink-0 w-4 h-4 bg-blue-600 text-white rounded-full text-xs flex items-center justify-center mr-2 mt-0.5">2</span>
+                                                            <span><strong>Lipa na M-PESA</strong> → <strong>Pay Bill</strong></span>
+                                                        </li>
+                                                        <li class="flex items-start">
+                                                            <span class="flex-shrink-0 w-4 h-4 bg-blue-600 text-white rounded-full text-xs flex items-center justify-center mr-2 mt-0.5">3</span>
+                                                            <span>Business No: <strong class="text-blue-700">553201</strong></span>
+                                                        </li>
+                                                        <li class="flex items-start">
+                                                            <span class="flex-shrink-0 w-4 h-4 bg-blue-600 text-white rounded-full text-xs flex items-center justify-center mr-2 mt-0.5">4</span>
+                                                            <span>Account: <strong class="text-blue-700">{{ paymentRefNo }}</strong></span>
+                                                        </li>
+                                                        <li class="flex items-start">
+                                                            <span class="flex-shrink-0 w-4 h-4 bg-blue-600 text-white rounded-full text-xs flex items-center justify-center mr-2 mt-0.5">5</span>
+                                                            <span>Amount: <strong class="text-blue-700">{{ quoteResult?.netprem | number:'1.0-0' }}</strong></span>
+                                                        </li>
+                                                        <li class="flex items-start">
+                                                            <span class="flex-shrink-0 w-4 h-4 bg-blue-600 text-white rounded-full text-xs flex items-center justify-center mr-2 mt-0.5">6</span>
+                                                            <span>Enter PIN and confirm</span>
+                                                        </li>
+                                                    </ol>
+                                                </details>
+
+                                                <!-- Payment Details Summary -->
+                                                <div class="grid grid-cols-2 gap-2">
+                                                    <div class="p-2 bg-gray-50 rounded-lg text-center">
+                                                        <span class="text-xs text-gray-500 block">Paybill</span>
+                                                        <span class="font-bold text-gray-900 text-sm">553201</span>
+                                                    </div>
+                                                    <div class="p-2 bg-gray-50 rounded-lg text-center">
+                                                        <span class="text-xs text-gray-500 block">Account</span>
+                                                        <span class="font-bold text-gray-900 text-sm break-all">{{ paymentRefNo }}</span>
+                                                    </div>
+                                                    <div class="p-2 bg-blue-50 rounded-lg col-span-2 text-center">
+                                                        <span class="text-xs text-blue-600 block">Amount to Pay</span>
+                                                        <span class="font-bold text-blue-700 text-base sm:text-lg">KES {{ quoteResult?.netprem | number:'1.2-2' }}</span>
+                                                    </div>
+                                                </div>
+
+                                                <!-- M-PESA Transaction Code Input -->
+                                                <div [formGroup]="shipmentForm">
+                                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                                        Enter M-PESA Transaction Code *
+                                                    </label>
+                                                    <input
+                                                        class="w-full px-3 py-3 sm:py-2.5 border rounded-lg focus:ring-2 text-center text-lg font-mono tracking-widest uppercase"
+                                                        [ngClass]="{
+                                                            'border-red-500 focus:ring-red-500 bg-red-50': mpesaCodeError,
+                                                            'border-green-500 focus:ring-green-500 bg-green-50': mpesaCodeValid,
+                                                            'border-gray-300 focus:ring-blue-500': !mpesaCodeError && !mpesaCodeValid
+                                                        }"
+                                                        formControlName="mpesaCode"
+                                                        placeholder="SJK7H9TXYZ"
+                                                        maxlength="10"
+                                                        autocapitalize="characters"
+                                                        autocomplete="off"
+                                                        spellcheck="false"
+                                                        (input)="onMpesaCodeInput($event)">
+                                                    <p class="text-xs text-gray-500 mt-1 text-center">
+                                                        Find this code in your M-PESA SMS
+                                                    </p>
+                                                    <p *ngIf="mpesaCodeError" class="text-xs text-red-600 mt-2 p-2 bg-red-50 rounded-lg">
+                                                        <mat-icon class="!w-4 !h-4 !text-sm align-middle mr-1">error</mat-icon>
+                                                        {{ mpesaCodeError }}
+                                                    </p>
+                                                </div>
+
+                                                <!-- Validate Payment Button -->
+                                                <button
+                                                    mat-raised-button
+                                                    color="primary"
+                                                    class="w-full !py-3 sm:!py-2.5 text-sm sm:text-base font-semibold rounded-full flex items-center justify-center"
+                                                    [disabled]="validatingPayment || !shipmentForm.get('mpesaCode')?.value || shipmentForm.get('mpesaCode')?.value?.length < 10"
+                                                    (click)="validateMpesaPayment()"
+                                                    style="background-color: #21275c; color: #ffffff;">
+                                                    <mat-spinner *ngIf="validatingPayment" diameter="20" class="mr-2"></mat-spinner>
+                                                    <mat-icon *ngIf="!validatingPayment" class="mr-2 !w-5 !h-5">verified</mat-icon>
+                                                    {{ validatingPayment ? 'Validating...' : 'Validate Payment' }}
+                                                </button>
+
+                                                <p class="text-xs text-center text-gray-500 mt-2">
+                                                    We'll verify your payment against our records.
+                                                </p>
                                             </div>
                                         </div>
-
-                                        <!-- Payment Button -->
-                                    <button
-                                        mat-raised-button
-                                        color="primary"
-                                        class="w-full py-3 text-lg font-semibold rounded-full flex items-center justify-center"
-                                        [disabled]="isProcessPayment || !shipmentForm.get('mpesaNumber')?.value"
-                                        (click)="initiatePayment()"
-                                        style="background-color: #21275c; color: #ffffff;">
-                                        <span *ngIf="!isProcessPayment">
-                                            Send Payment Prompt
-                                        </span>
-                                        <mat-spinner *ngIf="isProcessPayment" diameter="24" class="payment-spinner"></mat-spinner>
-                                    </button>
-
-                                        <p class="text-xs text-center mt-2" style="color: #21275c;">
-                                            You will receive an M-PESA prompt on your phone. Enter your PIN to complete the payment.
-                                        </p>
                                     </div>
 
-                                    <!-- Submit Application Button (Before Submission) -->
                                     <!-- Submit Application Buttons (Before Submission) -->
                                     <div *ngIf="!applicationSubmitted" class="mt-4">
-
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                                             <!-- Pay Now -->
                                             <button
                                                 mat-raised-button
                                                 color="primary"
-                                                class="w-full py-3 text-lg font-semibold rounded-full flex items-center justify-center shadow-md hover:shadow-lg transition"
+                                                class="w-full py-3 text-sm sm:text-base font-semibold rounded-full flex items-center justify-center shadow-md hover:shadow-lg transition"
                                                 [disabled]="isSubmitting"
                                                 (click)="onSubmit()"
                                                 style="background-color: #21275c; color: #ffffff;">
@@ -1044,7 +1152,7 @@
                                                     Save & Pay Now
                                                 </ng-container>
                                                 <ng-template #submittingStateNow>
-                                                    <mat-spinner diameter="24" class="payment-spinner"></mat-spinner>
+                                                    <mat-spinner diameter="20" class="payment-spinner"></mat-spinner>
                                                 </ng-template>
                                             </button>
 
@@ -1052,19 +1160,18 @@
                                             <button
                                                 mat-raised-button
                                                 color="primary"
-                                                class="w-full py-3 text-lg font-semibold rounded-full flex items-center justify-center shadow-md hover:shadow-lg transition"
+                                                class="w-full py-3 text-sm sm:text-base font-semibold rounded-full flex items-center justify-center shadow-md hover:shadow-lg transition"
                                                 [disabled]="isSubmitting"
                                                 (click)="onSubmitPayLater()"
-                                                style="background-color: #4b5563; color: #ffffff;"> <!-- Slightly different tone for distinction -->
+                                                style="background-color: #4b5563; color: #ffffff;">
                                                 <ng-container *ngIf="!isSubmitting; else submittingStateLater">
                                                     Save & Pay Later
                                                 </ng-container>
                                                 <ng-template #submittingStateLater>
-                                                    <mat-spinner diameter="24" class="payment-spinner"></mat-spinner>
+                                                    <mat-spinner diameter="20" class="payment-spinner"></mat-spinner>
                                                 </ng-template>
                                             </button>
                                         </div>
-
                                     </div>
 
                                 </div>
@@ -1072,12 +1179,12 @@
                         </div>
 
                         <!-- Navigation Buttons (Only shown before submission) -->
-                        <div class="flex justify-between mt-6 gap-3" *ngIf="!applicationSubmitted">
+                        <div class="flex justify-start mt-6" *ngIf="!applicationSubmitted">
                             <button
                                 mat-stroked-button
                                 (click)="stepper.previous()"
-                                class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-2 rounded-lg">
-                                <mat-icon class="mr-1">arrow_back</mat-icon>
+                                class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 sm:px-6 py-2 rounded-lg text-sm sm:text-base">
+                                <mat-icon class="mr-1 !w-5 !h-5">arrow_back</mat-icon>
                                 Back
                             </button>
                         </div>
@@ -1177,36 +1284,36 @@
 
 <!-- Share Quote Dialog Template (MatDialog) -->
 <ng-template #shareDialog>
-    <div class="w-full max-w-md p-6">
+    <div class="w-full max-w-md p-4 sm:p-6">
         <div class="flex items-center justify-between mb-4">
             <div>
-                <h2 class="text-lg font-semibold text-gray-900">Share Quote Details</h2>
-                <p class="text-sm text-gray-500">Choose how you'd like to share the quote information.</p>
+                <h2 class="text-base sm:text-lg font-semibold text-gray-900">Share Quote Details</h2>
+                <p class="text-xs sm:text-sm text-gray-500">Choose how you'd like to share the quote information.</p>
             </div>
             <button type="button" mat-icon-button (click)="closeShareDialog()">
                 <mat-icon>close</mat-icon>
             </button>
         </div>
 
-        <div class="grid grid-cols-2 gap-4">
-            <button type="button" class="border rounded-xl p-4 flex flex-col items-center justify-center hover:bg-gray-50 whatsapp-option" (click)="shareViaWhatsApp(); closeShareDialog()">
+        <div class="grid grid-cols-2 gap-3 sm:gap-4">
+            <button type="button" class="border rounded-xl p-3 sm:p-4 flex flex-col items-center justify-center hover:bg-gray-50 whatsapp-option" (click)="shareViaWhatsApp(); closeShareDialog()">
                 <span class="icon-circle mb-2">WA</span>
-                <span class="text-sm font-medium text-gray-800">WhatsApp</span>
+                <span class="text-xs sm:text-sm font-medium text-gray-800">WhatsApp</span>
             </button>
 
-            <button type="button" class="border rounded-xl p-4 flex flex-col items-center justify-center hover:bg-gray-50" (click)="shareViaGmail(); closeShareDialog()">
+            <button type="button" class="border rounded-xl p-3 sm:p-4 flex flex-col items-center justify-center hover:bg-gray-50" (click)="shareViaGmail(); closeShareDialog()">
                 <mat-icon class="text-red-500 mb-2">mail</mat-icon>
-                <span class="text-sm font-medium text-gray-800">Gmail</span>
+                <span class="text-xs sm:text-sm font-medium text-gray-800">Gmail</span>
             </button>
 
-            <button type="button" class="border rounded-xl p-4 flex flex-col items-center justify-center hover:bg-gray-50" (click)="shareViaOutlook(); closeShareDialog()">
+            <button type="button" class="border rounded-xl p-3 sm:p-4 flex flex-col items-center justify-center hover:bg-gray-50" (click)="shareViaOutlook(); closeShareDialog()">
                 <mat-icon class="text-blue-600 mb-2">mail</mat-icon>
-                <span class="text-sm font-medium text-gray-800">Outlook</span>
+                <span class="text-xs sm:text-sm font-medium text-gray-800">Outlook</span>
             </button>
 
-            <button type="button" class="border rounded-xl p-4 flex flex-col items-center justify-center hover:bg-gray-50" (click)="shareViaOutlook(); closeShareDialog()">
+            <button type="button" class="border rounded-xl p-3 sm:p-4 flex flex-col items-center justify-center hover:bg-gray-50" (click)="shareViaOutlook(); closeShareDialog()">
                 <mat-icon class="text-blue-400 mb-2">mail</mat-icon>
-                <span class="text-sm font-medium text-gray-800">Other Email</span>
+                <span class="text-xs sm:text-sm font-medium text-gray-800">Other Email</span>
             </button>
         </div>
     </div>

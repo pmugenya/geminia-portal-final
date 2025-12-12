@@ -1,4 +1,4 @@
-<div class="flex w-full flex-col items-center p-6 md:p-8">
+<div class="flex w-full flex-col items-center p-4 sm:p-6 md:p-8">
     <div *ngIf="isLoading" class="flex flex-col items-center justify-center h-[60vh] w-full">
         <mat-spinner diameter="60" color="primary"></mat-spinner>
         <p class="mt-4 text-gray-600 font-medium">Loading quote details...</p>
@@ -13,13 +13,29 @@
             Failed to download quote. Please try again later.
         </fuse-alert>
 
+        <fuse-alert
+            *ngIf="paymentError"
+            name="paymentError"
+            type="error"
+            [dismissible]="true"
+            [appearance]="'soft'">
+            {{ paymentError }}
+        </fuse-alert>
+
+        <fuse-alert
+            *ngIf="paymentSuccess"
+            name="paymentSuccess"
+            type="success"
+            [dismissible]="true"
+            [appearance]="'soft'">
+            {{ paymentSuccess }}
+        </fuse-alert>
+
 
         <!-- Header -->
-        <div class="flex items-center justify-between border-b pb-4 mb-6">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b pb-4 mb-6 gap-4">
             <div>
-                <h2 class="text-2xl font-semibold leading-8 tracking-tight">
-                    <h2 class="text-2xl font-bold text-gray-900">Marine Quote Details - {{quote?.refno}}</h2>
-                </h2>
+                <h2 class="text-xl sm:text-2xl font-bold text-gray-900">Marine Quote Details</h2>
                 <div class="text-secondary text-sm font-medium tracking-tight">
                     <p class="text-sm text-gray-600 mt-1">
                         Reference:
@@ -27,111 +43,260 @@
                     </p>
                 </div>
             </div>
-            <div class="flex items-center space-x-3">
-                <button
-                    type="button"
-                    class="inline-flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-medium bg-white text-gray-700 hover:bg-gray-50 share-trigger-btn"
-                    (click)="editQuote()">
-                    <mat-icon class="icon-size-4">pencil-square</mat-icon>
-                    <span>Edit Quote</span>
-                </button>
-                <button mat-flat-button color="primary" class="buy-btn" (click)="buyNow()" *ngIf="quote?.status==='DRAFT'">
-                    <mat-icon class="icon-size-4" [svgIcon]="'heroicons_outline:credit-card'"></mat-icon>
-                    Buy Now
-                </button>
-                <button mat-flat-button color="primary" class="buy-btn" (click)="payNow()" *ngIf="quote?.status==='PENDING'">
-                    <mat-icon class="icon-size-4" [svgIcon]="'heroicons_outline:credit-card'"></mat-icon>
-                    Pay Now
-                </button>
-                <button
-                    mat-flat-button
-                    color="primary"
-                    class="download-btn"
-                    (click)="downloadQuote()">
-                    <mat-icon svgIcon="heroicons_outline:arrow-down-tray" class="mr-2"></mat-icon>
-                    Download Quote
-                </button>
-                <button
-                    type="button"
-                    class="inline-flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-medium bg-white text-gray-700 hover:bg-gray-50 share-trigger-btn"
-                    (click)="openShareModal()">
-                    <mat-icon class="icon-size-4">share</mat-icon>
-                    <span>Share Quote</span>
-                </button>
-                <button
-                    type="button"
-                    (click)="goToDashboard()"
-                    class="inline-flex items-center gap-2 px-4 py-1 rounded-full border text-sm font-medium bg-white header-close-btn">
-                    <span class="text-base font-normal" aria-hidden="true">&times;</span>
-                    <span>Close</span>
-                </button>
+
+            <!-- Mobile Action Buttons - Stacked -->
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
+                <!-- Primary Actions Row -->
+                <div class="flex gap-2 w-full sm:w-auto">
+                    <button
+                        type="button"
+                        class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 rounded-full border text-xs sm:text-sm font-medium bg-white text-gray-700 hover:bg-gray-50"
+                        (click)="editQuote()">
+                        <mat-icon class="icon-size-4">edit</mat-icon>
+                        <span>Edit</span>
+                    </button>
+                    <button
+                        mat-flat-button
+                        color="primary"
+                        class="flex-1 sm:flex-none buy-btn !text-xs sm:!text-sm !px-3 sm:!px-4"
+                        (click)="buyNow()"
+                        *ngIf="quote?.status==='DRAFT'">
+                        <mat-icon class="icon-size-4" [svgIcon]="'heroicons_outline:credit-card'"></mat-icon>
+                        <span class="ml-1">Buy</span>
+                    </button>
+                    <button
+                        mat-flat-button
+                        color="primary"
+                        class="flex-1 sm:flex-none buy-btn !text-xs sm:!text-sm !px-3 sm:!px-4"
+                        (click)="payNow()"
+                        *ngIf="quote?.status==='PENDING'">
+                        <mat-icon class="icon-size-4" [svgIcon]="'heroicons_outline:credit-card'"></mat-icon>
+                        <span class="ml-1">Pay</span>
+                    </button>
+                </div>
+
+                <!-- Secondary Actions Row -->
+                <div class="flex gap-2 w-full sm:w-auto">
+                    <button
+                        mat-flat-button
+                        color="primary"
+                        class="flex-1 sm:flex-none download-btn !text-xs sm:!text-sm !px-3 sm:!px-4"
+                        (click)="downloadQuote()">
+                        <mat-icon svgIcon="heroicons_outline:arrow-down-tray" class="!mr-1"></mat-icon>
+                        <span>Download</span>
+                    </button>
+                    <button
+                        type="button"
+                        class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 rounded-full border text-xs sm:text-sm font-medium bg-white text-gray-700 hover:bg-gray-50"
+                        (click)="openShareModal()">
+                        <mat-icon class="icon-size-4">share</mat-icon>
+                        <span>Share</span>
+                    </button>
+                    <button
+                        type="button"
+                        (click)="goToDashboard()"
+                        class="hidden sm:inline-flex items-center gap-2 px-4 py-1 rounded-full border text-sm font-medium bg-white header-close-btn">
+                        <span class="text-base font-normal" aria-hidden="true">&times;</span>
+                        <span>Close</span>
+                    </button>
+                </div>
             </div>
         </div>
 
         <!-- M-PESA Payment Section -->
-        <div *ngIf="showPayment" class="w-full max-w-xl mx-auto mb-6"> <!-- constrain width -->
-            <div class="p-6 bg-white rounded-xl border-2 border-blue-300 shadow-sm">
-                <h3 class="font-bold text-gray-900 mb-4 flex items-center">
+        <div *ngIf="showPayment" class="w-full max-w-xl mx-auto mb-6 px-0 sm:px-4">
+            <div class="p-4 sm:p-6 bg-white rounded-xl border-2 border-blue-300 shadow-sm">
+                <h3 class="font-bold text-gray-900 mb-4 flex items-center text-base sm:text-lg">
                     <mat-icon class="text-blue-600 mr-2">payment</mat-icon>
-                    M-PESA Payment Instructions
+                    M-PESA Payment
                 </h3>
 
-                <div class="space-y-3">
-                    <!-- Paybill and Account -->
-                    <div class="flex justify-between p-2 bg-gray-50 rounded">
-                        <span class="text-gray-700">Paybill Number:</span>
-                        <span class="font-bold text-gray-900">553201</span>
+                <!-- Payment Method Tabs -->
+                <div class="flex mb-4 sm:mb-6 bg-gray-100 rounded-lg p-1">
+                    <button
+                        type="button"
+                        class="flex-1 py-2 sm:py-2.5 px-2 sm:px-4 rounded-md text-xs sm:text-sm font-medium transition-all duration-200 flex items-center justify-center gap-1"
+                        [ngClass]="paymentMethod === 'stk' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'"
+                        (click)="paymentMethod = 'stk'">
+                        <mat-icon class="!w-4 !h-4 !text-base">phone_android</mat-icon>
+                        <span>STK Push</span>
+                    </button>
+                    <button
+                        type="button"
+                        class="flex-1 py-2 sm:py-2.5 px-2 sm:px-4 rounded-md text-xs sm:text-sm font-medium transition-all duration-200 flex items-center justify-center gap-1"
+                        [ngClass]="paymentMethod === 'paybill' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'"
+                        (click)="paymentMethod = 'paybill'">
+                        <mat-icon class="!w-4 !h-4 !text-base">receipt_long</mat-icon>
+                        <span>Pay Bill</span>
+                    </button>
+                </div>
+
+                <!-- STK Push Option -->
+                <div *ngIf="paymentMethod === 'stk'" class="space-y-3">
+                    <div class="p-3 bg-blue-50 rounded-lg border border-blue-100 mb-4">
+                        <p class="text-xs sm:text-sm text-blue-800 flex items-start gap-2">
+                            <mat-icon class="!w-4 !h-4 !text-base flex-shrink-0 mt-0.5">info</mat-icon>
+                            <span>We'll send a payment prompt directly to your phone. Just enter your M-PESA PIN to complete.</span>
+                        </p>
                     </div>
 
-                    <div class="flex justify-between p-2 bg-gray-50 rounded">
-                        <span class="text-gray-700">Account Number:</span>
-                        <span class="font-bold text-gray-900">{{ quote?.refno }}</span>
+                    <!-- Amount Display -->
+                    <div class="flex justify-between p-3 bg-gray-50 rounded-lg">
+                        <span class="text-gray-700 text-sm">Amount:</span>
+                        <span class="font-bold text-gray-900">{{ quote?.netprem | currency:'KES ' }}</span>
                     </div>
 
                     <!-- M-PESA Number Input -->
-                    <div>
+                    <div [formGroup]="paymentForm">
                         <label class="block text-sm font-medium text-gray-700 mb-2">
                             Enter M-PESA Number *
                         </label>
                         <input
-                            class="w-full px-3 py-2 border rounded-md focus:ring-2"
+                            class="w-full px-3 py-3 sm:py-2 border rounded-lg focus:ring-2 text-base sm:text-sm"
                             [ngClass]="!paymentForm.get('mpesaNumber')?.value ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'"
                             formControlName="mpesaNumber"
                             placeholder="07XX XXX XXX"
                             maxlength="10"
+                            inputmode="numeric"
+                            type="tel"
                             (input)="onMpesaNumberInput($event)">
                         <p class="text-xs text-gray-500 mt-1">
                             Enter the M-PESA number to receive the payment prompt
                         </p>
                     </div>
+
+                    <!-- STK Push Button -->
+                    <button
+                        mat-raised-button
+                        color="primary"
+                        class="w-full mt-4 !py-3 sm:!py-2.5 text-sm sm:text-base font-semibold flex items-center justify-center"
+                        [disabled]="paymentProcessing || !paymentForm.get('mpesaNumber')?.value"
+                        (click)="initiatePayment()">
+                        <mat-spinner *ngIf="paymentProcessing" diameter="20" class="mr-2"></mat-spinner>
+                        <mat-icon *ngIf="!paymentProcessing" class="mr-2">send</mat-icon>
+                        {{ paymentProcessing ? 'Processing...' : 'Send Payment Prompt' }}
+                    </button>
+
+                    <p class="text-xs text-center text-gray-500 mt-2">
+                        You will receive an M-PESA prompt on your phone. Enter your PIN to complete.
+                    </p>
                 </div>
 
-                <!-- Payment Button -->
-                <div class="mt-4 flex flex-col space-y-3">
-                <button
-                    mat-raised-button
-                    color="primary"
-                    class="w-full mt-4 py-3 text-lg font-semibold flex items-center justify-center"
-                    [disabled]="paymentProcessing || !paymentForm.get('mpesaNumber')?.value"
-                    (click)="initiatePayment()">
-                    <mat-spinner *ngIf="paymentProcessing" diameter="24" class="mr-2"></mat-spinner>
-                    <mat-icon *ngIf="!paymentProcessing" class="mr-2">send</mat-icon>
-                    {{ paymentProcessing ? 'Processing Payment...' : 'Send Payment Prompt' }}
-                </button>
+                <!-- Paybill Validation Option -->
+                <div *ngIf="paymentMethod === 'paybill'" class="space-y-3">
+                    <div class="p-3 bg-blue-50 rounded-lg border border-blue-100 mb-4">
+                        <p class="text-xs sm:text-sm text-blue-800 flex items-start gap-2">
+                            <mat-icon class="!w-4 !h-4 !text-base flex-shrink-0 mt-0.5">check_circle</mat-icon>
+                            <span>Already paid via M-PESA? Enter your transaction code below to validate.</span>
+                        </p>
+                    </div>
+
+                    <!-- Paybill Instructions - Collapsible on Mobile -->
+                    <details class="bg-gray-50 rounded-lg border border-gray-200">
+                        <summary class="p-3 sm:p-4 cursor-pointer font-semibold text-gray-900 flex items-center text-sm sm:text-base">
+                            <mat-icon class="text-green-600 mr-2 !w-5 !h-5">smartphone</mat-icon>
+                            How to Pay via Paybill
+                            <mat-icon class="ml-auto !w-5 !h-5 text-gray-500">expand_more</mat-icon>
+                        </summary>
+                        <ol class="text-xs sm:text-sm text-gray-700 space-y-2 px-3 sm:px-4 pb-3 sm:pb-4">
+                            <li class="flex items-start">
+                                <span class="flex-shrink-0 w-5 h-5 bg-blue-600 text-white rounded-full text-xs flex items-center justify-center mr-2 mt-0.5">1</span>
+                                <span>Go to M-PESA menu on your phone</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="flex-shrink-0 w-5 h-5 bg-blue-600 text-white rounded-full text-xs flex items-center justify-center mr-2 mt-0.5">2</span>
+                                <span>Select <strong>Lipa na M-PESA</strong> → <strong>Pay Bill</strong></span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="flex-shrink-0 w-5 h-5 bg-blue-600 text-white rounded-full text-xs flex items-center justify-center mr-2 mt-0.5">3</span>
+                                <span>Enter Business Number: <strong class="text-blue-700">553201</strong></span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="flex-shrink-0 w-5 h-5 bg-blue-600 text-white rounded-full text-xs flex items-center justify-center mr-2 mt-0.5">4</span>
+                                <span>Enter Account Number: <strong class="text-blue-700">{{ quote?.refno }}</strong></span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="flex-shrink-0 w-5 h-5 bg-blue-600 text-white rounded-full text-xs flex items-center justify-center mr-2 mt-0.5">5</span>
+                                <span>Enter Amount: <strong class="text-blue-700">{{ quote?.netprem | number:'1.0-0' }}</strong></span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="flex-shrink-0 w-5 h-5 bg-blue-600 text-white rounded-full text-xs flex items-center justify-center mr-2 mt-0.5">6</span>
+                                <span>Enter your M-PESA PIN and confirm</span>
+                            </li>
+                        </ol>
+                    </details>
+
+                    <!-- Payment Details Summary - Compact Grid -->
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="p-2 sm:p-3 bg-gray-50 rounded-lg text-center">
+                            <span class="text-xs text-gray-500 block">Paybill</span>
+                            <span class="font-bold text-gray-900 text-sm sm:text-base">553201</span>
+                        </div>
+                        <div class="p-2 sm:p-3 bg-gray-50 rounded-lg text-center">
+                            <span class="text-xs text-gray-500 block">Account</span>
+                            <span class="font-bold text-gray-900 text-sm sm:text-base break-all">{{ quote?.refno }}</span>
+                        </div>
+                        <div class="p-2 sm:p-3 bg-blue-50 rounded-lg col-span-2 text-center">
+                            <span class="text-xs text-blue-600 block">Amount to Pay</span>
+                            <span class="font-bold text-blue-700 text-lg sm:text-xl">{{ quote?.netprem | currency:'KES ' }}</span>
+                        </div>
+                    </div>
+
+                    <!-- M-PESA Transaction Code Input -->
+                    <div class="mt-4" [formGroup]="paymentForm">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Enter M-PESA Transaction Code *
+                        </label>
+                        <input
+                            class="w-full px-3 py-3 sm:py-2.5 border rounded-lg focus:ring-2 text-center text-lg sm:text-xl font-mono tracking-widest uppercase"
+                            [ngClass]="{
+                                'border-red-500 focus:ring-red-500 bg-red-50': mpesaCodeError,
+                                'border-green-500 focus:ring-green-500 bg-green-50': mpesaCodeValid,
+                                'border-gray-300 focus:ring-blue-500': !mpesaCodeError && !mpesaCodeValid
+                            }"
+                            formControlName="mpesaCode"
+                            placeholder="SJK7H9TXYZ"
+                            maxlength="10"
+                            autocapitalize="characters"
+                            autocomplete="off"
+                            spellcheck="false"
+                            (input)="onMpesaCodeInput($event)">
+                        <p class="text-xs text-gray-500 mt-1 text-center">
+                            Find this code in your M-PESA SMS
+                        </p>
+                        <p *ngIf="mpesaCodeError" class="text-xs text-red-600 mt-2 p-2 bg-red-50 rounded-lg">
+                            <mat-icon class="!w-4 !h-4 !text-sm align-middle mr-1">error</mat-icon>
+                            {{ mpesaCodeError }}
+                        </p>
+                    </div>
+
+                    <!-- Validate Payment Button -->
+                    <button
+                        mat-raised-button
+                        color="primary"
+                        class="w-full mt-4 !py-3 sm:!py-2.5 text-sm sm:text-base font-semibold flex items-center justify-center"
+                        [disabled]="validatingPayment || !paymentForm.get('mpesaCode')?.value || paymentForm.get('mpesaCode')?.value?.length < 10"
+                        (click)="validateMpesaPayment()">
+                        <mat-spinner *ngIf="validatingPayment" diameter="20" class="mr-2"></mat-spinner>
+                        <mat-icon *ngIf="!validatingPayment" class="mr-2">verified</mat-icon>
+                        {{ validatingPayment ? 'Validating...' : 'Validate Payment' }}
+                    </button>
+
+                    <p class="text-xs text-center text-gray-500 mt-2">
+                        We'll verify your payment against our records.
+                    </p>
+                </div>
+
+                <!-- Cancel Button (shared) -->
                 <button
                     mat-stroked-button
                     color="warn"
-                    class="w-full py-3 text-lg font-semibold"
-                    [disabled]="paymentProcessing"
-                    (click)="showPayment = false">
-                    <mat-icon class="mr-2">close</mat-icon>
+                    class="w-full !py-3 sm:!py-2.5 text-sm font-semibold mt-4"
+                    [disabled]="paymentProcessing || validatingPayment"
+                    (click)="showPayment = false; resetPaymentForm()">
+                    <mat-icon class="mr-1">close</mat-icon>
                     Cancel
                 </button>
-                </div>
-
-                <p class="text-xs text-center text-gray-500 mt-2">
-                    You will receive an M-PESA prompt on your phone. Enter your PIN to complete the payment.
-                </p>
             </div>
         </div>
 
@@ -139,101 +304,110 @@
 
 
         <!-- Basic Info Section -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div class="bg-card rounded-xl shadow p-5">
-                <h3 class="text-sm font-medium text-secondary mb-2">Customer</h3>
-                <div class="text-lg font-semibold">{{ quote?.firstName }} {{ quote?.lastName }}</div>
-                <div class="text-sm text-secondary">{{ quote?.email }}</div>
-                <div class="text-sm text-secondary">{{ quote?.phoneNo }}</div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            <div class="bg-card rounded-xl shadow p-4 sm:p-5">
+                <h3 class="text-xs sm:text-sm font-medium text-secondary mb-2">Customer</h3>
+                <div class="text-base sm:text-lg font-semibold">{{ quote?.firstName }} {{ quote?.lastName }}</div>
+                <div class="text-xs sm:text-sm text-secondary break-all">{{ quote?.email }}</div>
+                <div class="text-xs sm:text-sm text-secondary">{{ quote?.phoneNo }}</div>
             </div>
 
-            <div class="bg-card rounded-xl shadow p-5">
-                <h3 class="text-sm font-medium text-secondary mb-2">Category & Product</h3>
-                <div class="text-lg font-semibold">{{ quote?.category }}</div>
-                <div class="text-sm text-secondary">{{ quote?.prodName }}</div>
+            <div class="bg-card rounded-xl shadow p-4 sm:p-5">
+                <h3 class="text-xs sm:text-sm font-medium text-secondary mb-2">Category & Product</h3>
+                <div class="text-base sm:text-lg font-semibold">{{ quote?.category }}</div>
+                <div class="text-xs sm:text-sm text-secondary">{{ quote?.prodName }}</div>
             </div>
 
-            <div class="bg-card rounded-xl shadow p-5">
-                <h3 class="text-sm font-medium text-secondary mb-2">Status</h3>
+            <div class="bg-card rounded-xl shadow p-4 sm:p-5">
+                <h3 class="text-xs sm:text-sm font-medium text-secondary mb-2">Status</h3>
                 <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium"
                       [ngClass]="getStatusColor(quote?.status)">
           {{ quote?.status }}
         </span>
-                <div class="text-sm text-secondary mt-2">
+                <div class="text-xs sm:text-sm text-secondary mt-2">
                     Expires on: <span class="font-medium">{{ quote?.expiryDate | date }}</span>
                 </div>
             </div>
         </div>
 
         <!-- Shipping & Cargo Details -->
-        <div class="bg-card rounded-xl shadow p-6 mt-8">
-            <h3 class="text-lg font-semibold mb-4">Shipping & Cargo Details</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="bg-card rounded-xl shadow p-4 sm:p-6 mt-6 sm:mt-8">
+            <h3 class="text-base sm:text-lg font-semibold mb-4">Shipping & Cargo Details</h3>
+            <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 <div>
-                    <label class="text-sm text-secondary">Cargo Type</label>
-                    <div class="font-medium">{{ quote?.cargotype }}</div>
+                    <label class="text-xs sm:text-sm text-secondary">Cargo Type</label>
+                    <div class="font-medium text-sm sm:text-base">{{ quote?.cargotype }}</div>
                 </div>
                 <div>
-                    <label class="text-sm text-secondary">Shipping Mode</label>
-                    <div class="font-medium">{{ quote?.shippingmode }}</div>
+                    <label class="text-xs sm:text-sm text-secondary">Shipping Mode</label>
+                    <div class="font-medium text-sm sm:text-base">{{ quote?.shippingmode }}</div>
                 </div>
                 <div>
-                    <label class="text-sm text-secondary">Packaging Type</label>
-                    <div class="font-medium">{{ quote?.packagingtype }}</div>
+                    <label class="text-xs sm:text-sm text-secondary">Packaging Type</label>
+                    <div class="font-medium text-sm sm:text-base">{{ quote?.packagingtype }}</div>
                 </div>
                 <div>
-                    <label class="text-sm text-secondary">Origin Country</label>
-                    <div class="font-medium">{{ quote?.originId }}</div>
+                    <label class="text-xs sm:text-sm text-secondary">Origin Country</label>
+                    <div class="font-medium text-sm sm:text-base">{{ quote?.originId }}</div>
                 </div>
                 <div>
-                    <label class="text-sm text-secondary">Destination</label>
-                    <div class="font-medium">{{ quote?.destination }}</div>
+                    <label class="text-xs sm:text-sm text-secondary">Destination</label>
+                    <div class="font-medium text-sm sm:text-base">{{ quote?.destination }}</div>
                 </div>
                 <div>
-                    <label class="text-sm text-secondary">Vessel Name</label>
-                    <div class="font-medium">{{ quote?.vesselName }}</div>
+                    <label class="text-xs sm:text-sm text-secondary">Vessel Name</label>
+                    <div class="font-medium text-sm sm:text-base">{{ quote?.vesselName }}</div>
                 </div>
             </div>
         </div>
 
         <!-- Financial Summary -->
-        <div class="bg-card rounded-xl shadow p-6 mt-8">
-            <h3 class="text-lg font-semibold mb-4">Premium Details</h3>
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div class="bg-card rounded-xl shadow p-4 sm:p-6 mt-6 sm:mt-8">
+            <h3 class="text-base sm:text-lg font-semibold mb-4">Premium Details</h3>
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
                 <div>
-                    <label class="text-sm text-secondary">Sum Assured</label>
-                    <div class="font-medium">{{ quote?.sumassured | currency:'KES ' }}</div>
+                    <label class="text-xs sm:text-sm text-secondary">Sum Assured</label>
+                    <div class="font-medium text-sm sm:text-base">{{ quote?.sumassured | currency:'KES ' }}</div>
                 </div>
                 <div>
-                    <label class="text-sm text-secondary">Premium</label>
-                    <div class="font-medium">{{ quote?.premium | currency:'KES ' }}</div>
+                    <label class="text-xs sm:text-sm text-secondary">Premium</label>
+                    <div class="font-medium text-sm sm:text-base">{{ quote?.premium | currency:'KES ' }}</div>
                 </div>
                 <div>
-                    <label class="text-sm text-secondary">PHCF</label>
-                    <div class="font-medium">{{ quote?.phcf | currency:'KES ' }}</div>
+                    <label class="text-xs sm:text-sm text-secondary">PHCF</label>
+                    <div class="font-medium text-sm sm:text-base">{{ quote?.phcf | currency:'KES ' }}</div>
                 </div>
                 <div>
-                    <label class="text-sm text-secondary">Training Levy</label>
-                    <div class="font-medium">{{ quote?.traininglevy | currency:'KES ' }}</div>
+                    <label class="text-xs sm:text-sm text-secondary">Training Levy</label>
+                    <div class="font-medium text-sm sm:text-base">{{ quote?.traininglevy | currency:'KES ' }}</div>
                 </div>
                 <div>
-                    <label class="text-sm text-secondary">Stamp Duty</label>
-                    <div class="font-medium">{{ quote?.sd | currency:'KES ' }}</div>
+                    <label class="text-xs sm:text-sm text-secondary">Stamp Duty</label>
+                    <div class="font-medium text-sm sm:text-base">{{ quote?.sd | currency:'KES ' }}</div>
                 </div>
-                <div>
-                    <div class="flex items-center text-sm text-secondary">
-                        <span>Net Premium</span>
-                        <span class="net-premium-pill">{{ quote?.netprem | currency:'KES ' }}</span>
-                    </div>
+                <div class="col-span-2 sm:col-span-1">
+                    <label class="text-xs sm:text-sm text-secondary">Net Premium</label>
+                    <div class="font-bold text-base sm:text-lg text-blue-600">{{ quote?.netprem | currency:'KES ' }}</div>
                 </div>
             </div>
         </div>
+
         <!-- Description Section -->
-        <div class="bg-card rounded-xl shadow p-6 mt-8">
-            <h3 class="text-lg font-semibold mb-3">Description</h3>
-            <p class="text-secondary text-sm leading-relaxed">
+        <div class="bg-card rounded-xl shadow p-4 sm:p-6 mt-6 sm:mt-8">
+            <h3 class="text-base sm:text-lg font-semibold mb-3">Description</h3>
+            <p class="text-secondary text-xs sm:text-sm leading-relaxed">
                 {{ quote?.description || 'No description provided for this quote.' }}
             </p>
+        </div>
+
+        <!-- Mobile Close Button -->
+        <div class="sm:hidden mt-6">
+            <button
+                type="button"
+                (click)="goToDashboard()"
+                class="w-full py-3 rounded-lg border text-sm font-medium bg-white text-gray-700 hover:bg-gray-50">
+                Close
+            </button>
         </div>
 
     </div>

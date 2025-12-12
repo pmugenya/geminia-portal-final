@@ -7,7 +7,7 @@ import { PendingQuote, QuotesData } from '../../../core/user/user.types';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { UserService } from '../../../core/user/user.service';
 import { FuseAlertComponent, FuseAlertService } from '../../../../@fuse/components/alert';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
 import { ShareQuoteDialogComponent, ShareChannel } from '../../../shared/share-quote-dialog/share-quote-dialog.component';
@@ -38,6 +38,7 @@ import {
         CurrencyPipe,
         CommonModule,
         MatProgressSpinner,
+        ReactiveFormsModule,
     ],
 })
 export class ViewQuote implements OnInit,OnDestroy {
@@ -47,9 +48,14 @@ export class ViewQuote implements OnInit,OnDestroy {
     quoteId!: string;
     isLoading = true;
     showPayment = false;
+    validatingPayment = false
+    mpesaCodeError: string | null = null;
+    mpesaCodeValid = false;
     paymentProcessing = false;
     private paymentPollingSub?: Subscription;
     isProcessingStk = false;
+    paymentMethod: 'stk' | 'paybill' = 'stk';
+    paymentError: string | null = null;
     paymentSuccess?: boolean;
     showShareModal = false; // legacy flag, no longer used by UI
 
@@ -64,7 +70,9 @@ export class ViewQuote implements OnInit,OnDestroy {
                 private dialog: MatDialog) {
 
         this.paymentForm = this.fb.group({
-            mpesaNumber: ['', [Validators.required, Validators.pattern(/^07\d{8}$/)]]
+            mpesaNumber: ['', [Validators.required, Validators.pattern(/^0[17]\d{8}$/)]],
+            mpesaCode: ['', [Validators.required, Validators.pattern(/^[A-Z0-9]{10}$/)]]
+
         });
     }
 
@@ -89,8 +97,7 @@ export class ViewQuote implements OnInit,OnDestroy {
     }
 
     initiatePayment(): void {
-        if (!this.paymentForm.valid || !this.quote) return;
-
+        if (!this.quote) return;
 
         this.paymentProcessing = true;
 
@@ -314,6 +321,53 @@ export class ViewQuote implements OnInit,OnDestroy {
 
     payNow(): void {
         this.showPayment = true;
+    }
+
+    onMpesaCodeInput(event: Event): void {
+        const input = event.target as HTMLInputElement;
+        // Convert to uppercase and remove spaces
+        input.value = input.value.toUpperCase().replace(/\s/g, '');
+        // Remove any non-alphanumeric characters
+        input.value = input.value.replace(/[^A-Z0-9]/g, '');
+        // Limit to 10 characters
+        if (input.value.length > 10) {
+            input.value = input.value.slice(0, 10);
+        }
+        this.paymentForm.get('mpesaCode')?.setValue(input.value);
+
+        // Reset validation states when user is typing
+        this.mpesaCodeError = null;
+        this.mpesaCodeValid = false;
+    }
+
+    validateMpesaPayment(): void {
+        if (!this.quote) return;
+        if (this.validatingPayment) return;
+
+        const mpesaCode = this.paymentForm.get('mpesaCode')?.value;
+        if (!mpesaCode || mpesaCode.length !== 10) {
+            this.mpesaCodeError = 'Please enter a valid 10-character M-PESA transaction code';
+            return;
+        }
+
+        // Basic format validation for M-PESA codes (typically start with letters)
+        if (!/^[A-Z]{2,3}[A-Z0-9]{7,8}$/.test(mpesaCode)) {
+            this.mpesaCodeError = 'Invalid M-PESA code format. Please check and try again.';
+            return;
+        }
+
+        this.validatingPayment = true;
+        this.mpesaCodeError = null;
+        this.paymentError = null;
+    }
+
+
+    resetPaymentForm(): void {
+        this.paymentForm.reset();
+        this.paymentMethod = 'stk';
+        this.mpesaCodeError = null;
+        this.mpesaCodeValid = false;
+        this.paymentSuccess = null;
     }
 
 

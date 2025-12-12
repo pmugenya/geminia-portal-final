@@ -499,37 +499,39 @@ export class MarineQuickQuoteComponent implements OnInit, OnDestroy
 
     private setupFormSubscriptions(): void {
         // Update the modeOfShipment subscription to reset countries
-        this.quotationForm.get('modeOfShipment')?.valueChanges.subscribe((mode: number) => {
-            if (mode) {
+        this.quotationForm.get('modeOfShipment')?.valueChanges
+            .pipe(takeUntil(this.destroy$))
+            .subscribe((mode: number) => {
+                if (mode) {
 
-                // Reset countries and load first page
-                this.countryFilterCtrl.setValue('');
-                this.loadCountries(true);
+                    // Reset countries and load first page
+                    this.countryFilterCtrl.setValue('');
+                    this.loadCountries(true);
+                }
+            });
 
-                // Load first page of countries
-            }
-        });
-
-        // this.quotationForm.get('tradeType')?.valueChanges.pipe(takeUntil(this.destroy$)).subscribe((type) => {
-        //     if (type === '2') {
-        //         this.dialog.open(ShipmentRequestModalComponent, {
-        //             width: '700px',
-        //             data: {
-        //                 isExport: false,
-        //                 showExportModal: false
-        //             }
-        //         }).afterClosed().subscribe(result => {
-        //             if (result) {
-        //
-        //             }
-        //         });
-        //     }
-        // });
+        // When Trade Type is Export (value '2'), open the Export Shipment Details form
+        this.quotationForm.get('tradeType')?.valueChanges
+            .pipe(takeUntil(this.destroy$))
+            .subscribe((type) => {
+                if (type === '2') {
+                    this.dialog.open(ShipmentRequestModalComponent, {
+                        width: '700px',
+                        data: {
+                            isExport: true,
+                            showExportModal: true,
+                        }
+                    }).afterClosed().subscribe(result => {
+                        if (result) {
+                            // Placeholder: handle returned export shipment details if needed
+                        }
+                    });
+                }
+            });
     }
 
     private setupSearchFilters(): void {
         // Country search with debounce for server-side filtering
-
         this.countryFilterCtrl.valueChanges
             .pipe(debounceTime(400), distinctUntilChanged(), takeUntil(this.destroy$))
             .subscribe(term => {
@@ -540,7 +542,6 @@ export class MarineQuickQuoteComponent implements OnInit, OnDestroy
                 this.loadCountries(true);
             });
 
-
         // Category search (local filtering)
         this.categoryFilterCtrl.valueChanges.pipe(
             takeUntil(this.destroy$)
@@ -548,7 +549,7 @@ export class MarineQuickQuoteComponent implements OnInit, OnDestroy
             this.filterCategories();
         });
 
-        // Category search (local filtering)
+        // Category search (local filtering) for second category control
         this.categoryFilterCtrl2.valueChanges.pipe(
             takeUntil(this.destroy$)
         ).subscribe(() => {

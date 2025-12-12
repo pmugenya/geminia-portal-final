@@ -230,6 +230,83 @@ export class EditMarineQuoteDetailsComponent implements OnInit, OnDestroy
         });
     }
 
+    onSaveAndPayNow(): void {
+        // For now, reuse existing submission logic
+        this.isSubmitting = true;
+        this.shipmentForm.markAllAsTouched();
+
+        if (!this.shipmentForm.valid) {
+            this.logAllFormErrors(this.shipmentForm);
+            this.scrollToFirstError();
+            this.validationToastRef = this.showToast(
+                `A few fields need your attention. Please review the highlights.`,
+            );
+            this.isSubmitting = false;
+            return;
+        }
+        const kycFormValue = this.shipmentForm.getRawValue();
+        const packagingType = this.shipmentForm.get('commodityType')?.value;
+        const category = this.shipmentForm.get('selectCategory')?.value;
+        const cargoType = this.shipmentForm.get('salesCategory')?.value;
+        console.log(cargoType);
+        console.log(this.filteredMarineCargoTypess);
+        const selectedCategory = this.marineCategories.find(c => c.catname === category);
+        const selectedCargoType = this.filteredMarineCargoTypess.find(p => p.ctname === cargoType);
+        const selectedOriginCountry = this.shipmentForm.get('countryOfOrigin')?.value?.id;
+
+        const metadata = {
+            suminsured: this.shipmentForm.get('sumInsured')?.value,
+            kraPin: kycFormValue.kraPin,
+            firstName: kycFormValue.firstName,
+            lastName: kycFormValue.lastName,
+            phoneNumber: kycFormValue.phoneNumber,
+            emailAddress: kycFormValue.emailAddress,
+            idNumber: kycFormValue.idNumber,
+            postalAddress: kycFormValue.streetAddress,
+            postalCode: kycFormValue.postalCode,
+            shippingid: this.shipmentForm.get('modeOfShipment')?.value,
+            tradeType: this.shipmentForm.get('tradeType')?.value,
+            countryOrigin: selectedOriginCountry,
+            destination: this.shipmentForm.get('finalDestination')?.value,
+            dateFormat: 'dd MMM yyyy',
+            locale: 'en_US',
+            productId: 2416,
+            packagetypeid: packagingType,
+            categoryid: selectedCategory?.id,
+            cargoId: selectedCargoType?.id,
+            quoteId: this.quoteId
+        };
+
+        const formData = new FormData();
+        formData.append('metadata', JSON.stringify(metadata));
+
+
+        this.quotationService.updateNewQuote(formData).subscribe({
+            next: (res) => {
+                this.isSubmitting = false;
+                this.quoteResult = res;
+                this.validationToastRef = this.showToast(
+                    ' Quote Updated Successfully.Fill in more details to complete the payment'
+                );
+                this.router.navigate(['/editquote', this.quoteId]);
+            },
+            error: (err) => {
+                console.log(err);
+                // this.submissionError = err?.error?.message || 'An unexpected error occurred. Please try again.';
+                this.validationToastRef = this.showToast(
+                    err?.error?.message || 'An unexpected error occurred. Please try again.',
+                );
+                this.isSubmitting = false;
+            },
+        });
+
+    }
+
+    onSaveAndPayLater(): void {
+        // TODO: implement separate save-later behaviour if backend supports it
+        this.onSubmit();
+    }
+
     private loadShippingCountries(reset = false) {
         if (this.loading || !this.hasMoreLast) return;
         const shippingMode = this.shipmentForm.get('modeOfShipment')?.value;
